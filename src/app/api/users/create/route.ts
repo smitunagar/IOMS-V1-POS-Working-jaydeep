@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Import our database models
 const User = require('@/lib/database/models/User');
-const AuditLog = require('../../../../database/models/AuditLog');
+const AuditLog = require('../../../../../database/models/AuditLog');
 
 /**
  * POST /api/users/create
