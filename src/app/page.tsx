@@ -431,7 +431,7 @@ export default function MarketplacePage() {
         <AppGrid />
         
         <section className="bg-wm-blue py-24 relative overflow-hidden mt-12">
-           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
+           <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-overlay"></div>
            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
              <h2 className="font-headline font-bold text-3xl sm:text-5xl text-white mb-6">
                Ready to transform your kitchen?

@@ -114,7 +114,28 @@ export default function HardwareCapturePage() {
   const lastSnapshotUrlRef = useRef<string | null>(null);
   const isMensaPilot = process.env.NEXT_PUBLIC_MENSA_PILOT === 'true';
   const scaleSocketRef = useRef<WebSocket | null>(null);
-  const scaleBridgeUrl = process.env.NEXT_PUBLIC_SCALE_BRIDGE_WS || 'ws://localhost:8787/ws';
+  const isLocalHost = (host: string) => ['localhost', '127.0.0.1', '::1'].includes(host);
+  const resolveScaleBridgeUrl = () => {
+    const envUrl = process.env.NEXT_PUBLIC_SCALE_BRIDGE_WS;
+    if (envUrl) {
+      if (typeof window === 'undefined') {
+        return envUrl;
+      }
+      const host = window.location.hostname;
+      const envIsLocal = /localhost|127\.0\.0\.1/.test(envUrl);
+      if (!isLocalHost(host) && envIsLocal) {
+        // Ignore localhost env in production browser
+      } else {
+        return envUrl;
+      }
+    }
+    if (typeof window === 'undefined') {
+      return 'ws://localhost:8787/ws';
+    }
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    return `${protocol}://${window.location.host}/scale-bridge/ws`;
+  };
+  const scaleBridgeUrl = resolveScaleBridgeUrl();
   const scaleReconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scaleHasConnectedRef = useRef(false);
   const scalePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -123,7 +144,8 @@ export default function HardwareCapturePage() {
   const getScaleHealthUrl = () => {
     const url = new URL(scaleBridgeUrl);
     const protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
-    return `${protocol}//${url.host}/health`;
+    const basePath = url.pathname.replace(/\/ws$/, '');
+    return `${protocol}//${url.host}${basePath}/health`;
   };
 
   const normalizeScaleUnit = (unit?: string | null) => {
@@ -388,6 +410,9 @@ export default function HardwareCapturePage() {
   // Start camera
   const startCamera = useCallback(async () => {
     try {
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('Camera not available. Use HTTPS or grant permissions.');
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           width: { ideal: 1280 },

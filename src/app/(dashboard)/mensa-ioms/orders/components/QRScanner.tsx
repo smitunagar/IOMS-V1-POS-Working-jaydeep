@@ -41,6 +41,11 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
 
   const checkCameraPermission = async () => {
     try {
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        setPermissionStatus('denied');
+        setError('Camera not available. Use HTTPS or grant permissions.');
+        return;
+      }
       // Check if browser supports permissions API
       if (navigator.permissions && navigator.permissions.query) {
         const permissionResult = await navigator.permissions.query({ name: 'camera' as PermissionName });
@@ -70,6 +75,12 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
     try {
       setError(null);
       setPermissionStatus('checking');
+
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        setPermissionStatus('denied');
+        setError('Camera not available. Use HTTPS or grant permissions.');
+        return false;
+      }
 
       // Request camera access
       const stream = await navigator.mediaDevices.getUserMedia({ 

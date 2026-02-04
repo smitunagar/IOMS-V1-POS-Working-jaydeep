@@ -6,7 +6,19 @@ export const runtime = 'nodejs';
 
 const DEFAULT_CO2_PER_KG = 2.1;
 
+const buildFallbackAnalysis = () => ({
+  dishName: 'Mixed Food Waste',
+  category: 'Food Waste',
+  estimatedWeight: '0.5 kg',
+  confidence: 60,
+  fallback: true,
+});
+
 async function analyzeImage(image: string) {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    return buildFallbackAnalysis();
+  }
   const prompt = `
 You are a food waste identification expert. Analyze the provided image and identify the food waste.
 
@@ -59,7 +71,12 @@ export async function POST() {
   try {
     markProcessing(item.id);
 
-    const analysis = await analyzeImage(item.imageData);
+    let analysis: any;
+    try {
+      analysis = await analyzeImage(item.imageData);
+    } catch (error) {
+      analysis = buildFallbackAnalysis();
+    }
     const weightKg = typeof item.weightKg === 'number'
       ? item.weightKg
       : parseWeightKg(analysis.estimatedWeight);

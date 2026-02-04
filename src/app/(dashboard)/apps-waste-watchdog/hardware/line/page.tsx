@@ -30,6 +30,9 @@ export default function WasteWatchdogLinePage() {
 
   const startCamera = useCallback(async () => {
     try {
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('Camera not available. Use HTTPS or grant permissions.');
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },

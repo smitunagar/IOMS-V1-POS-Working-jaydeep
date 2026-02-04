@@ -27,7 +27,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_USER_KEY = 'ioms_current_user';
 const LOCAL_STORAGE_SESSION_TOKEN_KEY = 'ioms_session_token';
-const isLocalAuthMode = process.env.NEXT_PUBLIC_AUTH_MODE === 'local';
+const isLocalAuthMode = (process.env.NEXT_PUBLIC_AUTH_MODE ?? 'local') === 'local';
 const HARDCODED_ADMIN_EMAIL = 'admin@gmail.com';
 const HARDCODED_ADMIN_PASSWORD = 'Smit123';
 
@@ -36,6 +36,11 @@ const createLocalSessionToken = () => {
     return `LOCAL_${crypto.randomUUID()}`;
   }
   return `LOCAL_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+};
+
+const isLocalSessionToken = (token: string | null) => {
+  if (!token) return false;
+  return token.startsWith('LOCAL_') || token.startsWith('SPECIAL_SAM_');
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -92,12 +97,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Function to refresh user data from API
   const refreshUser = async () => {
-    if (isLocalAuthMode) {
-      const storedUser = loadUserFromStorage();
+    const storedUser = loadUserFromStorage();
+    const sessionToken = getSessionToken();
+
+    if (isLocalAuthMode || isLocalSessionToken(sessionToken)) {
       setCurrentUser(storedUser);
       return;
     }
-    const sessionToken = getSessionToken();
     
     if (!sessionToken) {
       console.log('[AuthProvider] No session token, clearing user');
@@ -148,7 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const sessionToken = getSessionToken();
       const storedUser = loadUserFromStorage();
 
-      if (isLocalAuthMode) {
+      if (isLocalAuthMode || isLocalSessionToken(sessionToken)) {
         setCurrentUser(storedUser);
       } else if (sessionToken && storedUser) {
         await refreshUser();

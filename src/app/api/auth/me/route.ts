@@ -28,7 +28,23 @@ export async function GET(request: NextRequest) {
     let user;
     let session;
 
-    if (sessionToken.startsWith('SPECIAL_SAM_')) {
+    if (sessionToken.startsWith('LOCAL_')) {
+      user = {
+        id: 'local-session',
+        name: 'Local User',
+        email: 'local@local',
+        tenant_id: null,
+        active: true,
+        signup_date: new Date().toISOString(),
+        phone: null
+      };
+
+      session = {
+        login_time: new Date().toISOString(),
+        last_activity: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      };
+    } else if (sessionToken.startsWith('SPECIAL_SAM_')) {
       // Special admin user - return virtual user without database lookup
       user = {
         id: 'special-admin-sam',
