@@ -16,6 +16,10 @@ export interface WasteData {
 
 export interface WasteAnalysis {
   totalWaste: number;
+  recentOrders?: Array<unknown>;
+  inventoryStatus?: {
+    lowStock?: Array<unknown>;
+  };
   wasteByCategory: Array<{
     category: string;
     amount: number;
@@ -43,6 +47,10 @@ export interface WasteAnalysis {
 class POSWasteIntegrationService {
   async recordWaste(wasteData: Omit<WasteData, 'id' | 'timestamp'>): Promise<WasteData | null> {
     try {
+    recentOrders?: Array<Record<string, unknown>>;
+    inventoryStatus?: {
+      lowStock?: Array<Record<string, unknown>>;
+    };
       const response = await fetch('/api/waste/record', {
         method: 'POST',
         headers: {
