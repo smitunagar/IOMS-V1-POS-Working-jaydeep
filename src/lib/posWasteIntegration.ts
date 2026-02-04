@@ -16,9 +16,15 @@ export interface WasteData {
 
 export interface WasteAnalysis {
   totalWaste: number;
+  todayWaste?: number;
+  reductionPercentage?: number;
+  costImpact?: number;
+  co2Impact?: number;
   recentOrders?: Array<Record<string, unknown>>;
   inventoryStatus?: {
     lowStock?: Array<Record<string, unknown>>;
+    expiring?: Array<Record<string, unknown>>;
+    overstock?: Array<Record<string, unknown>>;
   };
   wasteByCategory: Array<{
     category: string;
