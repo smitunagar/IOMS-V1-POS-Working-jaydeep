@@ -132,8 +132,13 @@ export default function HardwareCapturePage() {
     if (typeof window === 'undefined') {
       return 'ws://localhost:8787/ws';
     }
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    return `${protocol}://${window.location.host}/scale-bridge/ws`;
+    const { protocol, hostname, port } = window.location;
+    const isLocalAccess = isLocalHost(hostname) || port === '3000';
+    if (isLocalAccess) {
+      return `ws://${hostname}:8787/ws`;
+    }
+    const wsProtocol = protocol === 'https:' ? 'wss' : 'ws';
+    return `${wsProtocol}://${window.location.host}/scale-bridge/ws`;
   };
   const scaleBridgeUrl = resolveScaleBridgeUrl();
   const scaleReconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -410,6 +415,16 @@ export default function HardwareCapturePage() {
   // Start camera
   const startCamera = useCallback(async () => {
     try {
+      if (typeof window !== 'undefined') {
+        if (!window.isSecureContext && !isLocalHost(window.location.hostname)) {
+          toast({
+            title: 'Camera Error',
+            description: 'Camera requires HTTPS or localhost.',
+            variant: 'destructive'
+          });
+          return;
+        }
+      }
       if (!navigator?.mediaDevices?.getUserMedia) {
         throw new Error('Camera not available. Use HTTPS or grant permissions.');
       }

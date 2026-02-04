@@ -84,7 +84,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (storedUser) {
         const userData = JSON.parse(storedUser);
-        console.log('[AuthProvider] Loaded user from storage:', userData.email);
         return userData;
       }
       return null;

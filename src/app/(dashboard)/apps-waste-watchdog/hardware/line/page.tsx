@@ -30,6 +30,18 @@ export default function WasteWatchdogLinePage() {
 
   const startCamera = useCallback(async () => {
     try {
+      if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        const isLocal = ['localhost', '127.0.0.1', '::1'].includes(host);
+        if (!window.isSecureContext && !isLocal) {
+          toast({
+            title: 'Camera Error',
+            description: 'Camera requires HTTPS or localhost.',
+            variant: 'destructive'
+          });
+          return;
+        }
+      }
       if (!navigator?.mediaDevices?.getUserMedia) {
         throw new Error('Camera not available. Use HTTPS or grant permissions.');
       }
