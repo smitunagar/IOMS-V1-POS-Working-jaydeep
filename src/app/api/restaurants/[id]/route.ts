@@ -5,7 +5,7 @@ import Session from '@/lib/database/models/Session';
 // GET /api/restaurants/[id] - Get a specific restaurant
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get session token from Authorization header
@@ -22,7 +22,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
 
-    const { id: restaurantId } = context.params;
+    const { id: restaurantId } = await context.params;
     
     // Get restaurant
     const restaurant = await Restaurant.getById(restaurantId);
@@ -53,7 +53,7 @@ export async function GET(
 // PUT /api/restaurants/[id] - Update a restaurant
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get session token from Authorization header
@@ -70,7 +70,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
 
-    const { id: restaurantId } = context.params;
+    const { id: restaurantId } = await context.params;
     
     // Check if restaurant exists and belongs to user
     const existingRestaurant = await Restaurant.getById(restaurantId);
@@ -152,7 +152,7 @@ export async function PUT(
 // DELETE /api/restaurants/[id] - Delete a restaurant (soft delete)
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get session token from Authorization header
@@ -169,7 +169,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
 
-    const { id: restaurantId } = context.params;
+    const { id: restaurantId } = await context.params;
     
     // Check if restaurant exists and belongs to user
     const existingRestaurant = await Restaurant.getById(restaurantId);
