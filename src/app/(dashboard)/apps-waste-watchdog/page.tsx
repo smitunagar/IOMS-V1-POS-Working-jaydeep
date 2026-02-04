@@ -150,9 +150,9 @@ export default function WasteWatchDogPage() {
                     <Scale className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{posMetrics.todayWaste.toFixed(1)} kg</div>
+                    <div className="text-2xl font-bold text-gray-900">{(posMetrics?.todayWaste ?? 0).toFixed(1)} kg</div>
                     <p className="text-xs text-gray-600">
-                      +{Math.abs(posMetrics.reductionPercentage - 100).toFixed(1)}% from yesterday
+                      +{Math.abs((posMetrics?.reductionPercentage ?? 100) - 100).toFixed(1)}% from yesterday
                     </p>
                   </CardContent>
                 </Card>
@@ -163,9 +163,9 @@ export default function WasteWatchDogPage() {
                     <DollarSign className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">€{posMetrics.costImpact.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-gray-900">€{(posMetrics?.costImpact ?? 0).toFixed(2)}</div>
                     <p className="text-xs text-gray-600">
-                      €{(posMetrics.costImpact * 30).toFixed(2)} saved this period
+                      €{((posMetrics?.costImpact ?? 0) * 30).toFixed(2)} saved this period
                     </p>
                   </CardContent>
                 </Card>
@@ -176,9 +176,9 @@ export default function WasteWatchDogPage() {
                     <Leaf className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{posMetrics.co2Impact.toFixed(1)} kg</div>
+                    <div className="text-2xl font-bold text-gray-900">{(posMetrics?.co2Impact ?? 0).toFixed(1)} kg</div>
                     <p className="text-xs text-gray-600">
-                      {(posMetrics.co2Impact * 0.4).toFixed(1)} kg CO₂ saved
+                      {((posMetrics?.co2Impact ?? 0) * 0.4).toFixed(1)} kg CO₂ saved
                     </p>
                   </CardContent>
                 </Card>
@@ -189,7 +189,7 @@ export default function WasteWatchDogPage() {
                     <TrendingDown className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{posMetrics.reductionPercentage.toFixed(1)}%</div>
+                    <div className="text-2xl font-bold text-gray-900">{(posMetrics?.reductionPercentage ?? 0).toFixed(1)}%</div>
                     <p className="text-xs text-gray-600">vs previous period</p>
                   </CardContent>
                 </Card>
@@ -284,7 +284,7 @@ export default function WasteWatchDogPage() {
                     <CardDescription>Live data from point of sale system</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {posMetrics.recentOrders.slice(0, 5).map((order) => (
+                    {(posMetrics?.recentOrders ?? []).slice(0, 5).map((order: any) => (
                       <div key={order.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                         <div>
                           <p className="font-medium">Order #{order.id.slice(-8)}</p>
@@ -298,7 +298,7 @@ export default function WasteWatchDogPage() {
                         </div>
                       </div>
                     ))}
-                    {posMetrics.recentOrders.length === 0 && (
+                    {(posMetrics?.recentOrders?.length ?? 0) === 0 && (
                       <p className="text-gray-500 text-center py-4">No recent orders</p>
                     )}
                   </CardContent>
@@ -315,33 +315,33 @@ export default function WasteWatchDogPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {posMetrics.inventoryStatus.expiring.length > 0 && (
+                      {(posMetrics?.inventoryStatus as any)?.expiring?.length > 0 && (
                         <div className="flex items-center gap-2 p-2 bg-red-50 rounded-lg">
                           <AlertTriangle className="w-4 h-4 text-red-600" />
                           <span className="text-sm text-red-800">
-                            {posMetrics.inventoryStatus.expiring.length} items expiring soon
+                            {(posMetrics?.inventoryStatus as any)?.expiring?.length ?? 0} items expiring soon
                           </span>
                         </div>
                       )}
-                      {posMetrics.inventoryStatus.lowStock.length > 0 && (
+                      {(posMetrics?.inventoryStatus as any)?.lowStock?.length > 0 && (
                         <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg">
                           <Clock className="w-4 h-4 text-yellow-600" />
                           <span className="text-sm text-yellow-800">
-                            {posMetrics.inventoryStatus.lowStock.length} items low in stock
+                            {(posMetrics?.inventoryStatus as any)?.lowStock?.length ?? 0} items low in stock
                           </span>
                         </div>
                       )}
-                      {posMetrics.inventoryStatus.overstock.length > 0 && (
+                      {(posMetrics?.inventoryStatus as any)?.overstock?.length > 0 && (
                         <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
                           <Package className="w-4 h-4 text-blue-600" />
                           <span className="text-sm text-blue-800">
-                            {posMetrics.inventoryStatus.overstock.length} items overstocked
+                            {(posMetrics?.inventoryStatus as any)?.overstock?.length ?? 0} items overstocked
                           </span>
                         </div>
                       )}
-                      {posMetrics.inventoryStatus.expiring.length === 0 && 
-                       posMetrics.inventoryStatus.lowStock.length === 0 && 
-                       posMetrics.inventoryStatus.overstock.length === 0 && (
+                      {((posMetrics?.inventoryStatus as any)?.expiring?.length ?? 0) === 0 && 
+                       ((posMetrics?.inventoryStatus as any)?.lowStock?.length ?? 0) === 0 && 
+                       ((posMetrics?.inventoryStatus as any)?.overstock?.length ?? 0) === 0 && (
                         <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
                           <CheckCircle className="w-4 h-4 text-green-600" />
                           <span className="text-sm text-green-800">All inventory levels optimal</span>
@@ -352,10 +352,10 @@ export default function WasteWatchDogPage() {
                     {/* Waste by Category */}
                     <div className="mt-4 pt-4 border-t">
                       <h4 className="font-medium mb-2">Waste by Category (Today)</h4>
-                      {Object.entries(posMetrics.wasteByCategory).slice(0, 3).map(([category, amount]) => (
+                      {Object.entries(posMetrics?.wasteByCategory ?? []).slice(0, 3).map(([category, amount]) => (
                         <div key={category} className="flex justify-between items-center py-1">
                           <span className="text-sm text-gray-600 capitalize">{category}</span>
-                          <span className="text-sm font-medium">{amount.toFixed(1)} kg</span>
+                          <span className="text-sm font-medium">{Number(amount).toFixed(1)} kg</span>
                         </div>
                       ))}
                     </div>
