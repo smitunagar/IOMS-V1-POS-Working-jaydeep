@@ -28,6 +28,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const LOCAL_STORAGE_USER_KEY = 'ioms_current_user';
 const LOCAL_STORAGE_SESSION_TOKEN_KEY = 'ioms_session_token';
 const isLocalAuthMode = process.env.NEXT_PUBLIC_AUTH_MODE === 'local';
+const HARDCODED_ADMIN_EMAIL = 'admin@gmail.com';
+const HARDCODED_ADMIN_PASSWORD = 'Smit123';
 
 const createLocalSessionToken = () => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -167,6 +169,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
 
+    if (email.toLowerCase() === HARDCODED_ADMIN_EMAIL && password === HARDCODED_ADMIN_PASSWORD) {
+      const adminUser: User = {
+        id: 'admin-hardcoded',
+        name: 'Admin',
+        email: HARDCODED_ADMIN_EMAIL,
+        tenantId: null,
+      };
+
+      const token = createLocalSessionToken();
+      saveSessionToken(token);
+      setCurrentUser(adminUser);
+      saveUserToStorage(adminUser);
+      setIsLoading(false);
+      return true;
+    }
+
     if (isLocalAuthMode) {
       const localUser: User = {
         id: `local-${email.toLowerCase()}`,
@@ -216,6 +234,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (email: string, password: string, restaurantName?: string, phone?: string): Promise<boolean> => {
     console.log('[AuthProvider] Signup attempt for:', email);
     setIsLoading(true);
+
+    if (email.toLowerCase() === HARDCODED_ADMIN_EMAIL && password === HARDCODED_ADMIN_PASSWORD) {
+      const adminUser: User = {
+        id: 'admin-hardcoded',
+        name: 'Admin',
+        email: HARDCODED_ADMIN_EMAIL,
+        tenantId: null,
+      };
+
+      const token = createLocalSessionToken();
+      saveSessionToken(token);
+      setCurrentUser(adminUser);
+      saveUserToStorage(adminUser);
+      setIsLoading(false);
+      return true;
+    }
 
     if (isLocalAuthMode) {
       setIsLoading(false);
