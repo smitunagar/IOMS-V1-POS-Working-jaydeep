@@ -1,0 +1,47 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: "production"
+    env_file:
+      - .env.local
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+  scale-bridge:
+    build: .
+    command: ["node", "scripts/scale-bridge.js"]
+    environment:
+      NODE_ENV: "production"
+      SCALE_SERIAL_PORT: "/dev/cu.usbserial-BG02Q7V9"
+      SCALE_BAUD: "9600"
+      SCALE_HTTP_PORT: "8787"
+    ports:
+      - "8787:8787"
+    volumes:
+      - ./logs:/app/logs
+    # Uncomment on Linux if you pass the USB device into the container
+    # devices:
+    #   - "/dev/ttyUSB0:/dev/ttyUSB0"
+    # privileged: true
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt

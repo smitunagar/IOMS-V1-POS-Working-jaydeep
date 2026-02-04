@@ -1,0 +1,407 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  background-color: #F5F5F7;
+  color: #1B1F3B;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* Clean white background */
+    --foreground: 20 14.3% 4.1%; /* Dark blue-gray for contrast */
+    --card: 0 0% 100%; /* Clean white cards */
+    --card-foreground: 20 14.3% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14.3% 4.1%;
+    --primary: 24 9.8% 10%; /* Rich dark blue */
+    --primary-foreground: 60 9.1% 97.8%; /* Almost white */
+    --secondary: 60 4.8% 95.9%; /* Light gray */
+    --secondary-foreground: 24 9.8% 10%; /* Dark text */
+    --muted: 60 4.8% 95.9%; /* Light gray */
+    --muted-foreground: 25 5.3% 44.7%; /* Medium gray */
+    --accent: 60 4.8% 95.9%; /* Light accent */
+    --accent-foreground: 24 9.8% 10%; /* Dark text */
+    --destructive: 0 84.2% 60.2%; /* Red for errors */
+    --destructive-foreground: 60 9.1% 97.8%; /* White text */
+    --border: 20 5.9% 90%; /* Light border */
+    --input: 20 5.9% 90%; /* Light input background */
+    --ring: 20 14.3% 4.1%; /* Focus ring color */
+    --chart-1: 12 76% 61%; /* Orange */
+    --chart-2: 173 58% 39%; /* Teal */
+    --chart-3: 197 37% 24%; /* Blue */
+    --chart-4: 43 74% 66%; /* Yellow */
+    --chart-5: 27 87% 67%; /* Red */
+    --radius: 0.75rem; /* More rounded corners */
+    
+    /* Vibrant color palette for food/restaurant theme */
+    --food-orange: 25 95% 60%; /* Vibrant orange */
+    --food-red: 0 84% 60%; /* Vibrant red */
+    --food-green: 142 76% 36%; /* Fresh green */
+    --food-yellow: 45 93% 58%; /* Golden yellow */
+    --food-blue: 217 91% 60%; /* Ocean blue */
+    --food-purple: 262 83% 58%; /* Royal purple */
+
+    /* Sidebar specific theme */
+    --sidebar-background: 232 48% 92%; /* Soft violet-grey #e4e7f5 for sidebar */
+    --sidebar-foreground: 220 40% 95%; /* Light text */
+    --sidebar-primary: 230 45% 77%; /* Accent color for selected/active items */
+    --sidebar-primary-foreground: 231 48% 20%; /* Dark text on accent */
+    --sidebar-accent: 231 48% 43%; /* Hover, slightly lighter than sidebar-background */
+    --sidebar-accent-foreground: 220 40% 98%; /* Light text */
+    --sidebar-border: 231 48% 30%; /* Darker border for sidebar elements */
+    --sidebar-ring: 230 45% 77%; /* Accent for ring */
+  }
+
+  .dark {
+    --background: 20 14.3% 4.1%; /* Dark blue-gray */
+    --foreground: 60 9.1% 97.8%; /* Light gray-blue text */
+    --card: 20 14.3% 4.1%;
+    --card-foreground: 60 9.1% 97.8%;
+    --popover: 20 14.3% 4.1%;
+    --popover-foreground: 60 9.1% 97.8%;
+    --primary: 60 9.1% 97.8%; /* Violet becomes primary in dark mode for better contrast */
+    --primary-foreground: 24 9.8% 10%; /* Dark text on light violet */
+    --secondary: 12 6.5% 15.1%; /* Saturated dark-blue becomes secondary */
+    --secondary-foreground: 60 9.1% 97.8%;
+    --muted: 12 6.5% 15.1%;
+    --muted-foreground: 24 5.4% 63.9%;
+    --accent: 12 6.5% 15.1%; /* Slightly lighter primary for accent */
+    --accent-foreground: 60 9.1% 97.8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 12 6.5% 15.1%;
+    --input: 12 6.5% 15.1%;
+    --ring: 24 5.7% 82.9%; /* Violet for focus rings */
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    /* Sidebar specific theme for dark mode */
+    --sidebar-background: 231 15% 12%; /* Even darker blue-gray */
+    --sidebar-foreground: 220 30% 85%;
+    --sidebar-primary: 230 45% 77%; /* Violet for selected/active */
+    --sidebar-primary-foreground: 231 48% 10%;
+    --sidebar-accent: 231 15% 20%; /* Hover */
+    --sidebar-accent-foreground: 220 30% 95%;
+    --sidebar-border: 231 15% 25%;
+    --sidebar-ring: 230 45% 77%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* 3D Effects and Enhanced Shadows */
+@layer utilities {
+  .shadow-3xl {
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+  
+  .shadow-4xl {
+    box-shadow: 
+      0 45px 100px -12px rgba(0, 0, 0, 0.25),
+      0 20px 40px -12px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+  
+  .glass-effect {
+    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .card-3d {
+    transform-style: preserve-3d;
+    /* Disabled transition to prevent flickering */
+    /* transition: all 0.3s ease; */
+  }
+  
+  .card-3d:hover {
+    /* Disabled 3D transform to prevent flickering */
+    /* transform: perspective(1000px) rotateX(5deg) rotateY(5deg) translateZ(20px); */
+  }
+  
+  .text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .btn-3d {
+    /* Simplified to prevent flickering */
+    /* transform: perspective(1000px) translateZ(0); */
+    /* transition: all 0.3s ease; */
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .btn-3d:hover {
+    /* Simplified hover to prevent flickering */
+    /* transform: perspective(1000px) translateZ(10px) translateY(-2px); */
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.15),
+      0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .pulse-ring {
+    animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  }
+  
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(0.8);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
+  
+  .float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  /* Table stability fixes to prevent flickering */
+  table {
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  table tr {
+    will-change: auto;
+  }
+  
+  table tr:hover {
+    transform: none !important;
+    transition: none !important;
+  }
+  
+  /* Tooltip stability */
+  [title] {
+    position: relative;
+  }
+  
+  /* Disable all transforms on table elements */
+  table * {
+    will-change: auto !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  
+  /* Inventory page specific stability */
+  .inventory-table,
+  .inventory-table * {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
+  /* Prevent any hover effects on table rows */
+  .inventory-table tr:hover {
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: hidden !important;
+  }
+  
+  /* Food theme utility classes */
+  .food-gradient-orange {
+    background: linear-gradient(135deg, hsl(var(--food-orange)) 0%, hsl(var(--food-red)) 100%);
+  }
+  
+  .food-gradient-green {
+    background: linear-gradient(135deg, hsl(var(--food-green)) 0%, hsl(var(--food-blue)) 100%);
+  }
+  
+  .food-gradient-yellow {
+    background: linear-gradient(135deg, hsl(var(--food-yellow)) 0%, hsl(var(--food-orange)) 100%);
+  }
+  
+  .food-gradient-purple {
+    background: linear-gradient(135deg, hsl(var(--food-purple)) 0%, hsl(var(--food-blue)) 100%);
+  }
+  
+  .text-food-orange {
+    color: hsl(var(--food-orange));
+  }
+  
+  .text-food-red {
+    color: hsl(var(--food-red));
+  }
+  
+  .text-food-green {
+    color: hsl(var(--food-green));
+  }
+  
+  .text-food-yellow {
+    color: hsl(var(--food-yellow));
+  }
+  
+  .text-food-blue {
+    color: hsl(var(--food-blue));
+  }
+  
+  .text-food-purple {
+    color: hsl(var(--food-purple));
+  }
+  
+  .bg-food-orange {
+    background-color: hsl(var(--food-orange));
+  }
+  
+  .bg-food-red {
+    background-color: hsl(var(--food-red));
+  }
+  
+  .bg-food-green {
+    background-color: hsl(var(--food-green));
+  }
+  
+  .bg-food-yellow {
+    background-color: hsl(var(--food-yellow));
+  }
+  
+  .bg-food-blue {
+    background-color: hsl(var(--food-blue));
+  }
+  
+  .bg-food-purple {
+    background-color: hsl(var(--food-purple));
+  }
+  
+  /* Enhanced card styles for food items */
+  .food-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fef7f0 100%);
+    border: 2px solid hsl(var(--food-orange) / 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .food-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.15);
+    border-color: hsl(var(--food-orange) / 0.4);
+  }
+  
+  /* Enhanced button styles */
+  .food-button-primary {
+    background: linear-gradient(135deg, hsl(var(--food-orange)) 0%, hsl(var(--food-red)) 100%);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .food-button-primary:hover {
+    background: linear-gradient(135deg, hsl(var(--food-orange) / 0.9) 0%, hsl(var(--food-red) / 0.9) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+  
+  .food-button-success {
+    background: linear-gradient(135deg, hsl(var(--food-green)) 0%, hsl(var(--food-blue)) 100%);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .food-button-success:hover {
+    background: linear-gradient(135deg, hsl(var(--food-green) / 0.9) 0%, hsl(var(--food-blue) / 0.9) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Enterprise Card Hover Effect */
+  .card-hover-effect {
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+  }
+  .card-hover-effect:hover {
+    transform: translateY(-5px);
+  }
+  
+  /* Claymorphism Utilities for the Hero Art */
+  .clay-red {
+    background: #E63946;
+    box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), inset 10px 10px 20px rgba(255,255,255,0.2), 10px 20px 30px rgba(230, 57, 70, 0.3);
+  }
+  .clay-teal {
+    background: #2A9D8F;
+    box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), inset 10px 10px 20px rgba(255,255,255,0.2), 10px 20px 30px rgba(42, 157, 143, 0.3);
+  }
+
+  /* Global Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #F5F5F7;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2A9D8F;
+  }
+
+  /* Sidebar Specific Dark Scrollbar */
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 5px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle white/blue initially */
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #2A9D8F; /* Brand Teal on hover */
+  }
+  
+  /* Utility to hide scrollbar but keep functionality if needed */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

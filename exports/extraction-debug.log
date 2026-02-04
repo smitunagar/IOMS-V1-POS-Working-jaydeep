@@ -1,0 +1,120 @@
+[2025-09-07T11:06:22.364Z] ❌ Tier 1 (AI) failed: Cannot read properties of undefined (reading 'startsWith')
+[2025-09-07T11:06:23.349Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open 'C:\Users\alvi\IOMS\IOMS_V1_POS_Working_main_20_08_2025\test\data\05-versions-space.pdf'
+[2025-09-07T11:06:23.350Z] ⚠️ All extraction tiers failed
+[2025-09-07T11:06:36.236Z] ❌ Tier 1 (AI) failed: Cannot read properties of undefined (reading 'startsWith')
+[2025-09-07T11:06:36.240Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open 'C:\Users\alvi\IOMS\IOMS_V1_POS_Working_main_20_08_2025\test\data\05-versions-space.pdf'
+[2025-09-07T11:06:36.242Z] ⚠️ All extraction tiers failed
+[2025-09-07T11:06:39.247Z] ❌ Tier 1 (AI) failed: Cannot read properties of undefined (reading 'startsWith')
+[2025-09-07T11:06:39.249Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open 'C:\Users\alvi\IOMS\IOMS_V1_POS_Working_main_20_08_2025\test\data\05-versions-space.pdf'
+[2025-09-07T11:06:39.252Z] ⚠️ All extraction tiers failed
+[2025-09-07T12:25:24.594Z] ❌ Tier 1 (AI) failed: Cannot read properties of undefined (reading 'startsWith')
+[2025-09-07T12:25:24.919Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open 'C:\Users\alvi\IOMS\IOMS_V1_POS_Working_main_20_08_2025\test\data\05-versions-space.pdf'
+[2025-09-07T12:25:24.920Z] ⚠️ All extraction tiers failed
+[2025-09-07T20:21:52.004Z] ❌ Tier 1 (AI) failed: Cannot read properties of undefined (reading 'startsWith')
+[2025-09-07T20:21:52.729Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open 'C:\Users\alvi\IOMS\IOMS_V1_POS_Working_main_20_08_2025\test\data\05-versions-space.pdf'
+[2025-09-07T20:21:52.730Z] ⚠️ All extraction tiers failed
+[2025-09-07T20:53:38.561Z] ❌ Tier 1 (AI) failed: Cannot read properties of undefined (reading 'startsWith')
+[2025-09-07T20:53:39.452Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open 'C:\Users\alvi\IOMS\IOMS_V1_POS_Working_main_20_08_2025\test\data\05-versions-space.pdf'
+[2025-09-07T20:53:39.455Z] ⚠️ All extraction tiers failed
+[2025-09-07T20:59:54.272Z] ❌ Tier 1 (AI) failed: Cannot read properties of undefined (reading 'startsWith')
+[2025-09-07T20:59:54.274Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open 'C:\Users\alvi\IOMS\IOMS_V1_POS_Working_main_20_08_2025\test\data\05-versions-space.pdf'
+[2025-09-07T20:59:54.275Z] ⚠️ All extraction tiers failed
+[2025-09-07T21:01:16.593Z] ❌ Tier 1 (AI) failed: Cannot read properties of undefined (reading 'startsWith')
+[2025-09-07T21:01:17.128Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open 'C:\Users\alvi\IOMS\IOMS_V1_POS_Working_main_20_08_2025\test\data\05-versions-space.pdf'
+[2025-09-07T21:01:17.129Z] ⚠️ All extraction tiers failed
+[2025-09-07T21:03:41.449Z] ❌ Tier 1 (AI) failed: Cannot read properties of undefined (reading 'startsWith')
+[2025-09-07T21:03:42.085Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open 'C:\Users\alvi\IOMS\IOMS_V1_POS_Working_main_20_08_2025\test\data\05-versions-space.pdf'
+[2025-09-07T21:03:42.088Z] ⚠️ All extraction tiers failed
+[2025-09-07T21:31:26.625Z] ❌ Tier 1 (AI) failed: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"model":"gemini-1.5-flash","location":"global"},"quotaValue":"50"}]},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"33s"}]
+[2025-09-07T21:52:31.706Z] ❌ Tier 1 (AI) failed: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-1.5-flash"},"quotaValue":"50"}]},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"28s"}]
+[2025-09-07T22:00:52.050Z] ❌ Tier 1 (AI) failed: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [429 Too Many Requests] Quota exceeded for quota metric 'Generate Content API requests per minute' and limit 'GenerateContent request limit per minute for a region' of service 'generativelanguage.googleapis.com' for consumer 'project_number:822414457844'. [{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"RATE_LIMIT_EXCEEDED","domain":"googleapis.com","metadata":{"consumer":"projects/822414457844","quota_limit":"GenerateContentRequestsPerMinutePerProjectPerRegion","service":"generativelanguage.googleapis.com","quota_unit":"1/min/{project}/{region}","quota_location":"europe-west1","quota_limit_value":"0","quota_metric":"generativelanguage.googleapis.com/generate_content_requests"}},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Request a higher quota limit.","url":"https://cloud.google.com/docs/quotas/help/request_increase"}]}]
+[2025-09-07T22:11:36.439Z] ⚠️ Tier 1 (AI) quota exceeded
+[2025-09-08T00:24:28.890Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T00:41:40.865Z] ✅ Tier 0 (Bypass) success: 139 items
+[2025-09-08T11:44:43.515Z] 📄 PDF detected, suggesting manual entry
+[2025-09-08T11:44:43.554Z] 📄 PDF detected, suggesting manual entry
+[2025-09-08T11:44:47.342Z] 📄 PDF detected, suggesting manual entry
+[2025-09-08T11:57:18.862Z] 📄 PDF detected, suggesting manual entry
+[2025-09-08T11:57:31.407Z] 📄 PDF detected, suggesting manual entry
+[2025-09-08T15:09:13.049Z] 📄 PDF detected, suggesting manual entry
+[2025-09-08T15:09:22.671Z] 📄 PDF detected, suggesting manual entry
+[2025-09-08T15:39:04.082Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:39:05.727Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:39:16.493Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:39:18.208Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:39:18.494Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:39:18.510Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:40:04.770Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T15:43:42.418Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:43:42.441Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:43:43.216Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:44:43.517Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T15:44:43.703Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T15:44:43.994Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T15:52:16.069Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:53:16.746Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T15:57:37.668Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:58:38.288Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T15:59:22.804Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T15:59:22.805Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open './test/data/05-versions-space.pdf'
+[2025-09-08T15:59:22.805Z] ⚠️ All extraction tiers failed
+[2025-09-08T16:07:04.290Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:07:06.826Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:07:19.336Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:07:27.602Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:08:04.993Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T16:08:07.365Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T16:08:19.488Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T16:08:27.768Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T16:21:26.340Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:21:26.342Z] ❌ Tier 2 (pdf-parse) failed: ENOENT: no such file or directory, open './test/data/05-versions-space.pdf'
+[2025-09-08T16:21:26.342Z] ⚠️ All extraction tiers failed
+[2025-09-08T16:24:29.822Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:25:30.617Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T16:27:26.246Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:28:26.472Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T16:31:12.155Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:32:12.335Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T16:35:26.998Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:35:27.088Z] ✅ Tier 2 (pdfjs-dist) success: 1 items
+[2025-09-08T16:42:33.881Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T16:43:34.145Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:20:11.782Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:20:12.541Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:21:12.272Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:21:12.726Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:22:44.943Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:22:46.764Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:22:46.891Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:22:47.080Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:22:47.244Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:22:51.580Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:23:45.455Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:23:46.903Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:23:47.019Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:23:47.213Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:23:47.372Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:23:51.770Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:26:51.877Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:27:52.352Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:36:57.060Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:37:57.571Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:39:10.098Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:40:10.573Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:42:19.377Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:43:19.923Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:48:31.373Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:49:31.882Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T17:53:32.093Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T17:54:32.584Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T18:22:20.848Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T18:23:21.377Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T18:26:14.782Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T18:27:15.258Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T18:33:13.021Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T18:34:13.527Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T18:47:57.929Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T18:49:16.140Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T18:50:26.749Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback
+[2025-09-08T19:05:17.231Z] 📄 PDF detected, continuing to AI/PDF parsers
+[2025-09-08T19:06:17.745Z] ⚠️ Tier 1 (AI) quota exceeded - using fallback

@@ -1,0 +1,10 @@
+ID,Name,Price,Category,Image,Ingredients,Extraction Method
+gemini-1764477451903-0,"Chicken Biryani",12.90,"Main Dishes","","Basmati rice; Chicken breast; Onions; Tomatoes; Olive oil; Biryani spice mix; Ginger-garlic paste; Plain yogurt",gemini-prompt
+gemini-1764477451904-1,"Dal Masoor Tadka",9.90,"Main Dishes","","Masoor dal; Onions; Tomatoes; Olive oil; Garlic; Cumin seeds; Turmeric powder; Salt",gemini-prompt
+gemini-1764477451904-2,"Grilled Chicken with Mozzarella Crust",13.90,"Main Dishes","","Chicken breast; Mozzarella cheese; Olive oil; Onions; Bell peppers; Garlic powder; Salt; Black pepper",gemini-prompt
+gemini-1764477451904-3,"Tomato & Onion Curry",8.90,"Main Dishes","","Tomatoes; Onions; Olive oil; Ginger-garlic paste; Cumin powder; Coriander powder; Turmeric powder; Salt",gemini-prompt
+gemini-1764477451904-4,"Samosa Chaat",6.50,"Appetizers","","Samosas; Onions; Tomatoes; Tamarind chutney; Mint chutney; Plain yogurt; Chaat masala; Sev",gemini-prompt
+gemini-1764477451904-5,"Cheesy Samosa Bake",7.00,"Appetizers","","Samosas; Mozzarella cheese; Olive oil; Tomato sauce; Onions; Bell peppers; Dried oregano; Salt",gemini-prompt
+gemini-1764477451904-6,"Plain Basmati Rice",3.50,"Sides & Rice","","Basmati rice; Water; Salt; Ghee; Cardamom pods; Bay leaf",gemini-prompt
+gemini-1764477451904-7,"Moong-Masoor Lentil Mix",4.50,"Main Menu","","Masoor dal; Moong dal; Onions; Tomatoes; Garlic; Ginger; Cumin seeds; Turmeric powder",gemini-prompt
+gemini-1764477451904-8,"Tomato & Onion Salad",4.00,"Salads","","Tomatoes; Onions; Olive oil; Lemon juice; Fresh cilantro; Salt; Black pepper; Green chili",gemini-prompt

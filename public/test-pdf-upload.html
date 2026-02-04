@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu PDF Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .upload-container {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        #drop-area {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #fileInput {
+            display: none;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #357ae8;
+        }
+        #result {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow: auto;
+            display: none;
+        }
+        .file-info {
+            margin: 10px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Menu PDF Upload Test</h1>
+    
+    <div class="upload-container">
+        <div id="drop-area">
+            <p>Drag and drop PDF menu file here or</p>
+            <input type="file" id="fileInput" accept="application/pdf" />
+            <button id="fileSelectBtn">Select File</button>
+            <div class="file-info" id="fileInfo"></div>
+        </div>
+        <button id="uploadBtn" disabled>Upload PDF</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('fileInput');
+        const fileSelectBtn = document.getElementById('fileSelectBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInfo = document.getElementById('fileInfo');
+        const result = document.getElementById('result');
+        
+        // Handle file select button
+        fileSelectBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Handle selected file
+        fileInput.addEventListener('change', handleFile);
+        
+        // Handle drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.style.border = '3px dashed #4a90e2';
+        }
+        
+        function unhighlight() {
+            dropArea.style.border = 'none';
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length) {
+                fileInput.files = files;
+                handleFile();
+            }
+        }
+        
+        let selectedFile = null;
+        
+        function handleFile() {
+            selectedFile = fileInput.files[0];
+            if (selectedFile) {
+                fileInfo.textContent = `Selected file: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`;
+                uploadBtn.disabled = false;
+            }
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            else return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+        
+        // Handle upload button
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            
+            const reader = new FileReader();
+            reader.readAsDataURL(selectedFile);
+            reader.onload = async () => {
+                // Extract the base64 data
+                const base64Data = reader.result.split(',')[1];
+                
+                try {
+                    const response = await fetch('/api/uploadMenu', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            file: base64Data,
+                            userId: 'test-user'
+                        }),
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Display result
+                    result.style.display = 'block';
+                    result.innerHTML = `<strong>Status:</strong> ${response.ok ? 'Success' : 'Failed'}<br>
+                    <strong>Response:</strong><br>${JSON.stringify(data, null, 2)}`;
+                    
+                    // Reset button
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Upload PDF';
+                    
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    result.style.display = 'block';
+                    result.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+                    
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Upload PDF';
+                }
+            };
+        });
+    </script>
+</body>
+</html>
