@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
  * Service to handle interactions with Google Gemini API for intelligent insights.
@@ -6,8 +6,8 @@ import { GoogleGenAI } from "@google/genai";
  */
 
 // Initialize API Client only when key is available
-const apiKey = process.env.API_KEY || '';
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+const ai = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export const generateSustainabilityReport = async (siteData: any): Promise<string> => {
   if (!ai) {
@@ -16,11 +16,11 @@ export const generateSustainabilityReport = async (siteData: any): Promise<strin
   }
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Analyze this cafeteria data and suggest 3 actionable sustainability improvements: ${JSON.stringify(siteData)}`,
-    });
-    return response.text || "No insight generated.";
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const response = await model.generateContent(
+      `Analyze this cafeteria data and suggest 3 actionable sustainability improvements: ${JSON.stringify(siteData)}`
+    );
+    return response.response.text() || "No insight generated.";
   } catch (error) {
     console.error("Gemini API Error:", error);
     return "Error generating report.";

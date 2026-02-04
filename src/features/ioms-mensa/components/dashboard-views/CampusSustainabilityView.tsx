@@ -23,7 +23,7 @@ const CampusSustainabilityView: React.FC<CampusSustainabilityViewProps> = ({ sit
             <div>
                 <p className="text-sm font-bold text-slate-500 uppercase">PHD Compliance</p>
                 <h3 className="text-3xl font-bold text-slate-900">{avgPhd.toFixed(0)}%</h3>
-                <p className="text-xs text-slate-400">Target: > 60% (Plant-based focus)</p>
+                <p className="text-xs text-slate-400">Target: &gt; 60% (Plant-based focus)</p>
             </div>
          </div>
 
@@ -58,7 +58,7 @@ const CampusSustainabilityView: React.FC<CampusSustainabilityViewProps> = ({ sit
                     </BarChart>
                 </ResponsiveContainer>
              </div>
-             <p className="text-xs text-center text-slate-400">Green = Compliant (>60%)</p>
+             <p className="text-xs text-center text-slate-400">Green = Compliant (&gt;60%)</p>
           </div>
 
           {/* Waste Comparison */}

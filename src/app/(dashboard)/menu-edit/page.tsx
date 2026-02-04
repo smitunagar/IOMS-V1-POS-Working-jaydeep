@@ -390,7 +390,7 @@ export default function MenuEditPage() {
                 </p>
                 <div className="bg-white rounded-md p-3 border border-blue-200">
                   {(() => {
-                    const ingredientSet = new Set();
+                    const ingredientSet = new Set<string>();
                     menuItems.forEach(item => {
                       if (item.ingredients && Array.isArray(item.ingredients)) {
                         item.ingredients.forEach(ingredient => {

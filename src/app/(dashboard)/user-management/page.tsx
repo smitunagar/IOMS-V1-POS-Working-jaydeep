@@ -875,7 +875,7 @@ export default function UserManagementPage() {
                             <Switch
                               checked={user.status === 'active'}
                               onCheckedChange={() => handleToggleStatus(user)}
-                              disabled={user.role === 'owner'}
+                              disabled={user.roles.some(role => role.role_name.toLowerCase() === 'owner')}
                               className="scale-75"
                             />
                             <span className={`text-xs font-medium ${
@@ -897,13 +897,13 @@ export default function UserManagementPage() {
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user)}
-                              disabled={user.role === 'owner'}
+                              disabled={user.roles.some(role => role.role_name.toLowerCase() === 'owner')}
                               className={`p-2 rounded-lg transition-colors ${
-                                user.role === 'owner' 
+                                user.roles.some(role => role.role_name.toLowerCase() === 'owner') 
                                   ? 'text-gray-400 cursor-not-allowed' 
                                   : 'text-red-600 hover:bg-red-50'
                               }`}
-                              title={user.role === 'owner' ? 'Cannot delete owner' : 'Delete User'}
+                              title={user.roles.some(role => role.role_name.toLowerCase() === 'owner') ? 'Cannot delete owner' : 'Delete User'}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -1282,7 +1282,7 @@ export default function UserManagementPage() {
                       ...formData,
                       permissions: { ...formData.permissions, pos: checked }
                     })}
-                    disabled={selectedUser?.role === 'owner'}
+                    disabled={selectedUser?.roles.some(role => role.role_name.toLowerCase() === 'owner')}
                   />
                 </div>
 
@@ -1298,7 +1298,7 @@ export default function UserManagementPage() {
                       ...formData,
                       permissions: { ...formData.permissions, inventory: checked }
                     })}
-                    disabled={selectedUser?.role === 'owner'}
+                    disabled={selectedUser?.roles.some(role => role.role_name.toLowerCase() === 'owner')}
                   />
                 </div>
 
@@ -1314,7 +1314,7 @@ export default function UserManagementPage() {
                       ...formData,
                       permissions: { ...formData.permissions, analytics: checked }
                     })}
-                    disabled={selectedUser?.role === 'owner'}
+                    disabled={selectedUser?.roles.some(role => role.role_name.toLowerCase() === 'owner')}
                   />
                 </div>
 
@@ -1330,7 +1330,7 @@ export default function UserManagementPage() {
                       ...formData,
                       permissions: { ...formData.permissions, settings: checked }
                     })}
-                    disabled={selectedUser?.role === 'owner'}
+                    disabled={selectedUser?.roles.some(role => role.role_name.toLowerCase() === 'owner')}
                   />
                 </div>
               </div>

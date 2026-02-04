@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     const result = await query(queryText, queryParams);
 
     // Transform the data to match the frontend interface
-    const orders = result.rows.map((row) => {
+    const orders = result.rows.map((row: any) => {
       // Extract item names from JSONB array
       const itemsArray = Array.isArray(row.items) ? row.items : [];
       const itemsCount = itemsArray.length;

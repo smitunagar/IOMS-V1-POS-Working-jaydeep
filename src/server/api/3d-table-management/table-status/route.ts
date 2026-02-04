@@ -124,7 +124,7 @@ export async function PUT(request: NextRequest) {
     // Perform bulk updates
     const results = await Promise.all(
       data.updates.map(async (update) => {
-        const existing = existingStatuses.find(s => s.tableId === update.tableId);
+        const existing = existingStatuses.find((s: any) => s.tableId === update.tableId);
         
         const tableStatus = await prisma.tableStatus.upsert({
           where: { tableId: update.tableId },
@@ -233,13 +233,13 @@ export async function GET(request: NextRequest) {
       _count: { status: true },
     });
 
-    const summary = statusCounts.reduce((acc, item) => {
+    const summary = statusCounts.reduce((acc: Record<string, number>, item: any) => {
       acc[item.status] = item._count.status;
       return acc;
     }, {} as Record<string, number>);
 
     // Enrich with additional metadata
-    const enrichedStatuses = tableStatuses.map(status => ({
+    const enrichedStatuses = tableStatuses.map((status: any) => ({
       tableId: status.tableId,
       status: status.status,
       // notes: status.notes,

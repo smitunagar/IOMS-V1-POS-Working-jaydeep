@@ -8,7 +8,7 @@ import {
   TableEvent,
   TableShapeSchema,
   TableStatusSchema 
-} from '@/lib/schemas/table-management';
+} from '@/server/lib/schemas/table-management';
 import { createOverlapWorker, createChairLayoutWorker } from '@/server/lib/workers/table-workers';
 
 // Constants

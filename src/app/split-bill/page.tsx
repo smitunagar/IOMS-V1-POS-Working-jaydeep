@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -14,6 +14,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   unitPrice: number;
+  notes?: string;
   addons?: Array<{
     id: string;
     name: string;
@@ -30,11 +31,19 @@ interface Order {
   tax: number;
   total: number;
   status: string;
+  orderType?: string;
+  customerInfo?: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    tableNumber?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
 
-export default function SplitBillPage() {
+function SplitBillClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams?.get('orderId');
@@ -841,5 +850,13 @@ export default function SplitBillPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SplitBillPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <SplitBillClient />
+    </Suspense>
   );
 }

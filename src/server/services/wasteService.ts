@@ -285,8 +285,8 @@ export async function getAnalytics(query: AnalyticsQuery): Promise<WasteAnalytic
     }
   });
 
-  const dailyTrends = dailyData.map(day => {
-    const coverInfo = coverData.find(c => 
+  const dailyTrends = dailyData.map((day: any) => {
+    const coverInfo = coverData.find((c: any) => 
       formatDate(c.date) === day.date
     );
     
@@ -315,9 +315,9 @@ export async function getAnalytics(query: AnalyticsQuery): Promise<WasteAnalytic
     }
   });
 
-  const totalWeight = categoryData.reduce((sum, cat) => sum + (cat._sum.amountKg || 0), 0);
+  const totalWeight = categoryData.reduce((sum: number, cat: any) => sum + (cat._sum.amountKg || 0), 0);
   
-  const byCategory = categoryData.map(cat => ({
+  const byCategory = categoryData.map((cat: any) => ({
     type: cat.type,
     weight: cat._sum.amountKg || 0,
     cost: cat._sum.costEUR || 0,
@@ -341,7 +341,7 @@ export async function getAnalytics(query: AnalyticsQuery): Promise<WasteAnalytic
     }
   });
 
-  const byStation = stationData.map(station => ({
+  const byStation = stationData.map((station: any) => ({
     station: station.station,
     weight: station._sum.amountKg || 0,
     cost: station._sum.costEUR || 0,
@@ -359,7 +359,7 @@ export async function getAnalytics(query: AnalyticsQuery): Promise<WasteAnalytic
   ];
 
   // Calculate ratios
-  const totalCovers = coverData.reduce((sum, c) => sum + c.covers, 0);
+  const totalCovers = coverData.reduce((sum: number, c: any) => sum + c.covers, 0);
   const totalRevenue = await prisma.coverCount.aggregate({
     where: {
       date: {
@@ -375,15 +375,15 @@ export async function getAnalytics(query: AnalyticsQuery): Promise<WasteAnalytic
   const ratios = {
     wastePerCover: totalCovers > 0 ? totalWeight / totalCovers : 0,
     wasteToSales: (totalRevenue._sum.revenue || 0) > 0 
-      ? (categoryData.reduce((sum, cat) => sum + (cat._sum.costEUR || 0), 0) / (totalRevenue._sum.revenue || 1)) * 100
+      ? (categoryData.reduce((sum: number, cat: any) => sum + (cat._sum.costEUR || 0), 0) / (totalRevenue._sum.revenue || 1)) * 100
       : 0,
     costPerCover: totalCovers > 0 
-      ? categoryData.reduce((sum, cat) => sum + (cat._sum.costEUR || 0), 0) / totalCovers
+      ? categoryData.reduce((sum: number, cat: any) => sum + (cat._sum.costEUR || 0), 0) / totalCovers
       : 0
   };
 
   // Impact calculations
-  const totalCO2 = categoryData.reduce((sum, cat) => sum + (cat._sum.co2Kg || 0), 0);
+  const totalCO2 = categoryData.reduce((sum: number, cat: any) => sum + (cat._sum.co2Kg || 0), 0);
   const impact = {
     co2Equivalent: `${totalCO2.toFixed(1)} kg CO₂`,
     treesEquivalent: Math.round(totalCO2 / 22), // 1 tree absorbs ~22kg CO2/year
@@ -422,19 +422,19 @@ export async function getCompliance(query: ComplianceQuery): Promise<ComplianceS
 
   // Count violations by severity and status
   const openViolations = {
-    critical: checks.filter(c => c.status === 'open' && c.severity === 'critical').length,
-    major: checks.filter(c => c.status === 'open' && c.severity === 'major').length,
-    minor: checks.filter(c => c.status === 'open' && c.severity === 'minor').length
+    critical: checks.filter((c: any) => c.status === 'open' && c.severity === 'critical').length,
+    major: checks.filter((c: any) => c.status === 'open' && c.severity === 'major').length,
+    minor: checks.filter((c: any) => c.status === 'open' && c.severity === 'minor').length
   };
 
   // Calculate compliance score (based on resolved vs total issues)
   const totalIssues = checks.length;
-  const resolvedIssues = checks.filter(c => c.status === 'closed').length;
+  const resolvedIssues = checks.filter((c: any) => c.status === 'closed').length;
   const score = totalIssues > 0 ? Math.round((resolvedIssues / totalIssues) * 100) : 100;
 
   // Format actions
   const now = new Date();
-  const actions = checks.map(check => ({
+  const actions = checks.map((check: any) => ({
     id: check.id,
     title: check.title,
     severity: check.severity,

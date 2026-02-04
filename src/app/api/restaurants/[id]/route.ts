@@ -17,7 +17,7 @@ export async function GET(
     const sessionToken = authHeader.substring(7);
     
     // Validate session and get user
-    const session = await Session.validateSession(sessionToken);
+    const session = await Session.validateSession(sessionToken) as any;
     if (!session) {
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
@@ -25,7 +25,7 @@ export async function GET(
     const { id: restaurantId } = await context.params;
     
     // Get restaurant
-    const restaurant = await Restaurant.getById(restaurantId);
+    const restaurant = await Restaurant.getById(restaurantId) as any;
     
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
@@ -65,7 +65,7 @@ export async function PUT(
     const sessionToken = authHeader.substring(7);
     
     // Validate session and get user
-    const session = await Session.validateSession(sessionToken);
+    const session = await Session.validateSession(sessionToken) as any;
     if (!session) {
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
@@ -73,7 +73,7 @@ export async function PUT(
     const { id: restaurantId } = await context.params;
     
     // Check if restaurant exists and belongs to user
-    const existingRestaurant = await Restaurant.getById(restaurantId);
+    const existingRestaurant = await Restaurant.getById(restaurantId) as any;
     if (!existingRestaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
     }
@@ -164,7 +164,7 @@ export async function DELETE(
     const sessionToken = authHeader.substring(7);
     
     // Validate session and get user
-    const session = await Session.validateSession(sessionToken);
+    const session = await Session.validateSession(sessionToken) as any;
     if (!session) {
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
@@ -172,7 +172,7 @@ export async function DELETE(
     const { id: restaurantId } = await context.params;
     
     // Check if restaurant exists and belongs to user
-    const existingRestaurant = await Restaurant.getById(restaurantId);
+    const existingRestaurant = await Restaurant.getById(restaurantId) as any;
     if (!existingRestaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
     }

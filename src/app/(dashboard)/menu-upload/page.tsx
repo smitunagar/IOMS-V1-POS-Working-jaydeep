@@ -295,7 +295,7 @@ export default function MenuUploadPage() {
                       <p className="text-gray-600">{item.category || 'No Category'}</p>
                       {item.ingredients && item.ingredients.length > 0 && (
                         <p className="text-sm text-gray-500 mt-1">
-                          Ingredients: {item.ingredients.map(ing => typeof ing === 'string' ? ing : ing.name).filter(Boolean).join(', ')}
+                          Ingredients: {item.ingredients.map((ing: string | { name?: string }) => typeof ing === 'string' ? ing : ing.name).filter(Boolean).join(', ')}
                         </p>
                       )}
                     </div>

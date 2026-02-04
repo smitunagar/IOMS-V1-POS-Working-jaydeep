@@ -183,7 +183,7 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ onLogout, onNavig
                   <div key={site.id} className={`p-4 flex justify-between items-center transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-200' : 'hover:bg-slate-50 text-slate-800'}`}>
                     <div>
                       <p className="font-semibold text-sm">{site.name}</p>
-                      <p className={`text-xs ${subText}`}>Non-compliant for >48h</p>
+                      <p className={`text-xs ${subText}`}>Non-compliant for &gt;48h</p>
                     </div>
                     <button className="text-xs font-medium text-indigo-500 hover:text-indigo-400">View Audit</button>
                   </div>

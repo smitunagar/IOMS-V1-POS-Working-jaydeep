@@ -246,7 +246,7 @@ export async function GET(request: NextRequest) {
     });
     
     return NextResponse.json({
-      reservations: reservations.map(r => ({
+      reservations: reservations.map((r: any) => ({
         id: r.id,
         tableId: r.tableId,
         customerName: r.customerName,

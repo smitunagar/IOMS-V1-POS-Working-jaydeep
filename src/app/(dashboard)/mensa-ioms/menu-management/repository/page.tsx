@@ -56,6 +56,12 @@ export default function MenuRepositoryPage() {
   const [newIngredient, setNewIngredient] = useState<{name: string, quantity: string, unit: string}>({name: '', quantity: '', unit: ''});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const normalizeIngredients = (ingredients?: string[] | Ingredient[]): Ingredient[] => {
+    return (ingredients || []).map((ingredient) =>
+      typeof ingredient === 'string' ? { name: ingredient } : ingredient
+    );
+  };
+
   const handleFileSelect = (file: File) => {
     const validTypes = ['application/pdf', 'text/csv', 'application/vnd.ms-excel'];
     const validExtensions = ['.pdf', '.csv'];
@@ -209,7 +215,7 @@ export default function MenuRepositoryPage() {
 
     setExtractedItems(items => items.map(item => {
       if (item.id === itemId) {
-        const currentIngredients = item.ingredients || [];
+        const currentIngredients = normalizeIngredients(item.ingredients);
         return {
           ...item,
           ingredients: [...currentIngredients, ingredientToAdd]
@@ -223,8 +229,8 @@ export default function MenuRepositoryPage() {
 
   const removeIngredient = (itemId: string, index: number) => {
     setExtractedItems(items => items.map(item => {
-      if (item.id === itemId && item.ingredients) {
-        const updatedIngredients = [...item.ingredients];
+      if (item.id === itemId) {
+        const updatedIngredients = normalizeIngredients(item.ingredients);
         updatedIngredients.splice(index, 1);
         return {
           ...item,
@@ -237,15 +243,13 @@ export default function MenuRepositoryPage() {
 
   const updateIngredient = (itemId: string, index: number, field: 'name' | 'quantity' | 'unit', value: string) => {
     setExtractedItems(items => items.map(item => {
-      if (item.id === itemId && item.ingredients) {
-        const updatedIngredients = [...item.ingredients];
+      if (item.id === itemId) {
+        const updatedIngredients = normalizeIngredients(item.ingredients);
         const ingredient = updatedIngredients[index];
-        if (typeof ingredient === 'object' && ingredient !== null) {
-          updatedIngredients[index] = { ...ingredient, [field]: value };
-        } else {
-          // Convert string to object
-          updatedIngredients[index] = { name: String(ingredient), [field]: value };
+        if (!ingredient) {
+          return item;
         }
+        updatedIngredients[index] = { ...ingredient, [field]: value };
         return {
           ...item,
           ingredients: updatedIngredients

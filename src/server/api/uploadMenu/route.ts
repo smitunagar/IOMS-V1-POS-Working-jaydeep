@@ -33,7 +33,7 @@ function exportToCSV(items: any[]): string {
       item.price,
       `"${item.category}"`,
       `"${item.image}"`,
-      `"${Array.isArray(item.ingredients) ? item.ingredients.map(ing => typeof ing === 'string' ? ing : (ing.name || ing.inventoryItemName || 'Unknown')).join('; ') : item.ingredients}"`,
+         `"${Array.isArray(item.ingredients) ? item.ingredients.map((ing: any) => typeof ing === 'string' ? ing : (ing.name || ing.inventoryItemName || 'Unknown')).join('; ') : item.ingredients}"`,
       item.extractionMethod
     ].join(','))
   ].join('\n');

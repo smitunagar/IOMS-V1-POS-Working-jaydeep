@@ -194,7 +194,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const enrichedLayouts = layouts.map(layout => {
+    const enrichedLayouts = layouts.map((layout: any) => {
       // const layoutData = JSON.parse(layout.layout as string);
       const layoutData = { tables: [], fixtures: [], walls: [] }; // Fallback data
       

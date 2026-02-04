@@ -80,7 +80,7 @@ export function getNextPending(): WasteQueueItem | null {
      ORDER BY id ASC
      LIMIT 1`
   );
-  const row = stmt.get();
+  const row = stmt.get() as any;
   if (!row) return null;
   return {
     id: row.id,

@@ -46,6 +46,12 @@ export default function EditMenuPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
+  const normalizeIngredients = (ingredients?: string[] | Ingredient[]): Ingredient[] => {
+    return (ingredients || []).map((ingredient) =>
+      typeof ingredient === 'string' ? { name: ingredient } : ingredient
+    );
+  };
+
   // Load menu items from localStorage
   useEffect(() => {
     loadMenuItems();
@@ -249,7 +255,7 @@ export default function EditMenuPage() {
 
     setMenuItems(items => items.map(item => {
       if (item.id === itemId) {
-        const currentIngredients = item.ingredients || [];
+        const currentIngredients = normalizeIngredients(item.ingredients);
         return {
           ...item,
           ingredients: [...currentIngredients, ingredientToAdd]
@@ -263,8 +269,8 @@ export default function EditMenuPage() {
 
   const removeIngredient = (itemId: string, index: number) => {
     setMenuItems(items => items.map(item => {
-      if (item.id === itemId && item.ingredients) {
-        const updatedIngredients = [...item.ingredients];
+      if (item.id === itemId) {
+        const updatedIngredients = normalizeIngredients(item.ingredients);
         updatedIngredients.splice(index, 1);
         return {
           ...item,
@@ -277,14 +283,13 @@ export default function EditMenuPage() {
 
   const updateIngredient = (itemId: string, index: number, field: 'name' | 'quantity' | 'unit', value: string) => {
     setMenuItems(items => items.map(item => {
-      if (item.id === itemId && item.ingredients) {
-        const updatedIngredients = [...item.ingredients];
+      if (item.id === itemId) {
+        const updatedIngredients = normalizeIngredients(item.ingredients);
         const ingredient = updatedIngredients[index];
-        if (typeof ingredient === 'object' && ingredient !== null) {
-          updatedIngredients[index] = { ...ingredient, [field]: value };
-        } else {
-          updatedIngredients[index] = { name: String(ingredient), [field]: value };
+        if (!ingredient) {
+          return item;
         }
+        updatedIngredients[index] = { ...ingredient, [field]: value };
         return {
           ...item,
           ingredients: updatedIngredients

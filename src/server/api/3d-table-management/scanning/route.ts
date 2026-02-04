@@ -214,7 +214,7 @@ export async function GET(request: NextRequest) {
       prisma.scanningSession.count({ where }),
     ]);
 
-    const enrichedSessions = sessions.map(session => ({
+    const enrichedSessions = sessions.map((session: any) => ({
       id: session.id,
       floorId: session.floorId,
       status: session.status,

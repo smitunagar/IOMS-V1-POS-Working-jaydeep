@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database/lib/connection';
 import Session from '@/lib/database/models/Session';
-import AuditLog from '@/lib/database/models/AuditLog';
+const AuditLog = require('../../../../../database/models/AuditLog');
 
 /**
  * User Role Management API with Audit Logging
@@ -12,7 +12,6 @@ import AuditLog from '@/lib/database/models/AuditLog';
 function getClientInfo(request: NextRequest) {
   const ipAddress = request.headers.get('x-forwarded-for') || 
                    request.headers.get('x-real-ip') || 
-                   request.ip || 
                    'unknown';
   
   const userAgent = request.headers.get('user-agent') || 'unknown';

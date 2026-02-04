@@ -257,7 +257,7 @@ export default function SupplySyncPage() {
 
   const loadSmartRecommendations = async () => {
     try {
-      const recommendations = await crossModuleIntegration.getSmartProcurementRecommendations();
+      const recommendations = await crossModuleIntegration.getWasteOptimizedProcurementRecommendations();
       setSmartRecommendations(recommendations);
     } catch (error) {
       console.error('Failed to load smart recommendations:', error);
@@ -267,9 +267,9 @@ export default function SupplySyncPage() {
   const loadProcurementData = async () => {
     try {
       // Load procurement workflow data
-      const quotations = await procurementWorkflowService.getQuotationRequests();
+      const quotations = await procurementWorkflowService.getAllQuotationRequests();
       const approvals: any[] = []; // Owner approvals not implemented yet
-      const orders = await procurementWorkflowService.getPurchaseOrders();
+      const orders = await procurementWorkflowService.getAllPurchaseOrders();
       
       setQuotationRequests(quotations);
       setOwnerApprovals(approvals);
@@ -605,7 +605,7 @@ export default function SupplySyncPage() {
       onTimeDeliveryRate: 94.2,
       costSavings: 3250.80,
       vendorCount: managementVendors.length,
-      activeQuotations: quotationRequests.filter(q => q.status === 'pending').length,
+      activeQuotations: quotationRequests.filter(q => q.status !== 'expired').length,
       pendingApprovals: ownerApprovals.length, // All approvals pending for now
       completedOrders: purchaseOrders.filter(o => o.status === 'delivered').length
     };
@@ -1149,54 +1149,58 @@ export default function SupplySyncPage() {
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Waste-Optimized Procurement Recommendations</h3>
                 <div className="space-y-4">
-                  {smartRecommendations.map((recommendation, index) => (
-                    <div key={index} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <h4 className="font-medium">{recommendation.itemName}</h4>
-                            <Badge variant={recommendation.priority === 'high' ? "destructive" : 
-                                          recommendation.priority === 'medium' ? "default" : "secondary"}>
-                              Priority: {recommendation.priority}
-                            </Badge>
-                            {recommendation.supplier && (
-                              <Badge variant="outline" className="bg-green-50 text-green-700">
-                                🌱 Waste Optimized
+                  {smartRecommendations.map((recommendation, index) => {
+                    const priority = recommendation.urgencyScore >= 75 ? 'high' :
+                      recommendation.urgencyScore >= 50 ? 'medium' : 'low';
+
+                    return (
+                      <div key={index} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3">
+                              <h4 className="font-medium">{recommendation.itemName}</h4>
+                              <Badge variant={priority === 'high' ? "destructive" : priority === 'medium' ? "default" : "secondary"}>
+                                Priority: {priority}
                               </Badge>
-                            )}
-                          </div>
-                          <div className="mt-2 grid grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600">Recommended Qty:</span>
-                              <p className="font-medium">{recommendation.recommendedQuantity} units</p>
+                              {recommendation.wasteOptimized && (
+                                <Badge variant="outline" className="bg-green-50 text-green-700">
+                                  🌱 Waste Optimized
+                                </Badge>
+                              )}
                             </div>
-                            <div>
-                              <span className="text-gray-600">Supplier:</span>
-                              <p className="font-medium">{recommendation.supplier || 'TBD'}</p>
+                            <div className="mt-2 grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-600">Recommended Qty:</span>
+                                <p className="font-medium">{recommendation.recommendedQuantity} units</p>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Supplier:</span>
+                                <p className="font-medium">{recommendation.preferredVendor || 'TBD'}</p>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Estimated Cost:</span>
+                                <p className="font-medium">€{recommendation.estimatedCost.toFixed(2)}</p>
+                              </div>
                             </div>
-                            <div>
-                              <span className="text-gray-600">Estimated Cost:</span>
-                              <p className="font-medium">€{recommendation.estimatedCost.toFixed(2)}</p>
+                            <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+                              <span className="font-medium">Reason:</span> {recommendation.reasoning}
                             </div>
                           </div>
-                          <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
-                            <span className="font-medium">Reason:</span> {recommendation.reason}
+                          <div className="ml-4">
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                console.log('Creating optimized quotation for:', recommendation.itemName);
+                                // This would integrate with the procurement workflow
+                              }}
+                            >
+                              Create Quotation
+                            </Button>
                           </div>
-                        </div>
-                        <div className="ml-4">
-                          <Button 
-                            size="sm"
-                            onClick={() => {
-                              console.log('Creating optimized quotation for:', recommendation.itemName);
-                              // This would integrate with the procurement workflow
-                            }}
-                          >
-                            Create Quotation
-                          </Button>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {smartRecommendations.length === 0 && (
                     <div className="text-center py-8">
                       <Lightbulb className="h-12 w-12 mx-auto text-gray-400 mb-4" />
@@ -1386,10 +1390,12 @@ export default function SupplySyncPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="font-medium">Quotation #{quotation.id.slice(-6)}</h4>
-                         <p className="text-sm text-gray-600">
-                          Status: {quotation.status} | Requested: {quotation.requestedDate}
+                        <p className="text-sm text-gray-600">
+                          Status: {quotation.status} | Requested: {quotation.createdAt}
                         </p>
-                        <p className="text-sm text-gray-600 mt-1">Supplier ID: {quotation.supplierId}</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Preferred Vendor: {quotation.preferredVendors?.[0] || 'Not set'}
+                        </p>
                       </div>
                       <Badge variant="outline">{quotation.status}</Badge>
                     </div>

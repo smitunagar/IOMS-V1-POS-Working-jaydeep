@@ -148,7 +148,7 @@ export async function PUT(request: NextRequest) {
     const now = new Date();
     
     // Start transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Archive current active layout (if exists)
       if (currentLayout.layoutActive) {
         await logAuditEvent(tenantId, 'LAYOUT_ARCHIVED', {

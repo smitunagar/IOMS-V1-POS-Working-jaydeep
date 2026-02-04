@@ -21,7 +21,8 @@ import {
   Search,
   Filter,
   Receipt,
-  Package
+  Package,
+  Info
 } from 'lucide-react';
 import { validateOrderInventory, getInventoryImpact } from '@/server/lib/inventoryValidation';
 import { saveDishes, getDishes } from '@/server/lib/menuService';

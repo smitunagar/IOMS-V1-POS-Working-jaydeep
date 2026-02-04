@@ -13,7 +13,6 @@ const AuditLog = require('../../../../database/models/AuditLog');
 function getClientInfo(request: NextRequest) {
   const ipAddress = request.headers.get('x-forwarded-for') || 
                    request.headers.get('x-real-ip') || 
-                   request.ip || 
                    'unknown';
   
   const userAgent = request.headers.get('user-agent') || 'unknown';
@@ -127,7 +126,7 @@ export async function GET(request: NextRequest) {
     const totalUsers = parseInt(countResult.rows[0].total);
 
     // Get roles for each user
-    const users = await Promise.all(userResult.rows.map(async (user) => {
+    const users = await Promise.all(userResult.rows.map(async (user: any) => {
       const rolesQuery = `
         SELECT 
           ur.id,

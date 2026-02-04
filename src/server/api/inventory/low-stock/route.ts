@@ -42,10 +42,10 @@ export async function GET(request: NextRequest) {
 
     // Calculate additional metrics
     const totalLowStockItems = lowStockItems.length;
-    const criticalItems = lowStockItems.filter(item => item.quantity <= 5);
+    const criticalItems = lowStockItems.filter((item: any) => item.quantity <= 5);
 
     // Transform data for frontend consumption
-    const formattedItems = lowStockItems.map(item => ({
+    const formattedItems = lowStockItems.map((item: any) => ({
       id: item.id,
       name: item.ingredient.name,
       quantity: item.quantity,

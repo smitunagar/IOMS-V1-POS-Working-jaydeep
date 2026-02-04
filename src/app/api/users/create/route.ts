@@ -118,9 +118,8 @@ export async function POST(request: NextRequest) {
     // Log the user creation in audit log
     try {
       const ipAddress = request.headers.get('x-forwarded-for') ||
-                       request.headers.get('x-real-ip') ||
-                       request.ip ||
-                       'unknown';
+               request.headers.get('x-real-ip') ||
+               'unknown';
       const userAgent = request.headers.get('user-agent') || 'unknown';
 
       await AuditLog.createAuditLog({

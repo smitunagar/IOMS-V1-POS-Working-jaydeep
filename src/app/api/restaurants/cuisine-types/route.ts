@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const sessionToken = authHeader.substring(7);
     
     // Validate session and get user
-    const session = await Session.validateSession(sessionToken);
+    const session = await Session.validateSession(sessionToken) as any;
     if (!session) {
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }

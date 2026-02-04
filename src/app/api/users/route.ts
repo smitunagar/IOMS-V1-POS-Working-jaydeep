@@ -15,16 +15,15 @@ export async function GET(request: NextRequest) {
     const sessionToken = authHeader.substring(7);
     
     // Validate session and get user
-    const session = await Session.validateSession(sessionToken);
+    const session = await Session.validateSession(sessionToken) as any;
     if (!session) {
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
 
     // Get client info for audit logging
     const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     request.ip || 
-                     'unknown';
+             request.headers.get('x-real-ip') || 
+             'unknown';
     
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
@@ -74,7 +73,7 @@ export async function GET(request: NextRequest) {
     const userResult = await query(userQuery, queryParams);
     
     // Get roles for each user
-    const users = await Promise.all(userResult.rows.map(async (user) => {
+    const users = await Promise.all(userResult.rows.map(async (user: any) => {
       const rolesQuery = `
         SELECT 
           ur.id,
@@ -134,7 +133,7 @@ export async function DELETE(request: NextRequest) {
     const sessionToken = authHeader.substring(7);
     
     // Validate session and get user
-    const session = await Session.validateSession(sessionToken);
+    const session = await Session.validateSession(sessionToken) as any;
     if (!session) {
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
@@ -150,9 +149,8 @@ export async function DELETE(request: NextRequest) {
 
     // Get client info for audit logging
     const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     request.ip || 
-                     'unknown';
+             request.headers.get('x-real-ip') || 
+             'unknown';
     
     const userAgent = request.headers.get('user-agent') || 'unknown';
 

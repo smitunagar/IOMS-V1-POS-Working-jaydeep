@@ -57,7 +57,15 @@ export default function WasteWatchDogPage() {
     { refreshInterval: 10000 }
   );
 
-  const quickActions = [
+  const quickActions: Array<{
+    title: string;
+    description: string;
+    icon: React.ElementType;
+    href: string;
+    color: string;
+    stats: string;
+    badge?: string;
+  }> = [
     {
       title: "Dashboard",
       description: "View waste tracking metrics & insights",

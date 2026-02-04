@@ -259,8 +259,8 @@ export default function SetupPage() {
         currentInventory.map((item: any) => item.name.toLowerCase().trim())
       );
       
-      const newIngredients = [];
-      const updatedExistingItems = [];
+      const newIngredients: any[] = [];
+      const updatedExistingItems: any[] = [];
       
       Array.from(ingredientMap.values()).forEach(ingredient => {
         if (existingIngredientNames.has(ingredient.name.toLowerCase().trim())) {
@@ -383,15 +383,17 @@ export default function SetupPage() {
       // Update inventory with ingredients from menu items
       console.log('🔄 Updating inventory with menu ingredients...');
       const inventoryUpdateResult = await updateInventoryFromIngredients(existingMenuItems);
+      const addedCount = inventoryUpdateResult.addedCount ?? 0;
+      const updatedCount = inventoryUpdateResult.updatedCount ?? 0;
       
       let successMessage = "Menu items saved successfully!";
       if (inventoryUpdateResult.success) {
-        if (inventoryUpdateResult.addedCount > 0 && inventoryUpdateResult.updatedCount > 0) {
-          successMessage += ` Added ${inventoryUpdateResult.addedCount} new ingredients and updated ${inventoryUpdateResult.updatedCount} existing ingredients in inventory.`;
-        } else if (inventoryUpdateResult.addedCount > 0) {
-          successMessage += ` Added ${inventoryUpdateResult.addedCount} new ingredients to inventory.`;
-        } else if (inventoryUpdateResult.updatedCount > 0) {
-          successMessage += ` Updated ${inventoryUpdateResult.updatedCount} existing ingredients in inventory.`;
+        if (addedCount > 0 && updatedCount > 0) {
+          successMessage += ` Added ${addedCount} new ingredients and updated ${updatedCount} existing ingredients in inventory.`;
+        } else if (addedCount > 0) {
+          successMessage += ` Added ${addedCount} new ingredients to inventory.`;
+        } else if (updatedCount > 0) {
+          successMessage += ` Updated ${updatedCount} existing ingredients in inventory.`;
         } else {
           successMessage += ` All ingredients already exist in inventory with current values.`;
         }

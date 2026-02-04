@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
       });
       
       return NextResponse.json({
-        tableStatuses: tableStatuses.map(ts => ({
+        tableStatuses: tableStatuses.map((ts: any) => ({
           tableId: ts.tableId,
           status: ts.status,
           updatedAt: ts.updatedAt.toISOString(),

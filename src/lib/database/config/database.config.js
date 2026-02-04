@@ -79,7 +79,7 @@ const environment = process.env.NODE_ENV || 'development';
 const dbConfig = config[environment];
 
 // Validate required environment variables for production
-if (environment === 'production') {
+if (environment === 'production' && process.env.NEXT_PHASE !== 'phase-production-build') {
   const required = ['DB_HOST', 'DB_USER', 'DB_PASSWORD'];
   const missing = required.filter(key => !process.env[key]);
   
