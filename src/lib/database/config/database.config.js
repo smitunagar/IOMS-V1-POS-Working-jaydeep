@@ -8,9 +8,18 @@ require('dotenv').config({ path: require('path').join(__dirname, '../../../../.e
 require('dotenv').config({ path: require('path').join(__dirname, '../../../../.env') });
 
 // Check if GCP Cloud SQL environment variables are set
-const isGCPCloudSQL = process.env.DB_HOST && 
-                      process.env.DB_HOST !== 'localhost' && 
+const isGCPCloudSQL = process.env.DB_HOST &&
+                      process.env.DB_HOST !== 'localhost' &&
+                      process.env.DB_HOST !== '127.0.0.1' &&
+                      process.env.DB_HOST !== 'postgres' &&
                       process.env.DB_HOST.includes('.');
+
+const shouldUseSSL = () => {
+  if (process.env.DB_SSL === 'false' || process.env.DB_SSL === '0') return false;
+  if (!process.env.DB_HOST) return false;
+  if (['localhost', '127.0.0.1', 'postgres'].includes(process.env.DB_HOST)) return false;
+  return true;
+};
 
 const config = {
   // Development Configuration
@@ -51,9 +60,7 @@ const config = {
     
     // SSL Settings (required for GCP Cloud SQL)
     // Use rejectUnauthorized: false for public IP connections (no CA cert needed)
-    ssl: {
-      rejectUnauthorized: false
-    }
+    ssl: shouldUseSSL() ? { rejectUnauthorized: false } : false
   },
 
   // Test Configuration (Separate test database)
