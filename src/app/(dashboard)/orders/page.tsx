@@ -1196,9 +1196,56 @@ export default function OrdersPage() {
               const uniqueCategories = [...new Set(menuData.map((item: MenuItem) => item.category))] as string[];
               setCategories(uniqueCategories);
             } else {
-              console.log('📋 [ORDERS] No menu data found');
-              setMenuItems([]);
-              setCategories([]);
+              // Try to load from API as final fallback
+              try {
+                const response = await fetch('/api/menuCsv');
+                const data = await response.json();
+
+                if (data.menu && Array.isArray(data.menu) && data.menu.length > 0) {
+                  console.log('📋 [ORDERS] Loading menu from API:', data.menu.length, 'items');
+
+                  const menuItemsFromApi = data.menu.map((item: any) => ({
+                    ...item,
+                    price: typeof item.price === 'number' ? item.price.toString() : item.price,
+                    sizes: item.sizes?.map((size: any) => ({
+                      ...size,
+                      price: typeof size.price === 'number' ? size.price.toString() : size.price
+                    }))
+                  }));
+
+                  const uniqueCategories = [...new Set(menuItemsFromApi.map((item: MenuItem) => item.category))];
+                  setMenuItems(menuItemsFromApi);
+                  setCategories(uniqueCategories);
+
+                  const menuData = {
+                    menuItems: menuItemsFromApi,
+                    categories: uniqueCategories,
+                    lastUpdated: new Date().toISOString()
+                  };
+                  localStorage.setItem(menuDataKey, JSON.stringify(menuData));
+
+                  try {
+                    const { saveDishes } = await import('@/server/lib/menuService');
+                    const convertedMenu = menuItemsFromApi.map((item: any) => ({
+                      ...item,
+                      price: typeof item.price === 'string'
+                        ? parseFloat(item.price.replace(/[^\d.,]/g, '').replace(',', '.'))
+                        : item.price
+                    }));
+                    saveDishes(userId, convertedMenu);
+                  } catch (saveError) {
+                    console.error('Error saving menu from API:', saveError);
+                  }
+                } else {
+                  console.log('📋 [ORDERS] No menu data found');
+                  setMenuItems([]);
+                  setCategories([]);
+                }
+              } catch (apiError) {
+                console.error('Error loading menu from API:', apiError);
+                setMenuItems([]);
+                setCategories([]);
+              }
             }
           }
         } catch (serviceError) {

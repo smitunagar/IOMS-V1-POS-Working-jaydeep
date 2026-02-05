@@ -287,6 +287,13 @@ export default function OrderEntryPage() {
           setMenuItems(data.menu); // Keep original format for UI
           const uniqueCategories = [...new Set(data.menu.map((item: MenuItem) => item.category))] as string[];
           setCategories(uniqueCategories);
+
+          const menuData = {
+            menuItems: data.menu,
+            categories: uniqueCategories,
+            lastUpdated: new Date().toISOString()
+          };
+          localStorage.setItem(menuDataKey, JSON.stringify(menuData));
           
           // Save converted menu data to localStorage for inventory validation
           console.log('💾 [ORDER-ENTRY] Saving menu data to localStorage for userId:', userId);
