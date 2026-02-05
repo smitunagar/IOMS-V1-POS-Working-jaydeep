@@ -41,12 +41,14 @@ const config = {
     connectionTimeoutMillis: 10000,
     
     // SSL Settings (required for GCP Cloud SQL)
-    ssl: {
-      rejectUnauthorized: true,
-      ca: process.env.DB_SSL_CA,
-      cert: process.env.DB_SSL_CERT,
-      key: process.env.DB_SSL_KEY
-    }
+    ssl: process.env.DB_SSL_DISABLED === 'true'
+      ? false
+      : {
+          rejectUnauthorized: true,
+          ca: process.env.DB_SSL_CA,
+          cert: process.env.DB_SSL_CERT,
+          key: process.env.DB_SSL_KEY
+        }
   },
 
   // Test Configuration (Separate test database)

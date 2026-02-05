@@ -1,15 +1,32 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-ioms_production}
+      POSTGRES_USER: ${DB_USER:-ioms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ioms123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   app:
     build: .
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: "production"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-ioms_production}
+      DB_USER: ${DB_USER:-ioms}
+      DB_PASSWORD: ${DB_PASSWORD:-ioms123}
+      DB_SSL_DISABLED: "true"
     env_file:
       - .env.local
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
+    depends_on:
+      - postgres
 
   scale-bridge:
     build: .
@@ -45,3 +62,6 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
+
+volumes:
+  postgres_data:
