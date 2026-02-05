@@ -137,6 +137,7 @@ interface CustomerInfo {
 }
 
 export default function OrderEntryPage() {
+  const MENU_DATA_VERSION = 'mensa-v1';
   const router = useRouter();
   const { currentUser } = useAuth();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -290,29 +291,18 @@ export default function OrderEntryPage() {
       
       if (storedMenuData) {
         const menuData = JSON.parse(storedMenuData);
+        if (menuData?.version !== MENU_DATA_VERSION) {
+          localStorage.removeItem(menuDataKey);
+        } else {
         console.log('📋 [ORDER-ENTRY] Loading saved menu data:', menuData);
         setMenuItems(menuData.menuItems || []);
         setCategories(menuData.categories || []);
         seedInventoryFromMenu(userId, menuData.menuItems || []);
         return;
-      }
-      
-      // Try to load from menu service as fallback
-      try {
-        const savedDishes = getDishes(userId);
-        if (savedDishes && savedDishes.length > 0) {
-          console.log('📋 [ORDER-ENTRY] Loading menu from menu service:', savedDishes.length, 'items');
-          setMenuItems(savedDishes);
-          const uniqueCategories = [...new Set(savedDishes.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
-          setCategories(uniqueCategories);
-          seedInventoryFromMenu(userId, savedDishes);
-          return;
         }
-      } catch (serviceError) {
-        console.error('Error loading from menu service:', serviceError);
       }
       
-      // Finally try to load from API as last resort
+      // Try to load from API first for canonical data
       try {
         const response = await fetch('/api/menuCsv');
         const data = await response.json();
@@ -331,6 +321,7 @@ export default function OrderEntryPage() {
           setCategories(uniqueCategories);
 
           const menuData = {
+            version: MENU_DATA_VERSION,
             menuItems: data.menu,
             categories: uniqueCategories,
             lastUpdated: new Date().toISOString()
@@ -342,15 +333,32 @@ export default function OrderEntryPage() {
           saveDishes(userId, convertedMenu);
 
           seedInventoryFromMenu(userId, data.menu);
+          return;
         } else {
           setMenuItems([]);
           setCategories([]);
         }
       } catch (apiError) {
         console.error('Error loading menu from API:', apiError);
-        setMenuItems([]);
-        setCategories([]);
       }
+
+      // Fallback to menu service
+      try {
+        const savedDishes = getDishes(userId);
+        if (savedDishes && savedDishes.length > 0) {
+          console.log('📋 [ORDER-ENTRY] Loading menu from menu service:', savedDishes.length, 'items');
+          setMenuItems(savedDishes);
+          const uniqueCategories = [...new Set(savedDishes.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
+          setCategories(uniqueCategories);
+          seedInventoryFromMenu(userId, savedDishes);
+          return;
+        }
+      } catch (serviceError) {
+        console.error('Error loading from menu service:', serviceError);
+      }
+
+      setMenuItems([]);
+      setCategories([]);
     } catch (error) {
       console.error('Error loading menu data:', error);
       setMenuItems([]);
