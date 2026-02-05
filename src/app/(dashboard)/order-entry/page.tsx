@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { validateOrderInventory, getInventoryImpact } from '@/server/lib/inventoryValidation';
 import { saveDishes, getDishes } from '@/server/lib/menuService';
+import { saveInventory, type InventoryItem } from '@/server/lib/inventoryService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 
 // DishCard component
@@ -239,6 +240,45 @@ export default function OrderEntryPage() {
     fetchTables();
   }, []);
 
+  const seedInventoryFromMenu = (userId: string, menu: MenuItem[]) => {
+    try {
+      const ingredientMap = new Map<string, InventoryItem>();
+      menu.forEach((item) => {
+        if (!item.ingredients || !Array.isArray(item.ingredients)) return;
+        item.ingredients.forEach((ingredient: any) => {
+          if (typeof ingredient === 'string') {
+            if (!ingredientMap.has(ingredient)) {
+              ingredientMap.set(ingredient, {
+                id: ingredient,
+                name: ingredient,
+                quantity: 10000,
+                unit: 'g',
+                category: 'Ingredients',
+                lowStockThreshold: 500
+              });
+            }
+            return;
+          }
+          const name = ingredient.inventoryItemName || ingredient.name;
+          if (!name) return;
+          if (!ingredientMap.has(name)) {
+            ingredientMap.set(name, {
+              id: name,
+              name,
+              quantity: 10000,
+              unit: ingredient.unit || 'g',
+              category: 'Ingredients',
+              lowStockThreshold: 500
+            });
+          }
+        });
+      });
+      saveInventory(userId, Array.from(ingredientMap.values()));
+    } catch (inventoryError) {
+      console.error('Error seeding inventory from menu:', inventoryError);
+    }
+  };
+
   const loadMenuData = async () => {
     try {
       setLoading(true);
@@ -253,6 +293,7 @@ export default function OrderEntryPage() {
         console.log('📋 [ORDER-ENTRY] Loading saved menu data:', menuData);
         setMenuItems(menuData.menuItems || []);
         setCategories(menuData.categories || []);
+        seedInventoryFromMenu(userId, menuData.menuItems || []);
         return;
       }
       
@@ -264,6 +305,7 @@ export default function OrderEntryPage() {
           setMenuItems(savedDishes);
           const uniqueCategories = [...new Set(savedDishes.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
           setCategories(uniqueCategories);
+          seedInventoryFromMenu(userId, savedDishes);
           return;
         }
       } catch (serviceError) {
@@ -298,6 +340,8 @@ export default function OrderEntryPage() {
           // Save converted menu data to localStorage for inventory validation
           console.log('💾 [ORDER-ENTRY] Saving menu data to localStorage for userId:', userId);
           saveDishes(userId, convertedMenu);
+
+          seedInventoryFromMenu(userId, data.menu);
         } else {
           setMenuItems([]);
           setCategories([]);

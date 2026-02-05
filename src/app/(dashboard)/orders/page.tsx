@@ -53,6 +53,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import { saveInventory, type InventoryItem } from '@/server/lib/inventoryService';
 import { useRouter } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/shared/components/ui/table';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
@@ -1134,6 +1135,45 @@ export default function OrdersPage() {
     fetchTables();
   }, []);
 
+  const seedInventoryFromMenu = (userId: string, menu: MenuItem[]) => {
+    try {
+      const ingredientMap = new Map<string, InventoryItem>();
+      menu.forEach((item) => {
+        if (!item.ingredients || !Array.isArray(item.ingredients)) return;
+        item.ingredients.forEach((ingredient: any) => {
+          if (typeof ingredient === 'string') {
+            if (!ingredientMap.has(ingredient)) {
+              ingredientMap.set(ingredient, {
+                id: ingredient,
+                name: ingredient,
+                quantity: 10000,
+                unit: 'g',
+                category: 'Ingredients',
+                lowStockThreshold: 500
+              });
+            }
+            return;
+          }
+          const name = ingredient.inventoryItemName || ingredient.name;
+          if (!name) return;
+          if (!ingredientMap.has(name)) {
+            ingredientMap.set(name, {
+              id: name,
+              name,
+              quantity: 10000,
+              unit: ingredient.unit || 'g',
+              category: 'Ingredients',
+              lowStockThreshold: 500
+            });
+          }
+        });
+      });
+      saveInventory(userId, Array.from(ingredientMap.values()));
+    } catch (inventoryError) {
+      console.error('Error seeding inventory from menu:', inventoryError);
+    }
+  };
+
   const loadMenuData = async () => {
     setLoading(true);
     try {
@@ -1158,6 +1198,7 @@ export default function OrdersPage() {
         
         setMenuItems(convertedMenuItems);
         setCategories(menuData.categories || []);
+        seedInventoryFromMenu(userId, convertedMenuItems);
         
         // Load combos
         const combosKey = `combos_data_${userId}`;
@@ -1186,6 +1227,7 @@ export default function OrdersPage() {
             setMenuItems(convertedDishes);
             const uniqueCategories = [...new Set(convertedDishes.map((item: MenuItem) => item.category))];
             setCategories(uniqueCategories);
+            seedInventoryFromMenu(userId, convertedDishes);
           } else {
             // Load from sessionStorage as final fallback
             const sessionMenuData = sessionStorage.getItem('extractedMenuItems');
@@ -1216,6 +1258,7 @@ export default function OrdersPage() {
                   const uniqueCategories = [...new Set(menuItemsFromApi.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
                   setMenuItems(menuItemsFromApi);
                   setCategories(uniqueCategories);
+                  seedInventoryFromMenu(userId, menuItemsFromApi);
 
                   const menuData = {
                     menuItems: menuItemsFromApi,
@@ -1236,6 +1279,8 @@ export default function OrdersPage() {
                   } catch (saveError) {
                     console.error('Error saving menu from API:', saveError);
                   }
+
+                  seedInventoryFromMenu(userId, menuItemsFromApi);
                 } else {
                   console.log('📋 [ORDERS] No menu data found');
                   setMenuItems([]);
