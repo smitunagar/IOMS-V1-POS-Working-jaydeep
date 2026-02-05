@@ -24,6 +24,7 @@ import {
   Clock,
   Cloud,
   CreditCard,
+  Edit3,
   Filter,
   Globe2,
   History,
