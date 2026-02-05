@@ -22,7 +22,10 @@
     "playwright:install": "playwright install",
     "update-features": "ts-node scripts/update_features_sheet.ts",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:migrate": "node database/lib/migration-runner.js",
+    "db:migrate:status": "node database/lib/migration-runner.js status",
+    "db:migrate:dry-run": "node database/lib/migration-runner.js dry-run"
   },
   "dependencies": {
     "@genkit-ai/firebase": "^1.15.1",
