@@ -1213,7 +1213,7 @@ export default function OrdersPage() {
                     }))
                   }));
 
-                  const uniqueCategories = [...new Set(menuItemsFromApi.map((item: MenuItem) => item.category))];
+                  const uniqueCategories = [...new Set(menuItemsFromApi.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
                   setMenuItems(menuItemsFromApi);
                   setCategories(uniqueCategories);
 
