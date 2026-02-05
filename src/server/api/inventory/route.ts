@@ -181,7 +181,7 @@ export async function PATCH(request: NextRequest) {
       [userId]
     );
 
-    let inventory = inventoryResult.rows.map((row: any) => ({
+    let inventory: InventoryItem[] = inventoryResult.rows.map((row: any) => ({
       id: row.id,
       name: row.name,
       quantity: Number(row.quantity) || 0,
@@ -197,7 +197,7 @@ export async function PATCH(request: NextRequest) {
       const { ingredientName, quantityToReduce, unit } = update;
       
       // Find inventory item
-      const inventoryItemIndex = inventory.findIndex(item => 
+      const inventoryItemIndex = inventory.findIndex((item: InventoryItem) => 
         item.name.toLowerCase() === ingredientName.toLowerCase() ||
         item.name.toLowerCase().includes(ingredientName.toLowerCase()) ||
         ingredientName.toLowerCase().includes(item.name.toLowerCase())
@@ -250,7 +250,7 @@ export async function PATCH(request: NextRequest) {
     await query('BEGIN', []);
     try {
       for (const result of updateResults.filter(r => r.success)) {
-        const item = inventory.find(i => i.name.toLowerCase() === result.ingredientName.toLowerCase());
+        const item = inventory.find((i: InventoryItem) => i.name.toLowerCase() === result.ingredientName.toLowerCase());
         if (!item) continue;
 
         await query(

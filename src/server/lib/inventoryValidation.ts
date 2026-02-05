@@ -142,7 +142,7 @@ export async function validateOrderInventory(userId: string, orderItems: OrderIt
       console.log(`🍽️ Processing dish: ${dishName} (quantity: ${orderQuantity})`);
 
       // Find the dish in menu
-      const dish = menu.find(d => d.name.toLowerCase() === dishName.toLowerCase());
+      const dish = menu.find((d: any) => d.name.toLowerCase() === dishName.toLowerCase());
 
       if (!dish) {
         result.warnings.push(`Dish not found in menu: ${dishName}`);
