@@ -73,10 +73,74 @@ import { SmartChefNotification } from '@/shared/components/SmartChefNotification
 import { getPendingOrders, getCompletedOrders } from '@/server/lib/orderService';
 import { validateOrderInventory, getInventoryImpact } from '@/server/lib/inventoryValidation';
 import { GermanTaxService, TaxableItem, TaxCalculation } from '@/server/lib/germanTaxService';
-import { getDishes, type MenuItem } from '@/server/lib/menuService';
+import { getDishes } from '@/server/lib/menuService';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/components/ui/tooltip';
 
 // Types
+
+interface MenuItem {
+  id: string;
+  name: string;
+  price: string | number;
+  category: string;
+  image?: string;
+  aiHint?: string;
+  ingredients?: (string | { inventoryItemName?: string; name?: string })[];
+  sizes?: Array<{ size: string; price: string | number }>;
+  addons?: Array<{ id: string; name: string; price: string | number }>;
+}
+
+interface AddOn {
+  id: string;
+  name: string;
+  price: number;
+  type: 'extra' | 'remove' | 'custom';
+}
+
+interface ComboItem {
+  id: string;
+  menuItem: MenuItem;
+  quantity: number;
+}
+
+interface Combo {
+  id: string;
+  name: string;
+  description: string;
+  items: ComboItem[];
+  totalPrice: number;
+  discount: number;
+  finalPrice: number;
+  category: string;
+  image: string;
+  isActive: boolean;
+}
+
+interface OrderItem {
+  menuItem: MenuItem;
+  quantity: number;
+  notes?: string;
+  selectedSize?: { size: string; price: string | number };
+  addOns?: AddOn[];
+  comboInfo?: {
+    comboId: string;
+    comboName: string;
+    comboDiscount: number;
+    discountedPrice: number;
+  };
+}
+
+interface CustomerInfo {
+  name: string;
+  phone: string;
+  tableNumber: string;
+  email?: string;
+  address?: {
+    street: string;
+    city: string;
+    pinCode: string;
+  };
+}
 
 interface Subsection {
   id: string;
