@@ -1,269 +1,87 @@
 [
   {
-    "id": "Chicken Biryani__Hauptgerichte (Main Dishes)__12.90 EUR",
-    "name": "Chicken Biryani",
-    "price": "12.90 EUR",
-    "category": "Hauptgerichte (Main Dishes)",
+    "id": "Penne Arrabiata + leaf salad__Tagesmenü__3.70 EUR",
+    "name": "Penne Arrabiata + leaf salad",
+    "price": "3.70 EUR",
+    "category": "Tagesmenü",
     "image": "",
     "aiHint": "",
     "ingredients": [
-      {
-        "inventoryItemName": "Basmati Rice",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Chicken Breast",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Onions",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Tomatoes",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Olive Oil",
-        "quantityPerDish": 100,
-        "unit": "g"
-      }
+      { "inventoryItemName": "Penne pasta", "quantityPerDish": 100, "unit": "g" },
+      { "inventoryItemName": "Tomato sauce", "quantityPerDish": 100, "unit": "g" },
+      { "inventoryItemName": "Chili", "quantityPerDish": 10, "unit": "g" },
+      { "inventoryItemName": "Garlic", "quantityPerDish": 10, "unit": "g" },
+      { "inventoryItemName": "Mixed leaf salad", "quantityPerDish": 80, "unit": "g" }
     ],
     "hasSizes": false,
     "sizeOptions": [],
-    "basePrice": "12.90 EUR"
+    "basePrice": "3.70 EUR"
   },
   {
-    "id": "Dal Masoor Tadka__Hauptgerichte (Main Dishes)__9.90 EUR",
-    "name": "Dal Masoor Tadka",
-    "price": "9.90 EUR",
-    "category": "Hauptgerichte (Main Dishes)",
+    "id": "Fleischkäse + gravy + green beans & corn + mashed potatoes__Tagesmenü__4.20 EUR",
+    "name": "Fleischkäse + gravy + green beans & corn + mashed potatoes",
+    "price": "4.20 EUR",
+    "category": "Tagesmenü",
     "image": "",
     "aiHint": "",
     "ingredients": [
-      {
-        "inventoryItemName": "Masoor Dal",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Onions",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Tomatoes",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Olive Oil",
-        "quantityPerDish": 100,
-        "unit": "g"
-      }
+      { "inventoryItemName": "Meat loaf (Fleischkäse)", "quantityPerDish": 140, "unit": "g" },
+      { "inventoryItemName": "Gravy", "quantityPerDish": 80, "unit": "g" },
+      { "inventoryItemName": "Green beans", "quantityPerDish": 80, "unit": "g" },
+      { "inventoryItemName": "Corn", "quantityPerDish": 80, "unit": "g" },
+      { "inventoryItemName": "Mashed potatoes", "quantityPerDish": 140, "unit": "g" }
     ],
     "hasSizes": false,
     "sizeOptions": [],
-    "basePrice": "9.90 EUR"
+    "basePrice": "4.20 EUR"
   },
   {
-    "id": "Grilled Chicken with Mozzarella Crust__Hauptgerichte (Main Dishes)__13.90 EUR",
-    "name": "Grilled Chicken with Mozzarella Crust",
-    "price": "13.90 EUR",
-    "category": "Hauptgerichte (Main Dishes)",
+    "id": "Samosas + mie noodles + tomato dip__Tagesmenü__3.70 EUR",
+    "name": "Samosas + mie noodles + tomato dip",
+    "price": "3.70 EUR",
+    "category": "Tagesmenü",
     "image": "",
     "aiHint": "",
     "ingredients": [
-      {
-        "inventoryItemName": "Chicken Breast",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Mozzarella Cheese",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Olive Oil",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Onions",
-        "quantityPerDish": 100,
-        "unit": "g"
-      }
+      { "inventoryItemName": "Samosa", "quantityPerDish": 140, "unit": "g" },
+      { "inventoryItemName": "Mie noodles", "quantityPerDish": 140, "unit": "g" },
+      { "inventoryItemName": "Tomato dip", "quantityPerDish": 60, "unit": "g" }
     ],
     "hasSizes": false,
     "sizeOptions": [],
-    "basePrice": "13.90 EUR"
+    "basePrice": "3.70 EUR"
   },
   {
-    "id": "Tomato & Onion Curry__Hauptgerichte (Main Dishes)__8.90 EUR",
-    "name": "Tomato & Onion Curry",
-    "price": "8.90 EUR",
-    "category": "Hauptgerichte (Main Dishes)",
-    "image": "",
-    "aiHint": "",
-    "ingredients": [
-      {
-        "inventoryItemName": "Tomatoes",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Onions",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Olive Oil",
-        "quantityPerDish": 100,
-        "unit": "g"
-      }
-    ],
-    "hasSizes": false,
-    "sizeOptions": [],
-    "basePrice": "8.90 EUR"
-  },
-  {
-    "id": "Samosa Chaat__Vorspeisen & Snacks (Starters & Snacks)__6.50 EUR",
-    "name": "Samosa Chaat",
-    "price": "6.50 EUR",
-    "category": "Vorspeisen & Snacks (Starters & Snacks)",
-    "image": "",
-    "aiHint": "",
-    "ingredients": [
-      {
-        "inventoryItemName": "Samosa (Frozen)",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Onions",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Tomatoes",
-        "quantityPerDish": 100,
-        "unit": "g"
-      }
-    ],
-    "hasSizes": false,
-    "sizeOptions": [],
-    "basePrice": "6.50 EUR"
-  },
-  {
-    "id": "Cheesy Samosa Bake__Vorspeisen & Snacks (Starters & Snacks)__7.00 EUR",
-    "name": "Cheesy Samosa Bake",
-    "price": "7.00 EUR",
-    "category": "Vorspeisen & Snacks (Starters & Snacks)",
-    "image": "",
-    "aiHint": "",
-    "ingredients": [
-      {
-        "inventoryItemName": "Samosa (Frozen)",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Mozzarella Cheese",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Olive Oil",
-        "quantityPerDish": 100,
-        "unit": "g"
-      }
-    ],
-    "hasSizes": false,
-    "sizeOptions": [],
-    "basePrice": "7.00 EUR"
-  },
-  {
-    "id": "Plain Basmati Rice__Beilagen & Reis (Sides & Rice)__3.50 EUR",
-    "name": "Plain Basmati Rice",
-    "price": "3.50 EUR",
-    "category": "Beilagen & Reis (Sides & Rice)",
-    "image": "",
-    "aiHint": "",
-    "ingredients": [
-      {
-        "inventoryItemName": "Basmati Rice",
-        "quantityPerDish": 100,
-        "unit": "g"
-      }
-    ],
-    "hasSizes": false,
-    "sizeOptions": [],
-    "basePrice": "3.50 EUR"
-  },
-  {
-    "id": "Moong-Masoor Lentil Mix__Other__4.50 EUR",
-    "name": "Moong-Masoor Lentil Mix",
+    "id": "Chicken cordon bleu + cream sauce + country potatoes + leaf salad__Tagesmenü__4.50 EUR",
+    "name": "Chicken cordon bleu + cream sauce + country potatoes + leaf salad",
     "price": "4.50 EUR",
-    "category": "Other",
+    "category": "Tagesmenü",
     "image": "",
     "aiHint": "",
     "ingredients": [
-      {
-        "inventoryItemName": "Masoor Dal",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Moong Dal",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Onions",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Tomatoes",
-        "quantityPerDish": 100,
-        "unit": "g"
-      }
+      { "inventoryItemName": "Chicken cordon bleu", "quantityPerDish": 160, "unit": "g" },
+      { "inventoryItemName": "Cream sauce", "quantityPerDish": 80, "unit": "g" },
+      { "inventoryItemName": "Country potatoes", "quantityPerDish": 140, "unit": "g" },
+      { "inventoryItemName": "Mixed leaf salad", "quantityPerDish": 80, "unit": "g" }
     ],
     "hasSizes": false,
     "sizeOptions": [],
     "basePrice": "4.50 EUR"
   },
   {
-    "id": "Tomato & Onion Salad__Salate (Salads)__4.00 EUR",
-    "name": "Tomato & Onion Salad",
-    "price": "4.00 EUR",
-    "category": "Salate (Salads)",
+    "id": "Baked vegetables + Hollandaise + potato rösti__Auswahlgericht__4.10 EUR",
+    "name": "Baked vegetables + Hollandaise + potato rösti",
+    "price": "4.10 EUR",
+    "category": "Auswahlgericht",
     "image": "",
     "aiHint": "",
     "ingredients": [
-      {
-        "inventoryItemName": "Tomatoes",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Onions",
-        "quantityPerDish": 100,
-        "unit": "g"
-      },
-      {
-        "inventoryItemName": "Olive Oil",
-        "quantityPerDish": 100,
-        "unit": "g"
-      }
+      { "inventoryItemName": "Baked vegetables", "quantityPerDish": 180, "unit": "g" },
+      { "inventoryItemName": "Sauce Hollandaise", "quantityPerDish": 70, "unit": "g" },
+      { "inventoryItemName": "Potato rösti", "quantityPerDish": 150, "unit": "g" }
     ],
     "hasSizes": false,
     "sizeOptions": [],
-    "basePrice": "4.00 EUR"
+    "basePrice": "4.10 EUR"
   }
 ]
