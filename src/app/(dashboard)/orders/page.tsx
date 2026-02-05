@@ -8,132 +8,75 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Badge } from '@/shared/components/ui/badge';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { Separator } from '@/shared/components/ui/separator';
+import { 
+  ShoppingCart, 
+  CreditCard, 
+  History, 
+  BarChart3,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Search,
+  Filter,
+  Plus,
+  Minus,
+  Trash2,
+  Receipt,
+  Package,
+  User,
+  Users,
+  Phone,
+  MapPin,
+  Banknote,
+  Smartphone,
+  Printer,
+  Car,
+  Store,
+  RefreshCw,
+  Loader2,
+  Edit3,
+  Layers,
+  Sparkles,
+  MoreVertical,
+  Settings,
+  Bell,
+  ChefHat,
+  Globe2,
+  X,
+  AlertTriangle,
+  Cloud,
+  Leaf,
+  Info,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
+import { saveInventory, type InventoryItem } from '@/server/lib/inventoryService';
+import { useRouter } from 'next/navigation';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/shared/components/ui/table';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/shared/components/ui/dialog';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/shared/components/ui/dropdown-menu';
+import { SmartChefNotification } from '@/shared/components/SmartChefNotifications';
+// Import the actual components from other pages
+import { getPendingOrders, getCompletedOrders } from '@/server/lib/orderService';
+import { validateOrderInventory, getInventoryImpact } from '@/server/lib/inventoryValidation';
+import { GermanTaxService, TaxableItem, TaxCalculation } from '@/server/lib/germanTaxService';
+import { getDishes } from '@/server/lib/menuService';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/components/ui/tooltip';
 
-      if (storedMenuData) {
-        const menuData = JSON.parse(storedMenuData);
-        if (menuData?.version === MENU_DATA_VERSION) {
-          console.log('📋 [ORDERS] Loading saved menu data:', menuData);
-          console.log('📋 [ORDERS] Sample menu item price:', menuData.menuItems?.[0]?.price, typeof menuData.menuItems?.[0]?.price);
-
-          const convertedMenuItems = (menuData.menuItems || []).map((item: any) => ({
-            ...item,
-            price: typeof item.price === 'number' ? item.price.toString() : item.price,
-            sizes: item.sizes?.map((size: any) => ({
-              ...size,
-              price: typeof size.price === 'number' ? size.price.toString() : size.price
-            }))
-          }));
-
-          setMenuItems(convertedMenuItems);
-          setCategories(menuData.categories || []);
-          seedInventoryFromMenu(userId, convertedMenuItems);
-
-          const combosKey = `combos_data_${userId}`;
-          const storedCombos = localStorage.getItem(combosKey);
-          if (storedCombos) {
-            setCombos(JSON.parse(storedCombos));
-          }
-          return;
-        }
-
-        localStorage.removeItem(menuDataKey);
-      }
-
-      try {
-        const response = await fetch('/api/menuCsv');
-        const data = await response.json();
-
-        if (data.menu && Array.isArray(data.menu) && data.menu.length > 0) {
-          console.log('📋 [ORDERS] Loading menu from API:', data.menu.length, 'items');
-
-          const menuItemsFromApi = data.menu.map((item: any) => ({
-            ...item,
-            price: typeof item.price === 'number' ? item.price.toString() : item.price,
-            sizes: item.sizes?.map((size: any) => ({
-              ...size,
-              price: typeof size.price === 'number' ? size.price.toString() : size.price
-            }))
-          }));
-
-          const uniqueCategories = [...new Set(menuItemsFromApi.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
-          setMenuItems(menuItemsFromApi);
-          setCategories(uniqueCategories);
-          seedInventoryFromMenu(userId, menuItemsFromApi);
-
-          const menuData = {
-            version: MENU_DATA_VERSION,
-            menuItems: menuItemsFromApi,
-            categories: uniqueCategories,
-            lastUpdated: new Date().toISOString()
-          };
-          localStorage.setItem(menuDataKey, JSON.stringify(menuData));
-
-          try {
-            const { saveDishes } = await import('@/server/lib/menuService');
-            const convertedMenu = menuItemsFromApi.map((item: any) => ({
-              ...item,
-              price: typeof item.price === 'string'
-                ? parseFloat(item.price.replace(/[^\d.,]/g, '').replace(',', '.'))
-                : item.price
-            }));
-            saveDishes(userId, convertedMenu);
-          } catch (saveError) {
-            console.error('Error saving menu from API:', saveError);
-          }
-          return;
-        }
-      } catch (apiError) {
-        console.error('Error loading menu from API:', apiError);
-      }
-
-      try {
-        const { getDishes } = await import('@/server/lib/menuService');
-        const savedDishes = getDishes(userId);
-        if (savedDishes && savedDishes.length > 0) {
-          console.log('📋 [ORDERS] Loading menu from menu service:', savedDishes.length, 'items');
-
-          const convertedDishes = savedDishes.map((item: any) => ({
-            ...item,
-            price: typeof item.price === 'number' ? item.price.toString() : item.price,
-            sizes: item.sizes?.map((size: any) => ({
-              ...size,
-              price: typeof size.price === 'number' ? size.price.toString() : size.price
-            }))
-          }));
-
-          setMenuItems(convertedDishes);
-          const uniqueCategories = [...new Set(convertedDishes.map((item: MenuItem) => item.category))];
-          setCategories(uniqueCategories);
-          seedInventoryFromMenu(userId, convertedDishes);
-          return;
-        }
-      } catch (serviceError) {
-        console.error('Error loading from menu service:', serviceError);
-      }
-
-      const sessionMenuData = sessionStorage.getItem('extractedMenuItems');
-      if (sessionMenuData) {
-        const menuData = JSON.parse(sessionMenuData);
-        console.log('📋 [ORDERS] Loading menu from sessionStorage:', menuData.length, 'items');
-        setMenuItems(menuData);
-        const uniqueCategories = [...new Set(menuData.map((item: MenuItem) => item.category))] as string[];
-        setCategories(uniqueCategories);
-        return;
-      }
-
-      console.log('📋 [ORDERS] No menu data found');
-      setMenuItems([]);
-      setCategories([]);
-  name: string;
-  phone: string;
-  tableNumber: string;
-  email?: string;
-  address?: {
-    street: string;
-    city: string;
-    pinCode: string;
-  };
-}
+// Types
 
 interface Subsection {
   id: string;
