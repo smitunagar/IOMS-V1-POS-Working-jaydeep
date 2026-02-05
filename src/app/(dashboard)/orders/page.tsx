@@ -73,7 +73,7 @@ import { SmartChefNotification } from '@/shared/components/SmartChefNotification
 import { getPendingOrders, getCompletedOrders } from '@/server/lib/orderService';
 import { validateOrderInventory, getInventoryImpact } from '@/server/lib/inventoryValidation';
 import { GermanTaxService, TaxableItem, TaxCalculation } from '@/server/lib/germanTaxService';
-import { getDishes } from '@/server/lib/menuService';
+import { getDishes, type MenuItem } from '@/server/lib/menuService';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/components/ui/tooltip';
 
 // Types
