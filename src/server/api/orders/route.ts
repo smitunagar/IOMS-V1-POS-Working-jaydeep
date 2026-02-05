@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDishes } from '@/server/lib/menuService';
+import { query } from '@/lib/database/lib/connection';
 
 // Get orders from localStorage (real orders from POS)
 function getOrdersFromStorage(userId: string = 'default_user'): any[] {
@@ -68,150 +68,264 @@ function isIngredientQuantity(obj: any): obj is { inventoryItemName: string; qua
 /**
  * Update inventory based on order items using the server-side inventory API
  */
-async function updateInventoryFromOrder(order: any, userId: string) {
-  console.log('🔄 Updating inventory for order:', order.id);
-  
-  try {
-    // Get current inventory and menu
-    const inventoryRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/inventory?userId=${userId}`);
-    const { inventory } = await inventoryRes.json();
-    const menu = getDishes(userId);
-    
-    console.log('📊 Current inventory items:', inventory.length);
-    console.log('🍽️ Available dishes:', menu.length);
-    
-    // Prepare inventory updates
-    const inventoryUpdates: any[] = [];
-    
-    // Process each order item
-    for (const orderItem of order.items) {
-      const dishName = orderItem.name;
-      const orderQuantity = orderItem.quantity;
-      
-      console.log(`🍽️ Processing dish: ${dishName} (quantity: ${orderQuantity})`);
-      
-      // Find the dish in menu
-      const dish = menu.find(d => d.name.toLowerCase() === dishName.toLowerCase());
-      
-      if (!dish) {
-        console.warn(`⚠️ Dish not found in menu: ${dishName}`);
-        continue;
-      }
-      
-      const ingredientCount = Array.isArray(dish.ingredients) ? dish.ingredients.length : 0;
-      console.log(`📋 Dish found: ${dish.name} with ${ingredientCount} ingredients`);
-      
-      // Process each ingredient in the dish
-      if (Array.isArray(dish.ingredients)) {
-        for (const ingredient of dish.ingredients) {
-          if (!isIngredientQuantity(ingredient)) {
-            console.warn(`⚠️ Ingredient is not a structured object:`, ingredient);
-            continue;
-          }
-          const ingredientName = ingredient.inventoryItemName;
-          const quantityPerDish = ingredient.quantityPerDish;
-          const unit = ingredient.unit;
-          
-          // Calculate total quantity needed for this order
-          const totalQuantityNeeded = quantityPerDish * orderQuantity;
-          
-          console.log(`🥘 Ingredient: ${ingredientName} - ${quantityPerDish} ${unit} per dish × ${orderQuantity} dishes = ${totalQuantityNeeded} ${unit} total`);
-          
-          // Add to inventory updates
-          inventoryUpdates.push({
-            ingredientName,
-            quantityToReduce: totalQuantityNeeded,
-            unit
-          });
-        }
-      }
-    }
-    
-    // Send inventory updates to the inventory API
-    if (inventoryUpdates.length > 0) {
-      const updateRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/inventory`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          updates: inventoryUpdates
-        })
-      });
-      
-      const updateResult = await updateRes.json();
-      
-      if (updateResult.success) {
-        console.log(`✅ Inventory update completed: ${updateResult.updates.filter((u: any) => u.success).length} items updated`);
-        return {
-          success: true,
-          message: updateResult.message,
-          updates: updateResult.updates
-        };
-      } else {
-        console.error('❌ Error updating inventory:', updateResult.error);
-        return {
-          success: false,
-          message: 'Error updating inventory',
-          error: updateResult.error
-        };
-      }
-    } else {
-      console.log('ℹ️ No inventory updates needed');
-      return {
-        success: true,
-        message: 'No inventory updates needed',
-        updates: []
-      };
-    }
-    
-  } catch (error) {
-    console.error('❌ Error updating inventory:', error);
-    return {
-      success: false,
-      message: 'Error updating inventory',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
+function parsePrice(value: any): number {
+  if (typeof value === 'number') return value;
+  if (typeof value !== 'string') return 0;
+  const cleaned = value.replace(/[^\d.,]/g, '').replace(',', '.');
+  const parsed = parseFloat(cleaned);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export async function GET() {
-  // Return empty array - orders will be fetched from client-side localStorage
-  // This ensures we don't show demo data
-  return NextResponse.json({ orders: [] });
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    let queryText = `
+      SELECT
+        id,
+        user_id,
+        status,
+        order_type,
+        customer_info,
+        subtotal,
+        tax_amount,
+        total_amount,
+        tip_amount,
+        amount_paid,
+        payment_mode,
+        source,
+        channel,
+        currency,
+        table_id,
+        cancellation_reason,
+        created_at,
+        updated_at
+      FROM orders
+    `;
+
+    const params: any[] = [];
+    if (userId) {
+      queryText += ` WHERE user_id = $1`;
+      params.push(userId);
+    }
+
+    queryText += ` ORDER BY created_at DESC`;
+
+    const ordersResult = await query(queryText, params);
+    const ordersRows = ordersResult.rows || [];
+
+    const orderIds = ordersRows.map((row: any) => row.id);
+    let itemsByOrder: Record<string, any[]> = {};
+
+    if (orderIds.length > 0) {
+      const itemsResult = await query(
+        `SELECT
+          id,
+          order_id,
+          menu_item_id,
+          name,
+          quantity,
+          unit_price,
+          total_price,
+          notes,
+          selected_size,
+          add_ons
+        FROM order_items
+        WHERE order_id = ANY($1::text[])
+        ORDER BY created_at ASC`,
+        [orderIds]
+      );
+
+      itemsByOrder = itemsResult.rows.reduce((acc: Record<string, any[]>, item: any) => {
+        if (!acc[item.order_id]) acc[item.order_id] = [];
+        acc[item.order_id].push(item);
+        return acc;
+      }, {});
+    }
+
+    const orders = ordersRows.map((row: any) => {
+      const customerInfo = row.customer_info || {};
+      const items = (itemsByOrder[row.id] || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        quantity: Number(item.quantity) || 0,
+        unitPrice: Number(item.unit_price) || 0,
+        totalPrice: Number(item.total_price) || 0,
+        notes: item.notes || undefined,
+        addOns: item.add_ons || [],
+        selectedSize: item.selected_size || undefined
+      }));
+
+      return {
+        id: row.id,
+        tableId: row.table_id || undefined,
+        customerName: customerInfo.name || undefined,
+        customerPhone: customerInfo.phone || undefined,
+        items,
+        totalAmount: row.total_amount !== null ? Number(row.total_amount) : 0,
+        status: row.status,
+        orderType: row.order_type,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        paymentMode: row.payment_mode || undefined,
+        tipAmount: row.tip_amount !== null ? Number(row.tip_amount) : undefined,
+        discountPercentage: customerInfo.discountPercentage || undefined,
+        address: customerInfo.address || undefined
+      };
+    });
+
+    return NextResponse.json({ orders });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const order = await request.json();
-    // Just return success - the order will be stored in client-side localStorage
-    // by the orders page when it calls this API
-    return NextResponse.json({ order }, { status: 201 });
+    const userId = order.userId || 'default_user';
+    const orderId = order.id || `order_${Date.now()}`;
+    const createdAt = order.createdAt ? new Date(order.createdAt) : new Date();
+
+    const totalAmount = parsePrice(order.totalAmount);
+    const subtotal = order.subtotal ? parsePrice(order.subtotal) : totalAmount;
+    const taxAmount = order.taxAmount ? parsePrice(order.taxAmount) : null;
+
+    await query(
+      `INSERT INTO orders (
+        id,
+        user_id,
+        status,
+        order_type,
+        customer_info,
+        subtotal,
+        tax_amount,
+        total_amount,
+        tip_amount,
+        amount_paid,
+        payment_mode,
+        source,
+        channel,
+        currency,
+        table_id,
+        created_at,
+        updated_at
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
+      ) ON CONFLICT (id) DO NOTHING`,
+      [
+        orderId,
+        userId,
+        order.status || 'Order Received',
+        order.orderType || 'dine-in',
+        order.customerInfo || null,
+        subtotal,
+        taxAmount,
+        totalAmount,
+        order.tipAmount ?? null,
+        order.amountPaid ?? null,
+        order.paymentMode || null,
+        order.source || null,
+        order.channel || null,
+        order.currency || null,
+        order.tableId || null,
+        createdAt,
+        new Date()
+      ]
+    );
+
+    if (Array.isArray(order.items)) {
+      for (const item of order.items) {
+        const unitPrice = parsePrice(item.unitPrice ?? item.price);
+        const quantity = Number(item.quantity) || 0;
+        const totalPrice = Number(item.totalPrice) || unitPrice * quantity;
+
+        await query(
+          `INSERT INTO order_items (
+            order_id,
+            menu_item_id,
+            name,
+            quantity,
+            unit_price,
+            total_price,
+            notes,
+            selected_size,
+            add_ons
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+          [
+            orderId,
+            item.menuItemId || item.id || null,
+            item.name,
+            quantity,
+            unitPrice,
+            totalPrice,
+            item.notes || null,
+            item.selectedSize || null,
+            item.addOns || []
+          ]
+        );
+      }
+    }
+
+    await query(
+      `INSERT INTO order_status_history (
+        order_id,
+        status,
+        changed_by,
+        reason
+      ) VALUES ($1,$2,$3,$4)`,
+      [orderId, order.status || 'Order Received', userId, null]
+    );
+
+    return NextResponse.json({ order: { id: orderId } }, { status: 201 });
   } catch (error) {
+    console.error('Error creating order:', error);
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { id, status, paymentMode, tipAmount, amountPaid, userId } = await request.json();
-    
-    // For PATCH operations, we need to update the client-side localStorage
-    // This is handled by the client-side code, we just return success
-    // The actual update happens in the client's localStorage
-    
-    if (status === 'Completed') {
-      // Update inventory when order is completed
-      // We need the full order data, but since we're not storing it server-side,
-      // we'll let the client handle inventory updates
-      console.log(`Order ${id} marked as completed - inventory update should be handled client-side`);
+    const { id, orderId, status, paymentMode, tipAmount, amountPaid, userId, cancellationReason } = await request.json();
+    const targetId = id || orderId;
+
+    if (!targetId) {
+      return NextResponse.json({ error: 'Order id is required' }, { status: 400 });
     }
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    await query(
+      `UPDATE orders
+       SET status = COALESCE($1, status),
+           payment_mode = COALESCE($2, payment_mode),
+           tip_amount = COALESCE($3, tip_amount),
+           amount_paid = COALESCE($4, amount_paid),
+           cancellation_reason = COALESCE($5, cancellation_reason),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $6`,
+      [status || null, paymentMode || null, tipAmount ?? null, amountPaid ?? null, cancellationReason || null, targetId]
+    );
+
+    if (status) {
+      await query(
+        `INSERT INTO order_status_history (
+          order_id,
+          status,
+          changed_by,
+          reason
+        ) VALUES ($1,$2,$3,$4)`,
+        [targetId, status, userId || null, cancellationReason || null]
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
       message: 'Order updated successfully',
-      order: { id, status, paymentMode, tipAmount, amountPaid }
+      order: { id: targetId, status, paymentMode, tipAmount, amountPaid }
     });
   } catch (error) {
+    console.error('Error updating order:', error);
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }

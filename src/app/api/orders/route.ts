@@ -4,9 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GET as serverGET, POST as serverPOST, PATCH as serverPATCH } from '@/server/api/orders/route';
 
 // Proxy to the server-side orders API
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    return await serverGET();
+    return await serverGET(request);
   } catch (error) {
     console.error('Error fetching orders:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
