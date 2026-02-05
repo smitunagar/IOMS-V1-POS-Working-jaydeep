@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     if (action === 'sync') {
       const items = Array.isArray(inventory) ? inventory : [];
 
-      await query('BEGIN');
+      await query('BEGIN', []);
       try {
         await query('DELETE FROM inventory_items WHERE user_id = $1', [userId]);
 
@@ -144,9 +144,9 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        await query('COMMIT');
+        await query('COMMIT', []);
       } catch (syncError) {
-        await query('ROLLBACK');
+        await query('ROLLBACK', []);
         throw syncError;
       }
 
@@ -247,7 +247,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Persist updates and movement logs
-    await query('BEGIN');
+    await query('BEGIN', []);
     try {
       for (const result of updateResults.filter(r => r.success)) {
         const item = inventory.find(i => i.name.toLowerCase() === result.ingredientName.toLowerCase());
@@ -275,9 +275,9 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      await query('COMMIT');
+      await query('COMMIT', []);
     } catch (persistError) {
-      await query('ROLLBACK');
+      await query('ROLLBACK', []);
       throw persistError;
     }
     
