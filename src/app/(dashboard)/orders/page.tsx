@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useToast } from '@/shared/hooks/use-toast';
 import { Button } from '@/shared/components/ui/button';
@@ -9,75 +10,68 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Separator } from '@/shared/components/ui/separator';
-import { 
-  ShoppingCart, 
-  CreditCard, 
-  History, 
-  BarChart3,
+import {
   ArrowLeft,
+  AlertTriangle,
+  Banknote,
+  BarChart3,
+  Bell,
+  Car,
   CheckCircle,
+  ChefHat,
+  ChevronDown,
+  ChevronUp,
   Clock,
-  TrendingUp,
-  TrendingDown,
-  Search,
+  Cloud,
+  CreditCard,
   Filter,
-  Plus,
+  Globe2,
+  History,
+  Info,
+  Layers,
+  Leaf,
+  Loader2,
+  MapPin,
   Minus,
-  Trash2,
-  Receipt,
+  MoreVertical,
   Package,
+  Phone,
+  Plus,
+  Printer,
+  Receipt,
+  RefreshCw,
+  Search,
+  Settings,
+  ShoppingCart,
+  Smartphone,
+  Sparkles,
+  Store,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
   User,
   Users,
-  Phone,
-  MapPin,
-  Banknote,
-  Smartphone,
-  Printer,
-  Car,
-  Store,
-  RefreshCw,
-  Loader2,
-  Edit3,
-  Layers,
-  Sparkles,
-  MoreVertical,
-  Settings,
-  Bell,
-  ChefHat,
-  Globe2,
   X,
-  AlertTriangle,
-  Cloud,
-  Leaf,
-  Info,
-  ChevronDown,
-  ChevronUp
 } from 'lucide-react';
-import { saveInventory, type InventoryItem } from '@/server/lib/inventoryService';
-import { useRouter } from 'next/navigation';
+import type { InventoryItem } from '@/server/lib/inventoryService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/shared/components/ui/table';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/shared/components/ui/dialog';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { SmartChefNotification } from '@/shared/components/SmartChefNotifications';
-// Import the actual components from other pages
-import { getPendingOrders, getCompletedOrders } from '@/server/lib/orderService';
 import { validateOrderInventory, getInventoryImpact } from '@/server/lib/inventoryValidation';
 import { GermanTaxService, TaxableItem, TaxCalculation } from '@/server/lib/germanTaxService';
-import { getDishes } from '@/server/lib/menuService';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/components/ui/tooltip';
 
 // Types
-
 interface MenuItem {
   id: string;
   name: string;
@@ -208,13 +202,8 @@ function MarketplaceOrdersSidebar({
 
   return (
     <>
-      <div
-        className="fixed inset-0 bg-black/50 z-40 transition-opacity"
-        onClick={onClose}
-      />
-      <div
-        className="fixed top-0 right-0 h-full w-[420px] bg-white shadow-2xl z-50 transition-transform duration-300 ease-in-out translate-x-0"
-      >
+      <div className="fixed inset-0 bg-black/50 z-40 transition-opacity" onClick={onClose} />
+      <div className="fixed top-0 right-0 h-full w-[420px] bg-white shadow-2xl z-50 transition-transform duration-300 ease-in-out translate-x-0">
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-5 border-b border-gray-200">
             <div className="flex items-center gap-3">
@@ -247,8 +236,7 @@ function MarketplaceOrdersSidebar({
                   </p>
                   <p className="mt-1 text-3xl font-semibold text-gray-900">{summary.total}</p>
                   <p className="mt-1 text-xs text-gray-500">
-                    Across {activePartners.length}{' '}
-                    partner{activePartners.length === 1 ? '' : 's'}
+                    Across {activePartners.length} partner{activePartners.length === 1 ? '' : 's'}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
@@ -290,18 +278,13 @@ function MarketplaceOrdersSidebar({
                 {activePartners.map(([partner, count]) => {
                   const styles = partnerStyles[partner as ThirdPartyPartner];
                   return (
-                    <span
-                      key={partner}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-full ${styles.pill}`}
-                    >
+                    <span key={partner} className={`px-3 py-1.5 text-xs font-semibold rounded-full ${styles.pill}`}>
                       {partner} · {count}
                     </span>
                   );
                 })}
                 {activePartners.length === 0 && (
-                  <span className="text-xs text-gray-500">
-                    No partner orders in queue right now
-                  </span>
+                  <span className="text-xs text-gray-500">No partner orders in queue right now</span>
                 )}
               </div>
 
@@ -334,9 +317,7 @@ function MarketplaceOrdersSidebar({
                             <div>
                               <div className="flex items-center gap-2">
                                 <p className="text-sm font-semibold text-gray-900">{order.partner}</p>
-                                <Badge className={`text-[11px] font-semibold ${statusMeta}`}>
-                                  {order.status}
-                                </Badge>
+                                <Badge className={`text-[11px] font-semibold ${statusMeta}`}>{order.status}</Badge>
                               </div>
                               <p className="text-xs text-gray-500 mt-1">#{order.id}</p>
                               <p className="mt-2 text-sm text-gray-700">{order.items}</p>
@@ -378,95 +359,93 @@ const ordersSubsections: Subsection[] = [
     title: 'POS',
     description: '',
     icon: ShoppingCart,
-    status: 'active'
+    status: 'active',
   },
   {
     id: 'payment',
     title: 'Payment',
     description: '',
     icon: CreditCard,
-    status: 'pending'
+    status: 'pending',
   },
   {
     id: 'order-history',
     title: 'Order History',
     description: '',
     icon: History,
-    status: 'pending'
+    status: 'pending',
   },
   {
     id: 'order-analytics',
     title: 'Order Analytics',
     description: '',
     icon: BarChart3,
-    status: 'pending'
-  }
+    status: 'pending',
+  },
 ];
 
-// DishCard component
-function DishCard({ item, orderItems, onAddToOrder, formatPrice }: { 
-  item: MenuItem; 
+interface DishCardProps {
+  item: MenuItem;
   orderItems: OrderItem[];
   onAddToOrder: (menuItem: MenuItem, selectedSize?: { size: string; price: string | number }) => void;
-  formatPrice: (price: string | number) => string; 
-}) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedSize, setSelectedSize] = useState(item.sizes && item.sizes.length > 0 ? item.sizes[0] : undefined);
+  formatPrice: (price: string | number) => string;
+}
 
+function DishCard({ item, orderItems, onAddToOrder, formatPrice }: DishCardProps) {
+  const [selectedSize, setSelectedSize] = useState<{ size: string; price: string | number } | undefined>(
+    item.sizes?.[0]
+  );
 
-  const displayPrice = selectedSize ? selectedSize.price : item.price;
-  console.log('🍽️ [DishCard] Item:', item.name, 'Price:', displayPrice, 'Type:', typeof displayPrice);
-  const alreadyAdded = orderItems.some(oi => {
-    if (item.sizes && selectedSize) {
-      return oi.menuItem.id === item.id && oi.selectedSize?.size === selectedSize.size;
-    } else {
-      return oi.menuItem.id === item.id;
-    }
+  const displayPrice = selectedSize?.price ?? item.price;
+  const alreadyAdded = orderItems.some((orderItem) => {
+    if (orderItem.menuItem.id !== item.id) return false;
+    if (!selectedSize) return true;
+    return orderItem.selectedSize?.size === selectedSize.size;
   });
 
   return (
-    <Card className="border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 flex flex-col h-full">
-      <CardContent className="p-3 flex flex-col flex-1">
-        {/* Header with name and price */}
-        <div className="flex justify-between items-start gap-2 mb-2">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm text-gray-900 line-clamp-2" style={{lineHeight:1.3}}>{item.name}</h3>
-            <p className="text-xs text-gray-500 mt-0.5">{item.category}</p>
+    <Card className="border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white">
+      <CardContent className="p-4 flex flex-col h-full">
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">{item.name}</h3>
+            <p className="text-xs text-gray-500 line-clamp-1">{item.category}</p>
           </div>
           <div className="flex flex-col items-end">
             <span className="text-sm font-bold text-gray-900">€{formatPrice(displayPrice)}</span>
-        </div>
+          </div>
         </div>
 
-        {/* Image */}
         {item.image && (
           <div className="mb-2">
             <img src={item.image} alt={item.name} className="w-full h-24 object-cover rounded" />
           </div>
         )}
 
-        {/* Size selector */}
         {item.sizes && item.sizes.length > 1 && (
           <div className="mb-2">
             <select
               className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
               value={selectedSize?.size}
-              onChange={e => {
-                const sz = item.sizes?.find(s => s.size === e.target.value);
-                setSelectedSize(sz);
+              onChange={(e) => {
+                const size = item.sizes?.find((sz) => sz.size === e.target.value);
+                setSelectedSize(size);
               }}
             >
-              {item.sizes.map(sz => (
-                <option key={sz.size} value={sz.size}>{sz.size} - €{formatPrice(sz.price)}</option>
+              {item.sizes.map((sz) => (
+                <option key={sz.size} value={sz.size}>
+                  {sz.size} - €{formatPrice(sz.price)}
+                </option>
               ))}
             </select>
           </div>
         )}
 
-        {/* Ingredients */}
         {(() => {
           const cleanIngredients = item.ingredients
-            ? item.ingredients.map(ing => typeof ing === 'string' ? ing : (ing.name || ing.inventoryItemName)).filter(Boolean)
+            ? item.ingredients
+                .map((ing) => (typeof ing === 'string' ? ing : ing.name || ing.inventoryItemName))
+                .filter(Boolean)
             : [];
           if (cleanIngredients.length === 0) return null;
           return (
@@ -479,26 +458,22 @@ function DishCard({ item, orderItems, onAddToOrder, formatPrice }: {
 
         <div className="flex-1" />
 
-        {/* Add button */}
-            <Button
-              size="sm"
-              onClick={() => onAddToOrder(item, selectedSize)}
+        <Button
+          size="sm"
+          onClick={() => onAddToOrder(item, selectedSize)}
           className={`w-full h-8 text-xs font-medium transition-all ${
-            alreadyAdded 
-              ? 'bg-green-600 hover:bg-green-700 text-white' 
-              : 'bg-gray-900 hover:bg-gray-800 text-white'
+            alreadyAdded ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'
           }`}
         >
           <Plus className="h-3 w-3 mr-1" />
           {alreadyAdded ? 'Added' : 'Add to Order'}
-            </Button>
+        </Button>
       </CardContent>
     </Card>
   );
 }
 
 export default function OrdersPage() {
-  const MENU_DATA_VERSION = 'mensa-v1';
   const { currentUser, isLoading, isInitialized } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
@@ -681,31 +656,20 @@ export default function OrdersPage() {
         setActiveSubsection('payment');
         
         // Force refresh the payment section orders
-        setTimeout(() => {
+        setTimeout(async () => {
           const userId = getUserId();
-          const ordersKey = `orders_${userId}`;
-          const storedOrders = localStorage.getItem(ordersKey);
-          if (storedOrders) {
-            try {
-              const allOrders = JSON.parse(storedOrders);
-              console.log('📦 [MESSAGE-HANDLER] Total orders in storage:', allOrders.length);
-              console.log('📦 [MESSAGE-HANDLER] All orders:', allOrders.map((o: any) => ({ 
-                id: o.id, 
-                status: o.status, 
-                isSplitBill: o.isSplitBill,
-                orderType: o.orderType 
-              })));
-              
-              const pendingOrders = filterOrdersForPayment(allOrders);
-              
-              console.log('🔄 [ORDERS-PAGE] Refreshing orders after split bill creation:', pendingOrders.length);
-              console.log('📋 [ORDERS-PAGE] Split bills found:', pendingOrders.filter((o: any) => o.isSplitBill).length);
-              setOrders(pendingOrders);
-            } catch (error) {
-              console.error('❌ [ORDERS-PAGE] Error refreshing orders:', error);
-            }
+          try {
+            const response = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
+            const data = await response.json();
+            const pendingOrders = filterOrdersForPayment(data.orders || []);
+
+            console.log('🔄 [ORDERS-PAGE] Refreshing orders after split bill creation:', pendingOrders.length);
+            console.log('📋 [ORDERS-PAGE] Split bills found:', pendingOrders.filter((o: any) => o.isSplitBill).length);
+            setOrders(pendingOrders);
+          } catch (error) {
+            console.error('❌ [ORDERS-PAGE] Error refreshing orders:', error);
           }
-        }, 500); // Small delay to ensure localStorage is updated
+        }, 500);
         
         // Show notification
         toast({
@@ -836,23 +800,19 @@ export default function OrdersPage() {
   useEffect(() => {
     if (activeSubsection !== 'payment') return;
 
-    const fetchOrdersForPayment = () => {
+    const fetchOrdersForPayment = async () => {
       console.log('🔄 [PAYMENT-SECTION] Fetching orders for payment section...');
       const userId = getUserId();
-      
-      // Read orders directly from localStorage since API returns empty array
-      const ordersKey = `orders_${userId}`;
-      const storedOrders = localStorage.getItem(ordersKey);
-      let allOrders = [];
-      
-      if (storedOrders) {
-        try {
-          allOrders = JSON.parse(storedOrders);
-          console.log('📦 [PAYMENT-SECTION] Loaded orders from localStorage:', allOrders.length);
-        } catch (error) {
-          console.error('❌ [PAYMENT-SECTION] Error parsing orders from localStorage:', error);
-          allOrders = [];
-        }
+      let allOrders: any[] = [];
+
+      try {
+        const response = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
+        const data = await response.json();
+        allOrders = data.orders || [];
+        console.log('📦 [PAYMENT-SECTION] Loaded orders from API:', allOrders.length);
+      } catch (error) {
+        console.error('❌ [PAYMENT-SECTION] Error fetching orders from API:', error);
+        allOrders = [];
       }
       
       // Filter for pending orders using centralized function
@@ -925,18 +885,10 @@ export default function OrdersPage() {
     };
 
     // Handle storage events (for cross-tab communication)
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === `orders_${getUserId()}` && event.newValue) {
-        console.log('🔄 [PAYMENT-SECTION] Storage change detected, refreshing orders');
-        fetchOrdersForPayment();
-      }
-    };
-
     // Add event listeners
     window.addEventListener('orderCreated', handleOrderCreated as EventListener);
     window.addEventListener('orderStatusUpdated', handleOrderStatusUpdated as EventListener);
     window.addEventListener('splitBillCreated', handleSplitBillCreated as EventListener);
-    window.addEventListener('storage', handleStorageChange);
     
     // DISABLED: Periodic refresh causes split bills to disappear
     // Only refresh on actual events now
@@ -945,7 +897,6 @@ export default function OrdersPage() {
       window.removeEventListener('orderCreated', handleOrderCreated as EventListener);
       window.removeEventListener('orderStatusUpdated', handleOrderStatusUpdated as EventListener);
       window.removeEventListener('splitBillCreated', handleSplitBillCreated as EventListener);
-      window.removeEventListener('storage', handleStorageChange);
     };
   }, [activeSubsection, lastOrderCount]);
 
@@ -953,10 +904,19 @@ export default function OrdersPage() {
   useEffect(() => {
     if (activeSubsection !== 'order-history') return;
 
-    const fetchOrdersForHistory = () => {
+    const fetchOrdersForHistory = async () => {
       console.log('🔄 Fetching orders for history section...');
       const userId = getUserId();
-      const allOrders = JSON.parse(localStorage.getItem(`orders_${userId}`) || '[]');
+      let allOrders: any[] = [];
+
+      try {
+        const response = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
+        const data = await response.json();
+        allOrders = data.orders || [];
+      } catch (error) {
+        console.error('❌ [HISTORY-SECTION] Error fetching orders from API:', error);
+        allOrders = [];
+      }
       
       // Sort by creation date (newest first)
       const sortedOrders = allOrders.sort((a: any, b: any) => 
@@ -1002,14 +962,7 @@ export default function OrdersPage() {
     window.addEventListener('paymentCompleted', handlePaymentCompleted as EventListener);
     window.addEventListener('orderStatusUpdated', handleOrderStatusUpdated as EventListener);
     
-    // Set up interval to refresh orders every 3 seconds as backup
-    const interval = setInterval(() => {
-      console.log('⏰ [HISTORY-SECTION] Periodic refresh triggered');
-      fetchOrdersForHistory();
-    }, 3000);
-    
     return () => {
-      clearInterval(interval);
       window.removeEventListener('orderCreated', handleOrderCreated as EventListener);
       window.removeEventListener('paymentCompleted', handlePaymentCompleted as EventListener);
       window.removeEventListener('orderStatusUpdated', handleOrderStatusUpdated as EventListener);
@@ -1136,8 +1089,14 @@ export default function OrdersPage() {
     fetchTables();
   }, []);
 
-  const seedInventoryFromMenu = (userId: string, menu: MenuItem[]) => {
+  const seedInventoryFromMenu = async (userId: string, menu: MenuItem[]) => {
     try {
+      const inventoryResponse = await fetch(`/api/inventory?userId=${encodeURIComponent(userId)}`);
+      const inventoryData = await inventoryResponse.json();
+      const existingInventory = inventoryData.inventory || [];
+
+      if (existingInventory.length > 0) return;
+
       const ingredientMap = new Map<string, InventoryItem>();
       menu.forEach((item) => {
         if (!item.ingredients || !Array.isArray(item.ingredients)) return;
@@ -1169,7 +1128,15 @@ export default function OrdersPage() {
           }
         });
       });
-      saveInventory(userId, Array.from(ingredientMap.values()));
+
+      const items = Array.from(ingredientMap.values());
+      if (items.length === 0) return;
+
+      await fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action: 'sync', inventory: items })
+      });
     } catch (inventoryError) {
       console.error('Error seeding inventory from menu:', inventoryError);
     }
@@ -1179,38 +1146,6 @@ export default function OrdersPage() {
     setLoading(true);
     try {
       const userId = currentUser?.id || 'default_user';
-      const menuDataKey = `menu_data_${userId}`;
-      const storedMenuData = localStorage.getItem(menuDataKey);
-
-      if (storedMenuData) {
-        const menuData = JSON.parse(storedMenuData);
-        if (menuData?.version === MENU_DATA_VERSION) {
-          console.log('📋 [ORDERS] Loading saved menu data:', menuData);
-          console.log('📋 [ORDERS] Sample menu item price:', menuData.menuItems?.[0]?.price, typeof menuData.menuItems?.[0]?.price);
-
-          const convertedMenuItems = (menuData.menuItems || []).map((item: any) => ({
-            ...item,
-            price: typeof item.price === 'number' ? item.price.toString() : item.price,
-            sizes: item.sizes?.map((size: any) => ({
-              ...size,
-              price: typeof size.price === 'number' ? size.price.toString() : size.price
-            }))
-          }));
-
-          setMenuItems(convertedMenuItems);
-          setCategories(menuData.categories || []);
-          seedInventoryFromMenu(userId, convertedMenuItems);
-
-          const combosKey = `combos_data_${userId}`;
-          const storedCombos = localStorage.getItem(combosKey);
-          if (storedCombos) {
-            setCombos(JSON.parse(storedCombos));
-          }
-          return;
-        }
-
-        localStorage.removeItem(menuDataKey);
-      }
 
       try {
         const response = await fetch('/api/menuCsv');
@@ -1231,57 +1166,11 @@ export default function OrdersPage() {
           const uniqueCategories = [...new Set(menuItemsFromApi.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
           setMenuItems(menuItemsFromApi);
           setCategories(uniqueCategories);
-          seedInventoryFromMenu(userId, menuItemsFromApi);
-
-          const menuData = {
-            version: MENU_DATA_VERSION,
-            menuItems: menuItemsFromApi,
-            categories: uniqueCategories,
-            lastUpdated: new Date().toISOString()
-          };
-          localStorage.setItem(menuDataKey, JSON.stringify(menuData));
-
-          try {
-            const { saveDishes } = await import('@/server/lib/menuService');
-            const convertedMenu = menuItemsFromApi.map((item: any) => ({
-              ...item,
-              price: typeof item.price === 'string'
-                ? parseFloat(item.price.replace(/[^\d.,]/g, '').replace(',', '.'))
-                : item.price
-            }));
-            saveDishes(userId, convertedMenu);
-          } catch (saveError) {
-            console.error('Error saving menu from API:', saveError);
-          }
+          await seedInventoryFromMenu(userId, menuItemsFromApi);
           return;
         }
       } catch (apiError) {
         console.error('Error loading menu from API:', apiError);
-      }
-
-      try {
-        const { getDishes } = await import('@/server/lib/menuService');
-        const savedDishes = getDishes(userId);
-        if (savedDishes && savedDishes.length > 0) {
-          console.log('📋 [ORDERS] Loading menu from menu service:', savedDishes.length, 'items');
-
-          const convertedDishes = savedDishes.map((item: any) => ({
-            ...item,
-            price: typeof item.price === 'number' ? item.price.toString() : item.price,
-            sizes: item.sizes?.map((size: any) => ({
-              ...size,
-              price: typeof size.price === 'number' ? size.price.toString() : size.price
-            }))
-          }));
-
-          setMenuItems(convertedDishes);
-          const uniqueCategories = [...new Set(convertedDishes.map((item: MenuItem) => item.category))];
-          setCategories(uniqueCategories);
-          seedInventoryFromMenu(userId, convertedDishes);
-          return;
-        }
-      } catch (serviceError) {
-        console.error('Error loading from menu service:', serviceError);
       }
 
       const sessionMenuData = sessionStorage.getItem('extractedMenuItems');
@@ -1530,14 +1419,6 @@ export default function OrdersPage() {
       });
     }
     
-    // Save to localStorage
-    const userId = currentUser?.id || 'default_user';
-    const combosKey = `combos_data_${userId}`;
-    const updatedCombos = editingCombo 
-      ? combos.map(combo => combo.id === editingCombo.id ? newCombo : combo)
-      : [...combos, newCombo];
-    localStorage.setItem(combosKey, JSON.stringify(updatedCombos));
-
     // Reset form
     setComboCreatorForm({
       name: '',
@@ -1570,12 +1451,6 @@ export default function OrdersPage() {
     if (window.confirm('Are you sure you want to delete this combo?')) {
       setCombos(prev => prev.filter(combo => combo.id !== comboId));
       
-      // Update localStorage
-      const userId = currentUser?.id || 'default_user';
-      const combosKey = `combos_data_${userId}`;
-      const updatedCombos = combos.filter(combo => combo.id !== comboId);
-      localStorage.setItem(combosKey, JSON.stringify(updatedCombos));
-      
       toast({
         title: 'Combo Deleted',
         description: 'The combo has been removed.'
@@ -1587,14 +1462,6 @@ export default function OrdersPage() {
     setCombos(prev => prev.map(combo => 
       combo.id === comboId ? { ...combo, isActive: !combo.isActive } : combo
     ));
-    
-    // Update localStorage
-    const userId = currentUser?.id || 'default_user';
-    const combosKey = `combos_data_${userId}`;
-    const updatedCombos = combos.map(combo => 
-      combo.id === comboId ? { ...combo, isActive: !combo.isActive } : combo
-    );
-    localStorage.setItem(combosKey, JSON.stringify(updatedCombos));
   };
 
   // Get cross-selling combo recommendations based on current order
@@ -1688,113 +1555,80 @@ export default function OrdersPage() {
   };
 
   // Function to deduct inventory when order is placed
-  const deductInventoryForOrder = (userId: string, orderData: any) => {
-    console.log('🔄 [INVENTORY-DEDUCTION] Starting inventory deduction for order:', orderData.id);
-    
-    // Get current inventory and menu
-    const inventory = JSON.parse(localStorage.getItem(`inventory_${userId}`) || '[]');
-    const dishes = getDishes(userId);
-    
-    if (!inventory || inventory.length === 0) {
-      console.warn('⚠️ [INVENTORY-DEDUCTION] No inventory found');
-      return;
-    }
-    
-    if (!dishes || dishes.length === 0) {
-      console.warn('⚠️ [INVENTORY-DEDUCTION] No dishes found');
-      return;
-    }
-    
-    console.log('📦 [INVENTORY-DEDUCTION] Current inventory items:', inventory.length);
-    console.log('🍽️ [INVENTORY-DEDUCTION] Available dishes:', dishes.length);
-    
-    // Build deduction plan
-    const deductionPlan: any[] = [];
-    
-    for (const orderItem of orderData.items) {
-      const dish = dishes.find((d: any) => d.name.toLowerCase() === orderItem.name.toLowerCase());
-      
-      if (!dish) {
-        console.warn(`⚠️ [INVENTORY-DEDUCTION] Dish not found in menu: ${orderItem.name}`);
-        continue;
-      }
-      
-      console.log(`🍽️ [INVENTORY-DEDUCTION] Processing dish: ${orderItem.name} (quantity: ${orderItem.quantity})`);
-      
-      // Process ingredients for this dish
-      if (Array.isArray(dish.ingredients)) {
-        for (const ingredient of dish.ingredients) {
-          let ingredientName = '';
-          let quantityPerDish = 1;
-          
-          // Handle different ingredient formats
-          if (typeof ingredient === 'string') {
-            ingredientName = ingredient;
-            quantityPerDish = 1;
-          } else if (ingredient && typeof ingredient === 'object') {
-            // TypeScript check for ingredient properties
-            const ingObj = ingredient as any;
-            ingredientName = ingObj.inventoryItemName || ingObj.name || '';
-            quantityPerDish = ingObj.quantityPerDish || ingObj.quantity || 1;
-          }
-          
-          if (!ingredientName) continue;
-          
-          // Find inventory item
-          const invIdx = inventory.findIndex((item: any) => 
-            item.name.toLowerCase() === ingredientName.toLowerCase()
-          );
-          
-          if (invIdx !== -1) {
-            const invItem = inventory[invIdx];
-            const totalDeduct = quantityPerDish * orderItem.quantity;
-            
-            console.log(`📊 [INVENTORY-DEDUCTION] ${ingredientName}: ${quantityPerDish} x ${orderItem.quantity} = ${totalDeduct} ${invItem.unit}`);
-            
-            deductionPlan.push({
-              idx: invIdx,
-              name: ingredientName,
-              required: totalDeduct,
-              available: invItem.quantity || 0,
-              unit: invItem.unit || 'pieces'
-            });
-          } else {
-            console.warn(`⚠️ [INVENTORY-DEDUCTION] Ingredient not found in inventory: ${ingredientName}`);
-          }
+  const deductInventoryForOrder = async (userId: string, items: OrderItem[], orderId: string) => {
+    console.log('🔄 [INVENTORY-DEDUCTION] Starting inventory deduction for order:', orderId);
+
+    const updatesMap = new Map<string, { ingredientName: string; quantityToReduce: number; unit: string }>();
+
+    for (const orderItem of items) {
+      const ingredientList = Array.isArray(orderItem.menuItem.ingredients) ? orderItem.menuItem.ingredients : [];
+
+      for (const ingredient of ingredientList) {
+        let ingredientName = '';
+        let quantityPerDish = 1;
+        let unit = 'pcs';
+
+        if (typeof ingredient === 'string') {
+          ingredientName = ingredient;
+          quantityPerDish = 1;
+          unit = 'pcs';
+        } else if (ingredient && typeof ingredient === 'object') {
+          const ingObj = ingredient as any;
+          ingredientName = ingObj.inventoryItemName || ingObj.name || '';
+          quantityPerDish = ingObj.quantityPerDish || ingObj.quantity || 1;
+          unit = ingObj.unit || 'g';
+        }
+
+        if (!ingredientName) continue;
+
+        const totalDeduct = quantityPerDish * orderItem.quantity;
+        const key = `${ingredientName.toLowerCase()}__${unit}`;
+        const existing = updatesMap.get(key);
+
+        if (existing) {
+          existing.quantityToReduce += totalDeduct;
+        } else {
+          updatesMap.set(key, {
+            ingredientName,
+            quantityToReduce: totalDeduct,
+            unit
+          });
         }
       }
     }
-    
-    // Execute deductions
-    let totalDeductions = 0;
-    for (const deduction of deductionPlan) {
-      const invItem = inventory[deduction.idx];
-      const oldQuantity = invItem.quantity || 0;
-      const newQuantity = Math.max(0, oldQuantity - deduction.required);
-      
-      invItem.quantity = newQuantity;
-      invItem.quantityUsed = (invItem.quantityUsed || 0) + deduction.required;
-      invItem.totalUsed = (invItem.totalUsed || 0) + deduction.required;
-      invItem.lastUpdated = new Date().toISOString();
-      
-      console.log(`✅ [INVENTORY-DEDUCTION] ${deduction.name}: ${oldQuantity} → ${newQuantity} ${deduction.unit}`);
-      totalDeductions++;
+
+    const updates = Array.from(updatesMap.values());
+    if (updates.length === 0) {
+      console.warn('⚠️ [INVENTORY-DEDUCTION] No inventory updates required');
+      return;
     }
-    
-    // Save updated inventory
-    localStorage.setItem(`inventory_${userId}`, JSON.stringify(inventory));
-    console.log(`✅ [INVENTORY-DEDUCTION] Inventory updated! Total deductions: ${totalDeductions}`);
-    
-    // Dispatch inventory updated event
-    const inventoryUpdatedEvent = new CustomEvent('inventoryUpdated', {
-      detail: {
-        orderId: orderData.id,
-        deductionsCount: totalDeductions,
-        timestamp: new Date().toISOString()
+
+    try {
+      const response = await fetch('/api/inventory', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, updates })
+      });
+
+      if (!response.ok) {
+        console.warn('⚠️ [INVENTORY-DEDUCTION] Failed to update inventory');
+        return;
       }
-    });
-    window.dispatchEvent(inventoryUpdatedEvent);
-    console.log('📢 [INVENTORY-DEDUCTION] Inventory updated event dispatched');
+
+      console.log(`✅ [INVENTORY-DEDUCTION] Inventory updated! Total deductions: ${updates.length}`);
+
+      const inventoryUpdatedEvent = new CustomEvent('inventoryUpdated', {
+        detail: {
+          orderId,
+          deductionsCount: updates.length,
+          timestamp: new Date().toISOString()
+        }
+      });
+      window.dispatchEvent(inventoryUpdatedEvent);
+      console.log('📢 [INVENTORY-DEDUCTION] Inventory updated event dispatched');
+    } catch (error) {
+      console.error('❌ [INVENTORY-DEDUCTION] Error updating inventory:', error);
+    }
   };
 
   const handlePlaceOrder = async () => {
@@ -1815,8 +1649,10 @@ export default function OrdersPage() {
       }
     }
 
+    const userId = getUserId();
     const orderData = {
       id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      userId,
       orderType,
       driver: orderType === 'home-delivery' ? driver : undefined,
       customerInfo,
@@ -1838,14 +1674,15 @@ export default function OrdersPage() {
     };
 
     try {
-      // Store order in localStorage
-      const userId = getUserId();
-      const existingOrders = JSON.parse(localStorage.getItem(`orders_${userId}`) || '[]');
-      existingOrders.push(orderData);
-      localStorage.setItem(`orders_${userId}`, JSON.stringify(existingOrders));
-      
+      // Store order in Postgres
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+
       // Deduct inventory immediately when order is placed
-      deductInventoryForOrder(userId, orderData);
+      await deductInventoryForOrder(userId, orderItems, orderData.id);
       
       // Dispatch custom event to notify other components
       console.log('📡 Dispatching orderCreated event...');
@@ -1861,13 +1698,6 @@ export default function OrdersPage() {
       toast({
         title: "Order Created Successfully! 🎉",
         description: `Order #${orderData.id} has been created. Inventory has been updated automatically.`,
-      });
-      
-      // Also call API for any server-side processing
-      await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
       });
       
       // If dine-in order, mark table as occupied
@@ -1914,7 +1744,8 @@ export default function OrdersPage() {
   // Payment functions
   const loadOrders = async () => {
     try {
-      const response = await fetch('/api/orders');
+      const userId = getUserId();
+      const response = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
       if (response.ok) {
         const data = await response.json();
         // Use centralized filter to include split bills
@@ -1937,17 +1768,17 @@ export default function OrdersPage() {
     if (currentUser) {
       setIsHistoryLoading(true);
       try {
-        // Get orders from localStorage instead of API
         const userId = getUserId();
-        const allOrders = JSON.parse(localStorage.getItem(`orders_${userId}`) || '[]');
-        
+        const ordersResponse = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
+        const ordersData = await ordersResponse.json();
+
         // Sort by creation date (newest first)
-        const sortedOrders = allOrders.sort((a: any, b: any) => 
+        const sortedOrders = (ordersData.orders || []).sort((a: any, b: any) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setCompletedOrders(sortedOrders);
         
-        // Get tables from localStorage or API
+        // Get tables from API
         try {
         const resTables = await fetch('/api/tables');
         const dataTables = await resTables.json();
@@ -1991,54 +1822,22 @@ export default function OrdersPage() {
     try {
       console.log('🔄 [STATUS-UPDATE] Updating order status:', orderId, 'to', newStatus);
       
-      // Update order in localStorage
       const userId = getUserId();
-      const ordersKey = `orders_${userId}`;
-      const storedOrders = localStorage.getItem(ordersKey);
-      
-      if (storedOrders) {
-        try {
-          const allOrders = JSON.parse(storedOrders);
-          const updatedOrders = allOrders.map((order: any) => {
-            if (order.id === orderId) {
-              return {
-                ...order,
-                status: newStatus,
-                cancellationReason: reason || order.cancellationReason || '',
-                updatedAt: new Date().toISOString()
-              };
-            }
-            return order;
-          });
-          
-          localStorage.setItem(ordersKey, JSON.stringify(updatedOrders));
-          console.log('✅ [STATUS-UPDATE] Order updated in localStorage');
-          console.log('🔍 [STATUS-UPDATE] Updated order details:', updatedOrders.find((o: any) => o.id === orderId));
-        } catch (error) {
-          console.error('❌ [STATUS-UPDATE] Error updating order in localStorage:', error);
-        }
-      }
+      const response = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: orderId,
+          status: newStatus,
+          cancellationReason: reason || '',
+          userId: userId
+        })
+      });
 
-      // Also update via API for consistency
-      try {
-        const response = await fetch('/api/orders', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: orderId,
-            status: newStatus,
-            cancellationReason: reason || '',
-            userId: userId
-          })
-        });
-
-        if (response.ok) {
-          console.log('✅ [STATUS-UPDATE] Order updated via API');
-        } else {
-          console.warn('⚠️ [STATUS-UPDATE] API update failed, but localStorage was updated');
-        }
-      } catch (apiError) {
-        console.warn('⚠️ [STATUS-UPDATE] API update failed, but localStorage was updated:', apiError);
+      if (response.ok) {
+        console.log('✅ [STATUS-UPDATE] Order updated via API');
+      } else {
+        console.warn('⚠️ [STATUS-UPDATE] API update failed');
       }
 
       toast({
@@ -2059,18 +1858,13 @@ export default function OrdersPage() {
       console.log('📢 [STATUS-UPDATE] Order status updated event dispatched');
       
       // Refresh the order history
+      // Refresh order history
       fetchOrderHistory();
       
       // Also refresh payment section if it's active (in case order status affects pending orders)
       if (activeSubsection === 'payment') {
         console.log('🔄 [STATUS-UPDATE] Refreshing payment section due to status change');
-        const updatedStoredOrders = localStorage.getItem(ordersKey);
-        if (updatedStoredOrders) {
-          const allOrders = JSON.parse(updatedStoredOrders);
-          const pendingOrders = filterOrdersForPayment(allOrders);
-          setOrders(pendingOrders);
-          setLastOrderCount(pendingOrders.length);
-        }
+        loadOrders();
       }
       
     } catch (error) {
@@ -2163,7 +1957,10 @@ export default function OrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingOrder.id,
-          customerInfo: editCustomerInfo,
+          customerInfo: {
+            ...editCustomerInfo,
+            splitMeta: editingOrder.customerInfo?.splitMeta || editingOrder.splitMeta || undefined
+          },
           userId: currentUser?.id || 'default_user'
         })
       });
@@ -2218,15 +2015,13 @@ export default function OrdersPage() {
   };
 
   // Handle simple split bill creation for testing
-  const handleSimpleSplitBill = (order: any) => {
+  const handleSimpleSplitBill = async (order: any) => {
     if (!order || order.status === 'Split') return;
-    
+
     try {
       const userId = getUserId();
-      const ordersKey = `orders_${userId}`;
-      const existingOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
-      
-      // Create two split bills
+      const baseCustomerInfo = order.customerInfo || {};
+
       const splitBill1 = {
         ...order,
         id: `${order.id}_split_1`,
@@ -2235,11 +2030,22 @@ export default function OrdersPage() {
         totalSplits: 2,
         payerName: 'Payer 1',
         items: order.items.slice(0, Math.ceil(order.items.length / 2)),
-        totalAmount: Math.round((order.totalAmount / 2) * 100) / 100, // Round to 2 decimal places
+        totalAmount: Math.round((order.totalAmount / 2) * 100) / 100,
         status: 'Pending Payment',
-        isSplitBill: true
+        isSplitBill: true,
+        userId,
+        customerInfo: {
+          ...baseCustomerInfo,
+          splitMeta: {
+            isSplitBill: true,
+            parentOrderId: order.id,
+            splitNumber: 1,
+            totalSplits: 2,
+            payerName: 'Payer 1'
+          }
+        }
       };
-      
+
       const splitBill2 = {
         ...order,
         id: `${order.id}_split_2`,
@@ -2248,46 +2054,57 @@ export default function OrdersPage() {
         totalSplits: 2,
         payerName: 'Payer 2',
         items: order.items.slice(Math.ceil(order.items.length / 2)),
-        totalAmount: Math.round((order.totalAmount / 2) * 100) / 100, // Round to 2 decimal places
+        totalAmount: Math.round((order.totalAmount / 2) * 100) / 100,
         status: 'Pending Payment',
-        isSplitBill: true
-      };
-      
-      // Update original order status
-      const updatedOrders = existingOrders.map((o: any) => {
-        if (o.id === order.id) {
-          return { ...o, status: 'Split', splitInto: 2 };
+        isSplitBill: true,
+        userId,
+        customerInfo: {
+          ...baseCustomerInfo,
+          splitMeta: {
+            isSplitBill: true,
+            parentOrderId: order.id,
+            splitNumber: 2,
+            totalSplits: 2,
+            payerName: 'Payer 2'
+          }
         }
-        return o;
+      };
+
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(splitBill1)
       });
-      
-      // Add split bills
-      updatedOrders.push(splitBill1, splitBill2);
-      
-      // Save back to localStorage
-      localStorage.setItem(ordersKey, JSON.stringify(updatedOrders));
-      
+
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(splitBill2)
+      });
+
+      await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: order.id,
+          status: 'Split',
+          userId,
+          customerInfo: {
+            ...baseCustomerInfo,
+            splitMeta: {
+              splitInto: 2
+            }
+          }
+        })
+      });
+
       toast({
         title: "Split Bills Created! 🎉",
         description: `Order split into 2 separate bills for ${splitBill1.payerName} and ${splitBill2.payerName}`
       });
-      
-      // Refresh the orders list - include split bills in pending orders
-      const pendingOrders = updatedOrders.filter((order: any) => 
-        (order.status === 'Pending' || order.status === 'Order Received' || order.status === 'Pending Payment') &&
-        order.orderType !== 'home-delivery' &&
-        (order.status !== 'Split' || order.isSplitBill) // Include split bills but exclude parent orders
-      );
-      
-      console.log('🔄 [QUICK-SPLIT] Updated orders:', updatedOrders.length);
-      console.log('🔄 [QUICK-SPLIT] Pending orders after split:', pendingOrders.length);
-      console.log('🔄 [QUICK-SPLIT] Split bills created:', pendingOrders.filter((o: any) => o.isSplitBill));
-      
-      setOrders(pendingOrders);
-      
-      // Clear selected order so user can see the new split bills
+
+      await refreshOrdersForPayment();
       setSelectedOrder(null);
-      
     } catch (error) {
       console.error('Error creating split bills:', error);
       toast({
@@ -2351,54 +2168,45 @@ export default function OrdersPage() {
   };
 
   // Check if all split bills are completed and update parent order status
-  const checkAndUpdateParentOrderStatus = (parentOrderId: string) => {
+  const checkAndUpdateParentOrderStatus = async (parentOrderId: string) => {
     const userId = getUserId();
-    const ordersKey = `orders_${userId}`;
-    const storedOrders = localStorage.getItem(ordersKey);
-    
-    if (storedOrders) {
-      try {
-        const allOrders = JSON.parse(storedOrders);
-        
-        // Find all split bills for this parent order
-        const splitBills = allOrders.filter((order: any) => 
-          order.isSplitBill && order.parentOrderId === parentOrderId
-        );
-        
-        console.log(`🔍 [PARENT-CHECK] Found ${splitBills.length} split bills for parent ${parentOrderId}`);
-        console.log(`🔍 [PARENT-CHECK] Split bill statuses:`, splitBills.map((bill: any) => ({ id: bill.id, status: bill.status })));
-        
-        // Check if all split bills are completed
-        const allCompleted = splitBills.every((bill: any) => bill.status === 'Completed');
-        
-        if (allCompleted && splitBills.length > 0) {
-          console.log('✅ [PARENT-CHECK] All split bills completed, updating parent order status');
-          
-          // Update parent order status to completed
-          const updatedOrders = allOrders.map((order: any) => {
-            if (order.id === parentOrderId) {
-              return {
-                ...order,
-                status: 'Completed',
-                updatedAt: new Date().toISOString()
-              };
-            }
-            return order;
-          });
-          
-          localStorage.setItem(ordersKey, JSON.stringify(updatedOrders));
-          
-          // Show notification
-          toast({
-            title: "All Split Bills Completed! 🎉",
-            description: `All split bills for order ${parentOrderId} have been completed. The group will now disappear from the payment section.`,
-          });
-        } else {
-          console.log(`⏳ [PARENT-CHECK] Not all split bills completed yet (${splitBills.filter((bill: any) => bill.status === 'Completed').length}/${splitBills.length})`);
-        }
-      } catch (error) {
-        console.error('❌ [PARENT-CHECK] Error checking parent order status:', error);
+
+    try {
+      const response = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
+      const data = await response.json();
+      const allOrders = data.orders || [];
+
+      const splitBills = allOrders.filter((order: any) =>
+        order.isSplitBill && order.parentOrderId === parentOrderId
+      );
+
+      console.log(`🔍 [PARENT-CHECK] Found ${splitBills.length} split bills for parent ${parentOrderId}`);
+      console.log(`🔍 [PARENT-CHECK] Split bill statuses:`, splitBills.map((bill: any) => ({ id: bill.id, status: bill.status })));
+
+      const allCompleted = splitBills.every((bill: any) => bill.status === 'Completed');
+
+      if (allCompleted && splitBills.length > 0) {
+        console.log('✅ [PARENT-CHECK] All split bills completed, updating parent order status');
+
+        await fetch('/api/orders', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: parentOrderId,
+            status: 'Completed',
+            userId
+          })
+        });
+
+        toast({
+          title: "All Split Bills Completed! 🎉",
+          description: `All split bills for order ${parentOrderId} have been completed. The group will now disappear from the payment section.`,
+        });
+      } else {
+        console.log(`⏳ [PARENT-CHECK] Not all split bills completed yet (${splitBills.filter((bill: any) => bill.status === 'Completed').length}/${splitBills.length})`);
       }
+    } catch (error) {
+      console.error('❌ [PARENT-CHECK] Error checking parent order status:', error);
     }
   };
 
@@ -2469,10 +2277,7 @@ export default function OrdersPage() {
   };
 
   const getUserId = () => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userId') || currentUser?.id || 'default_user';
-    }
-    return 'default_user';
+    return currentUser?.id || 'default_user';
   };
 
   // Centralized filter function for payment section orders
@@ -2501,36 +2306,18 @@ export default function OrdersPage() {
   };
 
   // Global function to refresh orders (can be called from split bill page)
-  const refreshOrdersForPayment = () => {
+  const refreshOrdersForPayment = async () => {
     const userId = getUserId();
-    const ordersKey = `orders_${userId}`;
-    const storedOrders = localStorage.getItem(ordersKey);
-    if (storedOrders) {
-      try {
-        const allOrders = JSON.parse(storedOrders);
-        console.log('🔍 [GLOBAL-REFRESH] All orders in localStorage:', allOrders.map((o: any) => ({
-          id: o.id,
-          status: o.status,
-          isSplitBill: o.isSplitBill,
-          parentOrderId: o.parentOrderId,
-          totalAmount: o.totalAmount
-        })));
-        
-        const pendingOrders = filterOrdersForPayment(allOrders);
-        console.log('🔍 [GLOBAL-REFRESH] Filtered pending orders:', pendingOrders.map((o: any) => ({
-          id: o.id,
-          status: o.status,
-          isSplitBill: o.isSplitBill,
-          parentOrderId: o.parentOrderId,
-          totalAmount: o.totalAmount
-        })));
-        
-        setOrders(pendingOrders);
-        console.log('🔄 [GLOBAL-REFRESH] Orders refreshed:', pendingOrders.length);
-        console.log('🔄 [GLOBAL-REFRESH] Split bills:', pendingOrders.filter((o: any) => o.isSplitBill).length);
-      } catch (error) {
-        console.error('❌ [GLOBAL-REFRESH] Error refreshing orders:', error);
-      }
+    try {
+      const response = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
+      const data = await response.json();
+      const pendingOrders = filterOrdersForPayment(data.orders || []);
+
+      setOrders(pendingOrders);
+      console.log('🔄 [GLOBAL-REFRESH] Orders refreshed:', pendingOrders.length);
+      console.log('🔄 [GLOBAL-REFRESH] Split bills:', pendingOrders.filter((o: any) => o.isSplitBill).length);
+    } catch (error) {
+      console.error('❌ [GLOBAL-REFRESH] Error refreshing orders:', error);
     }
   };
 
@@ -2831,38 +2618,6 @@ export default function OrdersPage() {
       if (response.ok) {
         console.log('✅ [PAYMENT-PROCESSING] Order status updated successfully');
 
-        // Update order in localStorage to mark as completed
-        const userId = getUserId();
-        const ordersKey = `orders_${userId}`;
-        const storedOrders = localStorage.getItem(ordersKey);
-        
-        if (storedOrders) {
-          try {
-            const allOrders = JSON.parse(storedOrders);
-            const updatedOrders = allOrders.map((order: any) => {
-              if (order.id === selectedOrder.id) {
-                return {
-                  ...order,
-                  status: 'Completed',
-                  paymentMode: selectedPaymentMethod,
-                  tipAmount: parseFloat(tipAmount) || 0,
-                  amountPaid: selectedPaymentMethod === 'cash' ? received : totalAmount,
-                  completedAt: new Date().toISOString(),
-                  discountPercentage: parseFloat(discountPercentage) || 0,
-                  discountAmount: getDiscountAmount(),
-                  change: selectedPaymentMethod === 'cash' ? calculateChange() : 0
-                };
-              }
-              return order;
-            });
-            
-            localStorage.setItem(ordersKey, JSON.stringify(updatedOrders));
-            console.log('✅ [PAYMENT-PROCESSING] Order updated in localStorage');
-          } catch (error) {
-            console.error('❌ [PAYMENT-PROCESSING] Error updating order in localStorage:', error);
-          }
-        }
-
         // Generate bill and receipt data
         const paymentDetails = {
           paymentMethod: selectedPaymentMethod,
@@ -2888,14 +2643,7 @@ export default function OrdersPage() {
 
         // Refresh payment section orders (this will remove the completed order from pending list)
         console.log('🔄 [PAYMENT-PROCESSING] Refreshing payment section...');
-        const updatedStoredOrders = localStorage.getItem(ordersKey);
-        if (updatedStoredOrders) {
-          const allOrders = JSON.parse(updatedStoredOrders);
-          const pendingOrders = filterOrdersForPayment(allOrders);
-          setOrders(pendingOrders);
-          setLastOrderCount(pendingOrders.length);
-          console.log(`📊 [PAYMENT-PROCESSING] Updated payment section: ${pendingOrders.length} pending orders`);
-        }
+        await refreshOrdersForPayment();
 
         // Refresh order history section
         fetchOrderHistory();
@@ -4644,434 +4392,20 @@ export default function OrdersPage() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => {
-                        console.log('🔄 [PAYMENT-SECTION] Manual refresh triggered');
-                        const userId = getUserId();
-                        const ordersKey = `orders_${userId}`;
-                        const storedOrders = localStorage.getItem(ordersKey);
-                        let allOrders = [];
-                        if (storedOrders) {
-                          try {
-                            allOrders = JSON.parse(storedOrders);
-                          } catch (error) {
-                            console.error('❌ [PAYMENT-SECTION] Error parsing orders:', error);
-                            allOrders = [];
-                          }
-                        }
-                        const pendingOrders = allOrders.filter((order: any) => 
-                          (order.status === 'Pending' || order.status === 'Order Received' || order.status === 'Pending Payment') &&
-                          order.orderType !== 'home-delivery' &&
-                          (order.status !== 'Split' || order.isSplitBill)
-                        );
-                        setOrders(pendingOrders);
-                        setLastOrderCount(pendingOrders.length);
+                        refreshOrdersForPayment();
                         toast({
                           title: "Orders Refreshed",
-                          description: `Found ${pendingOrders.length} pending orders`,
+                          description: "Latest orders loaded from the database.",
                         });
                       }}
                     >
                       <RefreshCw className="h-4 w-4 mr-2" />
                       Refresh Orders
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        const userId = getUserId();
-                        const ordersKey = `orders_${userId}`;
-                        const allOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
-                        console.log('🔍 [DEBUG] Total orders:', allOrders.length);
-                        console.log('🔍 [DEBUG] Order IDs:', allOrders.map((o: any) => o.id));
-                        const splitBills = allOrders.filter((o: any) => o.isSplitBill);
-                        console.log('🔍 [DEBUG] Split bills:', splitBills.length);
-                        toast({
-                          title: "Debug Complete",
-                          description: `${allOrders.length} orders, ${splitBills.length} splits. Check console.`,
-                        });
-                      }}
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Debug All Data
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        console.log('🔄 [MANUAL-REFRESH] Manually refreshing orders...');
-                        refreshOrdersForPayment();
-                      }}
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Force Refresh
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => {
-                        const userId = getUserId();
-                        const ordersKey = `orders_${userId}`;
-                        const existingOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
-                        const uniqueOrders = new Map();
-                        existingOrders.forEach((order: any) => {
-                          if (!uniqueOrders.has(order.id)) {
-                            uniqueOrders.set(order.id, order);
-                          }
-                        });
-                        const deduplicatedOrders = Array.from(uniqueOrders.values());
-                        localStorage.setItem(ordersKey, JSON.stringify(deduplicatedOrders));
-                        refreshOrdersForPayment();
-                        toast({
-                          title: "Duplicates Removed",
-                          description: `Removed ${existingOrders.length - deduplicatedOrders.length} duplicates.`,
-                        });
-                      }}
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Remove Duplicates
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        const userId = getUserId();
-                        const ordersKey = `orders_${userId}`;
-                        const storedOrders = localStorage.getItem(ordersKey);
-                        if (storedOrders) {
-                          const allOrders = JSON.parse(storedOrders);
-                          const filteredOrders = allOrders.filter((order: any) => {
-                            if (order.isSplitBill) return false;
-                            if (order.status === 'Split') {
-                              order.status = 'Pending Payment';
-                              order.splitInto = undefined;
-                              order.splitBillIds = undefined;
-                            }
-                            return true;
-                          });
-                          localStorage.setItem(ordersKey, JSON.stringify(filteredOrders));
-                          refreshOrdersForPayment();
-                        }
-                      }}
-                      className="text-orange-600"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Clear ALL Splits
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        const userId = getUserId();
-                        const ordersKey = `orders_${userId}`;
-                        localStorage.removeItem(ordersKey);
-                        localStorage.removeItem('selectedOrderForSplit');
-                        refreshOrdersForPayment();
-                        toast({
-                          title: "Nuclear Clear Complete",
-                          description: "All data cleared. Create new orders.",
-                          variant: "destructive"
-                        });
-                      }}
-                      className="text-red-600"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Nuclear Clear
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => {
-                        // Create test order
-                        const userId = getUserId();
-                        const ordersKey = `orders_${userId}`;
-                        const existingOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
-                        const testOrder = {
-                          id: `test_order_${Date.now()}`,
-                          tableId: '1',
-                          status: 'Pending Payment',
-                          items: [{ name: 'Test Item', quantity: 1, unitPrice: 10.00 }],
-                          totalAmount: 10.00,
-                          createdAt: new Date().toISOString(),
-                          orderType: 'dine-in'
-                        };
-                        existingOrders.push(testOrder);
-                        localStorage.setItem(ordersKey, JSON.stringify(existingOrders));
-                        refreshOrdersForPayment();
-                        toast({
-                          title: "Test Order Created",
-                          description: `Order ${testOrder.id} created`,
-                        });
-                      }}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Create Test Order
-                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
               
-              <div className="hidden">
-                  <Button
-                    onClick={() => {
-                      console.log('🔄 [PAYMENT-SECTION] Manual refresh triggered');
-                      const userId = getUserId();
-                      
-                      // Read orders directly from localStorage
-                      const ordersKey = `orders_${userId}`;
-                      const storedOrders = localStorage.getItem(ordersKey);
-                      let allOrders = [];
-                      
-                      if (storedOrders) {
-                        try {
-                          allOrders = JSON.parse(storedOrders);
-                        } catch (error) {
-                          console.error('❌ [PAYMENT-SECTION] Error parsing orders:', error);
-                          allOrders = [];
-                        }
-                      }
-                      
-                      const pendingOrders = allOrders.filter((order: any) => 
-                        (order.status === 'Pending' || order.status === 'Order Received' || order.status === 'Pending Payment') &&
-                        order.orderType !== 'home-delivery' &&
-                        (order.status !== 'Split' || order.isSplitBill) // Include split bills but exclude parent orders
-                      );
-                      
-                      console.log('📊 [PAYMENT-SECTION] Manual refresh found orders:', pendingOrders.length);
-                      console.log('📦 [PAYMENT-SECTION] All orders in storage:', allOrders.length);
-                      console.log('📋 [PAYMENT-SECTION] Split bills found:', pendingOrders.filter((o: any) => o.isSplitBill).length);
-                      setOrders(pendingOrders);
-                      setLastOrderCount(pendingOrders.length);
-                      toast({
-                        title: "Orders Refreshed",
-                        description: `Found ${pendingOrders.length} pending orders out of ${allOrders.length} total orders`,
-                      });
-                    }}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Refresh Orders
-                  </Button>
-                  
-                  <Button
-                    onClick={() => {
-                      // Comprehensive debug function
-                      const userId = getUserId();
-                      const ordersKey = `orders_${userId}`;
-                      const allOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
-                      
-                      console.log('🔍 [DEBUG] === COMPREHENSIVE LOCALSTORAGE DEBUG ===');
-                      console.log('🔍 [DEBUG] User ID:', userId);
-                      console.log('🔍 [DEBUG] Orders Key:', ordersKey);
-                      console.log('🔍 [DEBUG] Total orders in localStorage:', allOrders.length);
-                      console.log('🔍 [DEBUG] All order IDs:', allOrders.map((o: any) => o.id));
-                      
-                      // Check for the specific order that's failing
-                      const failingOrderId = 'order_1760041903044_zalzg';
-                      const failingOrder = allOrders.find((o: any) => o.id === failingOrderId);
-                      
-                      console.log('🔍 [DEBUG] Looking for failing order:', failingOrderId);
-                      console.log('🔍 [DEBUG] Failing order found:', failingOrder ? 'YES' : 'NO');
-                      if (failingOrder) {
-                        console.log('🔍 [DEBUG] Failing order details:', {
-                          id: failingOrder.id,
-                          status: failingOrder.status,
-                          isSplitBill: failingOrder.isSplitBill,
-                          totalAmount: failingOrder.totalAmount,
-                          items: failingOrder.items?.length || 0
-                        });
-                      } else {
-                        console.log('❌ [DEBUG] ORDER NOT FOUND IN LOCALSTORAGE!');
-                        console.log('❌ [DEBUG] This explains why split bill page shows "Order Not Found"');
-                        console.log('❌ [DEBUG] Available orders:', allOrders.map((o: any) => o.id));
-                      }
-                      
-                      // Show split bills
-                      const splitBills = allOrders.filter((o: any) => o.isSplitBill);
-                      console.log('🔍 [DEBUG] Split bills found:', splitBills.length);
-                      console.log('🔍 [DEBUG] Split bill IDs:', splitBills.map((o: any) => o.id));
-                      
-                      // Show regular orders
-                      const regularOrders = allOrders.filter((o: any) => !o.isSplitBill);
-                      console.log('🔍 [DEBUG] Regular orders found:', regularOrders.length);
-                      console.log('🔍 [DEBUG] Regular order IDs:', regularOrders.map((o: any) => o.id));
-                      
-                      toast({
-                        title: "Debug Complete",
-                        description: `Found ${allOrders.length} total orders, ${splitBills.length} split bills. Check console for details.`,
-                      });
-                    }}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Debug All Data
-                  </Button>
-                  
-                  <Button
-                    onClick={() => {
-                      console.log('🔄 [MANUAL-REFRESH] Manually refreshing orders...');
-                      refreshOrdersForPayment();
-                    }}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Force Refresh
-                  </Button>
-                  
-                  <Button
-                    onClick={() => {
-                      // Clear ALL split bills and duplicates for debugging
-                      const userId = getUserId();
-                      const ordersKey = `orders_${userId}`;
-                      const storedOrders = localStorage.getItem(ordersKey);
-                      if (storedOrders) {
-                        const allOrders = JSON.parse(storedOrders);
-                        console.log('🧹 [DEBUG] Before clearing - Total orders:', allOrders.length);
-                        console.log('🧹 [DEBUG] Split bills found:', allOrders.filter((o: any) => o.isSplitBill).length);
-                        
-                        // Remove ALL split bills and reset parent orders
-                        const filteredOrders = allOrders.filter((order: any) => {
-                          if (order.isSplitBill) {
-                            return false; // Remove all split bills
-                          }
-                          // Reset parent orders that were split back to their original status
-                          if (order.status === 'Split') {
-                            order.status = 'Pending Payment';
-                            order.splitInto = undefined;
-                            order.splitBillIds = undefined;
-                          }
-                          return true;
-                        });
-                        
-                        localStorage.setItem(ordersKey, JSON.stringify(filteredOrders));
-                        console.log('🧹 [DEBUG] After clearing - Total orders:', filteredOrders.length);
-                        console.log('🧹 [DEBUG] Remaining orders:', filteredOrders.map((o: any) => ({ id: o.id, status: o.status })));
-                        refreshOrdersForPayment();
-                      }
-                    }}
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Clear ALL Splits
-                  </Button>
-                  
-                  <Button
-                    onClick={() => {
-                      // Nuclear option: Clear everything and start fresh
-                      const userId = getUserId();
-                      const ordersKey = `orders_${userId}`;
-                      localStorage.removeItem(ordersKey);
-                      localStorage.removeItem('selectedOrderForSplit');
-                      console.log('💥 [NUCLEAR] Cleared ALL localStorage data');
-                      console.log('💥 [NUCLEAR] User ID:', userId);
-                      console.log('💥 [NUCLEAR] Orders key:', ordersKey);
-                      refreshOrdersForPayment();
-                      toast({
-                        title: "Nuclear Clear Complete",
-                        description: "All localStorage data has been cleared. You'll need to create new orders.",
-                        variant: "destructive"
-                      });
-                    }}
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Nuclear Clear
-                  </Button>
-                  
-                  <Button
-                    onClick={() => {
-                      // Remove duplicate orders from localStorage
-                      const userId = getUserId();
-                      const ordersKey = `orders_${userId}`;
-                      const existingOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
-                      
-                      console.log('🧹 [DEDUP] Before deduplication:', existingOrders.length);
-                      
-                      // Create a Map to track unique orders by ID
-                      const uniqueOrders = new Map();
-                      existingOrders.forEach((order: any) => {
-                        if (!uniqueOrders.has(order.id)) {
-                          uniqueOrders.set(order.id, order);
-                        } else {
-                          console.log('🧹 [DEDUP] Removing duplicate order:', order.id);
-                        }
-                      });
-                      
-                      const deduplicatedOrders = Array.from(uniqueOrders.values());
-                      localStorage.setItem(ordersKey, JSON.stringify(deduplicatedOrders));
-                      
-                      console.log('✅ [DEDUP] After deduplication:', deduplicatedOrders.length);
-                      console.log('✅ [DEDUP] Removed', existingOrders.length - deduplicatedOrders.length, 'duplicates');
-                      
-                      refreshOrdersForPayment();
-                      toast({
-                        title: "Duplicates Removed",
-                        description: `Removed ${existingOrders.length - deduplicatedOrders.length} duplicate orders.`,
-                      });
-                    }}
-                    variant="secondary"
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Remove Duplicates
-                  </Button>
-                  
-                  <Button
-                    onClick={() => {
-                      // Create the missing order for testing
-                      const userId = getUserId();
-                      const ordersKey = `orders_${userId}`;
-                      const existingOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
-                      
-                      const testOrder = {
-                        id: 'order_1760041903044_zalzg',
-                        customerName: 'Test Customer',
-                        tableNumber: '5',
-                        status: 'Order Received',
-                        orderType: 'dine-in',
-                        items: [
-                          {
-                            id: 'item_1',
-                            name: 'Chicken Biryani',
-                            quantity: 1,
-                            unitPrice: 12.90,
-                            total: 12.90,
-                            addons: []
-                          },
-                          {
-                            id: 'item_2',
-                            name: 'Dal Masoor Tadka',
-                            quantity: 1,
-                            unitPrice: 9.90,
-                            total: 9.90,
-                            addons: []
-                          }
-                        ],
-                        subtotal: 22.80,
-                        tax: 4.33,
-                        totalAmount: 27.13,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        isSplitBill: false
-                      };
-                      
-                      existingOrders.push(testOrder);
-                      localStorage.setItem(ordersKey, JSON.stringify(existingOrders));
-                      
-                      console.log('✅ [CREATE-TEST] Created missing order:', testOrder.id);
-                      console.log('✅ [CREATE-TEST] Order details:', {
-                        id: testOrder.id,
-                        items: testOrder.items.length,
-                        totalAmount: testOrder.totalAmount
-                      });
-                      
-                      refreshOrdersForPayment();
-                      toast({
-                        title: "Test Order Created",
-                        description: `Created order ${testOrder.id} for testing split functionality.`,
-                      });
-                    }}
-                    variant="default"
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Create Test Order
-                  </Button>
-              </div>
-
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Order Selection */}
                 <Card>
@@ -5630,23 +4964,11 @@ export default function OrdersPage() {
                                 className="w-full"
                                 size="lg"
                                 onClick={() => {
-                                  // Refresh orders to show split bills
-                                  const userId = getUserId();
-                                  const ordersKey = `orders_${userId}`;
-                                  const storedOrders = localStorage.getItem(ordersKey);
-                                  if (storedOrders) {
-                                    const allOrders = JSON.parse(storedOrders);
-                                    const pendingOrders = allOrders.filter((order: any) => 
-                                      (order.status === 'Pending' || order.status === 'Order Received' || order.status === 'Pending Payment') &&
-                                      order.orderType !== 'home-delivery' &&
-                                      order.status !== 'Split'
-                                    );
-                                    setOrders(pendingOrders);
-                                    toast({
-                                      title: "Orders Refreshed",
-                                      description: "Split bills should now be visible in the order list"
-                                    });
-                                  }
+                                  refreshOrdersForPayment();
+                                  toast({
+                                    title: "Orders Refreshed",
+                                    description: "Split bills should now be visible in the order list"
+                                  });
                                 }}
                               >
                                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -6054,71 +5376,99 @@ export default function OrdersPage() {
                 Cancel
               </Button>
               <Button
-                onClick={() => {
+                onClick={async () => {
                   // Create split bills based on assignments
                   if (!selectedOrder) return;
-                  
-                  const userId = getUserId();
-                  const ordersKey = `orders_${userId}`;
-                  const existingOrders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
-                  
-                  // Group items by payee
-                  const payeeGroups: {[key: number]: any[]} = {};
-                  selectedOrder.items.forEach((item: any, idx: number) => {
-                    const payeeNum = payeeAssignments[idx] || 1;
-                    if (!payeeGroups[payeeNum]) {
-                      payeeGroups[payeeNum] = [];
-                    }
-                    payeeGroups[payeeNum].push(item);
-                  });
-                  
-                  // Create split bills for each payee
-                  const splitBills = Object.entries(payeeGroups).map(([payeeNum, items]) => {
-                    const payeeTotal = items.reduce((sum, item) => 
-                      sum + (parseFloat(item.unitPrice) * item.quantity), 0
+
+                  try {
+                    const userId = getUserId();
+                    const baseCustomerInfo = selectedOrder.customerInfo || {};
+
+                    // Group items by payee
+                    const payeeGroups: { [key: number]: any[] } = {};
+                    selectedOrder.items.forEach((item: any, idx: number) => {
+                      const payeeNum = payeeAssignments[idx] || 1;
+                      if (!payeeGroups[payeeNum]) {
+                        payeeGroups[payeeNum] = [];
+                      }
+                      payeeGroups[payeeNum].push(item);
+                    });
+
+                    // Create split bills for each payee
+                    const splitBills = Object.entries(payeeGroups).map(([payeeNum, items]) => {
+                      const payeeTotal = items.reduce((sum, item) =>
+                        sum + (parseFloat(item.unitPrice) * item.quantity), 0
+                      );
+
+                      return {
+                        ...selectedOrder,
+                        id: `${selectedOrder.id}_split_${payeeNum}`,
+                        parentOrderId: selectedOrder.id,
+                        splitNumber: parseInt(payeeNum),
+                        totalSplits: numberOfPayees,
+                        payerName: `Payee ${payeeNum}`,
+                        items: items,
+                        totalAmount: payeeTotal,
+                        status: 'Pending Payment',
+                        isSplitBill: true,
+                        userId,
+                        customerInfo: {
+                          ...baseCustomerInfo,
+                          splitMeta: {
+                            isSplitBill: true,
+                            parentOrderId: selectedOrder.id,
+                            splitNumber: parseInt(payeeNum),
+                            totalSplits: numberOfPayees,
+                            payerName: `Payee ${payeeNum}`
+                          }
+                        }
+                      };
+                    });
+
+                    await Promise.all(
+                      splitBills.map((bill) =>
+                        fetch('/api/orders', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(bill)
+                        })
+                      )
                     );
-                    
-                    return {
-                      ...selectedOrder,
-                      id: `${selectedOrder.id}_split_${payeeNum}`,
-                      parentOrderId: selectedOrder.id,
-                      splitNumber: parseInt(payeeNum),
-                      totalSplits: numberOfPayees,
-                      payerName: `Payee ${payeeNum}`,
-                      items: items,
-                      totalAmount: payeeTotal,
-                      status: 'Pending Payment',
-                      isSplitBill: true
-                    };
-                  });
-                  
-                  // Update original order to Split status
-                  const updatedOrders = existingOrders.map((o: any) => 
-                    o.id === selectedOrder.id ? { ...o, status: 'Split', splitInto: numberOfPayees } : o
-                  );
-                  
-                  // Add all split bills
-                  updatedOrders.push(...splitBills);
-                  
-                  // Save to localStorage
-                  localStorage.setItem(ordersKey, JSON.stringify(updatedOrders));
-                  
-                  toast({
-                    title: "Bill Split Successfully!",
-                    description: `Order split into ${numberOfPayees} separate bills based on item assignments.`,
-                  });
-                  
-                  // Refresh and close
-                  const pendingOrders = updatedOrders.filter((order: any) => 
-                    (order.status === 'Pending' || order.status === 'Order Received' || order.status === 'Pending Payment') &&
-                    order.orderType !== 'home-delivery' &&
-                    (order.status !== 'Split' || order.isSplitBill)
-                  );
-                  setOrders(pendingOrders);
-                  setSelectedOrder(null);
-                  setShowSplitBillDialog(false);
-                  setPayeeAssignments({});
-                  setNumberOfPayees(2);
+
+                    await fetch('/api/orders', {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        id: selectedOrder.id,
+                        status: 'Split',
+                        userId,
+                        customerInfo: {
+                          ...baseCustomerInfo,
+                          splitMeta: {
+                            splitInto: numberOfPayees
+                          }
+                        }
+                      })
+                    });
+
+                    toast({
+                      title: "Bill Split Successfully!",
+                      description: `Order split into ${numberOfPayees} separate bills based on item assignments.`,
+                    });
+
+                    await refreshOrdersForPayment();
+                    setSelectedOrder(null);
+                    setShowSplitBillDialog(false);
+                    setPayeeAssignments({});
+                    setNumberOfPayees(2);
+                  } catch (error) {
+                    console.error('Error creating split bills:', error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to create split bills. Please try again.",
+                      variant: "destructive",
+                    });
+                  }
                 }}
                 className="bg-blue-600 hover:bg-blue-700"
               >

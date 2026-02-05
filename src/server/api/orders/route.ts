@@ -146,6 +146,7 @@ export async function GET(request: NextRequest) {
 
     const orders = ordersRows.map((row: any) => {
       const customerInfo = row.customer_info || {};
+      const splitMeta = customerInfo.splitMeta || {};
       const items = (itemsByOrder[row.id] || []).map((item: any) => ({
         id: item.id,
         name: item.name,
@@ -171,7 +172,14 @@ export async function GET(request: NextRequest) {
         paymentMode: row.payment_mode || undefined,
         tipAmount: row.tip_amount !== null ? Number(row.tip_amount) : undefined,
         discountPercentage: customerInfo.discountPercentage || undefined,
-        address: customerInfo.address || undefined
+        address: customerInfo.address || undefined,
+        isSplitBill: splitMeta.isSplitBill || false,
+        parentOrderId: splitMeta.parentOrderId || undefined,
+        splitNumber: splitMeta.splitNumber || undefined,
+        totalSplits: splitMeta.totalSplits || undefined,
+        payerName: splitMeta.payerName || undefined,
+        splitInto: splitMeta.splitInto || undefined,
+        customerInfo
       };
     });
 
@@ -192,6 +200,18 @@ export async function POST(request: NextRequest) {
     const totalAmount = parsePrice(order.totalAmount);
     const subtotal = order.subtotal ? parsePrice(order.subtotal) : totalAmount;
     const taxAmount = order.taxAmount ? parsePrice(order.taxAmount) : null;
+
+    const customerInfo = order.customerInfo ? { ...order.customerInfo } : null;
+    if (customerInfo && (order.isSplitBill || order.parentOrderId || order.splitNumber || order.totalSplits || order.payerName || order.splitInto)) {
+      customerInfo.splitMeta = {
+        isSplitBill: order.isSplitBill || false,
+        parentOrderId: order.parentOrderId || undefined,
+        splitNumber: order.splitNumber || undefined,
+        totalSplits: order.totalSplits || undefined,
+        payerName: order.payerName || undefined,
+        splitInto: order.splitInto || undefined
+      };
+    }
 
     await query(
       `INSERT INTO orders (
@@ -220,7 +240,7 @@ export async function POST(request: NextRequest) {
         userId,
         order.status || 'Order Received',
         order.orderType || 'dine-in',
-        order.customerInfo || null,
+        customerInfo,
         subtotal,
         taxAmount,
         totalAmount,
@@ -288,7 +308,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { id, orderId, status, paymentMode, tipAmount, amountPaid, userId, cancellationReason } = await request.json();
+    const { id, orderId, status, paymentMode, tipAmount, amountPaid, userId, cancellationReason, customerInfo } = await request.json();
     const targetId = id || orderId;
 
     if (!targetId) {
@@ -302,9 +322,10 @@ export async function PATCH(request: NextRequest) {
            tip_amount = COALESCE($3, tip_amount),
            amount_paid = COALESCE($4, amount_paid),
            cancellation_reason = COALESCE($5, cancellation_reason),
+           customer_info = COALESCE($6, customer_info),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $6`,
-      [status || null, paymentMode || null, tipAmount ?? null, amountPaid ?? null, cancellationReason || null, targetId]
+       WHERE id = $7`,
+      [status || null, paymentMode || null, tipAmount ?? null, amountPaid ?? null, cancellationReason || null, customerInfo || null, targetId]
     );
 
     if (status) {

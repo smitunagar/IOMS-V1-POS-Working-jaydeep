@@ -38,7 +38,7 @@ export interface Order {
 
 export async function getPendingOrders(userId: string): Promise<Order[]> {
   try {
-    const response = await fetch('/api/orders');
+    const response = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
     if (!response.ok) {
       throw new Error('Failed to fetch pending orders');
     }
@@ -52,7 +52,7 @@ export async function getPendingOrders(userId: string): Promise<Order[]> {
 
 export async function getCompletedOrders(userId: string): Promise<Order[]> {
   try {
-    const response = await fetch('/api/orders');
+    const response = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
     if (!response.ok) {
       throw new Error('Failed to fetch completed orders');
     }
@@ -71,7 +71,7 @@ export async function updateOrderStatus(orderId: string, status: string, reason?
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ orderId, status, reason }),
+      body: JSON.stringify({ id: orderId, status, cancellationReason: reason }),
     });
     return response.ok;
   } catch (error) {

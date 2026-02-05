@@ -12,13 +12,10 @@ import {
 } from "@/shared/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { getCompletedOrders, Order } from '@/server/lib/orderService';
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Loader2, Car, Store, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/features/auth/AuthContext';
 import { Button } from '@/shared/components/ui/button';
-import { getInventory, updateInventoryItem } from '@/server/lib/inventoryService';
-import { getDishes } from '@/server/lib/menuService';
 
 export default function OrderHistoryPage() {
   const [completedOrders, setCompletedOrders] = useState<any[]>([]);
@@ -31,7 +28,7 @@ export default function OrderHistoryPage() {
     if (currentUser) {
       setIsLoading(true);
       try {
-        const resOrders = await fetch('/api/orders');
+        const resOrders = await fetch(`/api/orders?userId=${encodeURIComponent(currentUser.id)}`);
         const dataOrders = await resOrders.json();
         setCompletedOrders(dataOrders.orders.filter((o: any) => o.status === 'Completed'));
         
@@ -63,63 +60,6 @@ export default function OrderHistoryPage() {
     const table = tables.find((t: any) => t.id === tableNumber);
     return table ? table.status : 'Unknown';
   };
-
-  // Automated deduction logic
-  function autoDeductInventoryForOrder(userId: string, order: any) {
-    // Track which orders have been deducted to avoid double deduction
-    const deductedOrdersKey = `deducted_orders_${userId}`;
-    const deductedOrders = JSON.parse(localStorage.getItem(deductedOrdersKey) || '[]');
-    if (deductedOrders.includes(order.id)) return; // Already deducted
-
-    const dishes = getDishes(userId);
-    const inventory = getInventory(userId);
-    if (!dishes || dishes.length === 0) return;
-    if (!inventory || inventory.length === 0) return;
-    let deductionPlan = [];
-    for (const item of order.items || []) {
-      const dish = dishes.find(d => d.name === item.name);
-      if (!dish) continue;
-      if (Array.isArray(dish.ingredients)) {
-        for (const ing of dish.ingredients) {
-          let ingName = typeof ing === 'string' ? ing : (ing.inventoryItemName || (hasName(ing) ? ing.name : ''));
-          let qtyPerDish = typeof ing === 'string' ? 1 : (ing.quantityPerDish || (hasQuantity(ing) ? ing.quantity : 1));
-          const invIdx = inventory.findIndex(i => i.name.toLowerCase() === ingName.toLowerCase());
-          if (invIdx !== -1) {
-            const invItem = inventory[invIdx];
-            const totalDeduct = qtyPerDish * (item.quantity || 1);
-            deductionPlan.push({
-              idx: invIdx,
-              name: ingName,
-              required: totalDeduct,
-              available: invItem.quantity ?? 0,
-              unit: invItem.unit
-            });
-          }
-        }
-      }
-    }
-    // Check for insufficient stock
-    const insufficient = deductionPlan.find(d => d.available < d.required);
-    if (insufficient) return;
-    // Deduct all in a single pass (atomic)
-    for (const d of deductionPlan) {
-      const invItem = inventory[d.idx];
-      invItem.quantity = (invItem.quantity ?? 0) - d.required;
-      invItem.quantityUsed = (invItem.quantityUsed || 0) + d.required;
-      invItem.totalUsed = (invItem.totalUsed || 0) + d.required;
-    }
-    localStorage.setItem('inventory_' + userId, JSON.stringify(inventory));
-    // Mark this order as deducted
-    localStorage.setItem(deductedOrdersKey, JSON.stringify([...deductedOrders, order.id]));
-  }
-
-  // Type guard for IngredientQuantity
-  function hasName(obj: any): obj is { name: string } {
-    return obj && typeof obj === 'object' && 'name' in obj && typeof obj.name === 'string';
-  }
-  function hasQuantity(obj: any): obj is { quantity: number } {
-    return obj && typeof obj === 'object' && 'quantity' in obj && typeof obj.quantity === 'number';
-  }
 
   return (
     
@@ -169,10 +109,7 @@ export default function OrderHistoryPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {completedOrders.map((order, idx) => {
-                      // Auto-deduct inventory for this order
-                      if (currentUser) autoDeductInventoryForOrder(currentUser.id, order);
-                      return (
+                    {completedOrders.map((order, idx) => (
                         <TableRow key={order.id || `order-${idx}`}>
                         <TableCell className="font-medium truncate max-w-[150px] block" title={order.id}>{order.id}</TableCell>
                         <TableCell>
@@ -246,8 +183,7 @@ export default function OrderHistoryPage() {
                           {order.items.reduce((sum: number, item: any) => sum + item.quantity, 0)}
                         </TableCell>
                       </TableRow>
-                    );
-                    })}
+                    ))}
                   </TableBody>
                 </Table>
               </ScrollArea>

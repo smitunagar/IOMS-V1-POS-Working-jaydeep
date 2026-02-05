@@ -1,8 +1,7 @@
 // Inventory Validation Service
 // Validates if orders can be fulfilled based on available inventory
 
-import { getInventory, InventoryItem } from './inventoryService';
-import { getDishes } from './menuService';
+import type { InventoryItem } from './inventoryService';
 
 export interface InventoryValidationResult {
   canFulfill: boolean;
@@ -107,30 +106,14 @@ export async function validateOrderInventory(userId: string, orderItems: OrderIt
   };
 
   try {
-    // Debug localStorage contents
-    if (typeof window !== 'undefined') {
-      console.log('🔍 [INVENTORY-VALIDATION] UserId received:', userId);
-      console.log('🔍 [INVENTORY-VALIDATION] LocalStorage keys:', Object.keys(localStorage));
-      
-      // Check for inventory keys
-      const inventoryKeys = Object.keys(localStorage).filter(key => key.startsWith('inventory_'));
-      console.log('🔍 [INVENTORY-VALIDATION] Inventory keys found:', inventoryKeys);
-      
-      // Check the specific key we're looking for
-      const expectedKey = 'inventory_' + userId;
-      console.log('🔍 [INVENTORY-VALIDATION] Expected key:', expectedKey);
-      console.log('🔍 [INVENTORY-VALIDATION] Key exists:', localStorage.getItem(expectedKey) !== null);
-      
-      // Show all inventory data
-      inventoryKeys.forEach(key => {
-        const data = localStorage.getItem(key);
-        console.log(`🔍 [INVENTORY-VALIDATION] ${key}:`, data ? JSON.parse(data).length + ' items' : 'null');
-      });
-    }
-    
-    // Get current inventory and menu
-    const inventory = getInventory(userId);
-    const menu = getDishes(userId);
+    // Get current inventory and menu from API
+    const inventoryResponse = await fetch(`/api/inventory?userId=${encodeURIComponent(userId)}`);
+    const inventoryData = await inventoryResponse.json();
+    const inventory: InventoryItem[] = inventoryData.inventory || [];
+
+    const menuResponse = await fetch('/api/menuCsv');
+    const menuData = await menuResponse.json();
+    const menu = menuData.menu || [];
 
     console.log(`🔍 [INVENTORY-VALIDATION] Got ${inventory.length} inventory items and ${menu.length} menu items`);
 

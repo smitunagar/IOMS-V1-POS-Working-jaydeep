@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/features/auth/AuthContext';
-import { getInventory, addInventoryItem } from '@/server/lib/inventoryService';
 import { Badge } from '@/shared/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { AlertTriangle, CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
@@ -120,59 +119,26 @@ export default function InventoryPage() {
     pageSize: 50,
   });
 
-  // Safe inventory loading functions with error handling and fallback support
-  function safeGetInventory(userId: string) {
-    try {
-      if (typeof window === 'undefined') return [];
-      
-      console.log('[InventoryPage] 🔍 DEBUGGING: Loading inventory for userId:', userId);
-      
-      // First try localStorage with user-specific key
-      const localStorageKey = `inventory_${userId}`;
-      const storedLocal = localStorage.getItem(localStorageKey);
-      
-      if (storedLocal) {
-        console.log('[InventoryPage] ✅ Loading from localStorage:', localStorageKey);
-        const parsed = JSON.parse(storedLocal);
-        console.log('[InventoryPage] 🔍 DEBUGGING: localStorage has', parsed.length, 'items');
-        console.log('[InventoryPage] 🔍 DEBUGGING: localStorage data sample:', JSON.stringify(parsed.slice(0, 3), null, 2));
-        return parsed;
-      }
-      
-      // Fallback to sessionStorage for compatibility with setup process
-      const storedSession = sessionStorage.getItem('inventoryItems');
-      
-      if (storedSession) {
-        console.log('[InventoryPage] ✅ Loading from sessionStorage fallback');
-        const parsedInventory = JSON.parse(storedSession);
-        console.log('[InventoryPage] 🔍 DEBUGGING: sessionStorage has', parsedInventory.length, 'items');
-        console.log('[InventoryPage] 🔍 DEBUGGING: sessionStorage data sample:', JSON.stringify(parsedInventory.slice(0, 3), null, 2));
-        // Also save to localStorage for future consistency
-        localStorage.setItem(localStorageKey, storedSession);
-        console.log('[InventoryPage] Migrated sessionStorage data to localStorage');
-        return parsedInventory;
-      }
-      
-      console.log('[InventoryPage] ⚠️ No inventory data found in any storage');
-      return [];
-    } catch (error) {
-      console.error('[InventoryPage] Error reading inventory:', error);
-      return [];
+  const fetchInventory = useCallback(async (userId: string) => {
+    const response = await fetch(`/api/inventory?userId=${encodeURIComponent(userId)}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch inventory');
     }
-  }
+    const data = await response.json();
+    return data.inventory || [];
+  }, []);
 
-  function safeSetInventory(userId: string, items: any[]) {
-    try {
-      if (typeof window === 'undefined') return;
-      const localStorageKey = `inventory_${userId}`;
-      localStorage.setItem(localStorageKey, JSON.stringify(items));
-      // Also update sessionStorage for compatibility
-      sessionStorage.setItem('inventoryItems', JSON.stringify(items));
-      console.log('[InventoryPage] Inventory saved to both localStorage and sessionStorage');
-    } catch (error) {
-      console.error('[InventoryPage] Error writing inventory:', error);
+  const syncInventory = useCallback(async (userId: string, inventoryItems: any[]) => {
+    const response = await fetch('/api/inventory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, inventory: inventoryItems, action: 'sync' })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to sync inventory');
     }
-  }
+  }, []);
 
   // COMPLETELY CLEAN: Single useEffect for loading inventory
   useEffect(() => {
@@ -184,18 +150,20 @@ export default function InventoryPage() {
   
     console.log('[InventoryPage] Loading inventory for user:', currentUser.id);
     setLoading(true);
-    
-    try {
-      const inv = safeGetInventory(currentUser.id);
-      setItems(inv);
-      console.log('[InventoryPage] Inventory loaded successfully:', inv.length, 'items');
-    } catch (error) {
-      console.error('[InventoryPage] Error loading inventory:', error);
-      setInventoryError('Failed to load inventory');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser?.id]); // Only depend on currentUser.id, not the entire object
+
+    (async () => {
+      try {
+        const inv = await fetchInventory(currentUser.id);
+        setItems(inv);
+        console.log('[InventoryPage] Inventory loaded successfully:', inv.length, 'items');
+      } catch (error) {
+        console.error('[InventoryPage] Error loading inventory:', error);
+        setInventoryError('Failed to load inventory');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [currentUser?.id, fetchInventory]); // Only depend on currentUser.id, not the entire object
 
   // Listen for inventory update events from order placement
   useEffect(() => {
@@ -207,20 +175,22 @@ export default function InventoryPage() {
       console.log('[InventoryPage] Auto-refreshing inventory due to order placement');
       setLoading(true);
       
-      try {
-        const inv = safeGetInventory(currentUser.id);
-        setItems(inv);
-        console.log('[InventoryPage] Auto-refresh completed:', inv.length, 'items');
-        
-        toast({
-          title: 'Inventory Updated',
-          description: `Inventory automatically updated after order placement (${event.detail.deductionsCount} items affected)`,
-        });
-      } catch (error) {
-        console.error('[InventoryPage] Error during auto-refresh:', error);
-      } finally {
-        setLoading(false);
-      }
+      (async () => {
+        try {
+          const inv = await fetchInventory(currentUser.id);
+          setItems(inv);
+          console.log('[InventoryPage] Auto-refresh completed:', inv.length, 'items');
+          
+          toast({
+            title: 'Inventory Updated',
+            description: `Inventory automatically updated after order placement (${event.detail.deductionsCount} items affected)`,
+          });
+        } catch (error) {
+          console.error('[InventoryPage] Error during auto-refresh:', error);
+        } finally {
+          setLoading(false);
+        }
+      })();
     };
 
     window.addEventListener('inventoryUpdated', handleInventoryUpdated as EventListener);
@@ -228,7 +198,7 @@ export default function InventoryPage() {
     return () => {
       window.removeEventListener('inventoryUpdated', handleInventoryUpdated as EventListener);
     };
-  }, [currentUser, toast]);
+  }, [currentUser, toast, fetchInventory]);
 
   // Manual refresh function
   const refreshInventory = useCallback(() => {
@@ -239,145 +209,20 @@ export default function InventoryPage() {
     
     console.log('[InventoryPage] Manual refresh triggered for user:', currentUser.id);
     setLoading(true);
-    
-    try {
-      const inv = safeGetInventory(currentUser.id);
-      setItems(inv);
-      console.log('[InventoryPage] Manual refresh completed:', inv.length, 'items');
-    } catch (error) {
-      console.error('[InventoryPage] Error during manual refresh:', error);
-      setInventoryError('Failed to refresh inventory');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser]);
 
-  const forceRefreshFromSessionStorage = useCallback(() => {
-    console.log('[InventoryPage] 🔄 Force refresh from sessionStorage');
-    const userId = currentUser?.id || 'default_user';
-    
-    // Check all possible storage locations
-    const sessionData = sessionStorage.getItem('inventoryItems');
-    const localData = localStorage.getItem(`inventory_${userId}`);
-    
-    console.log('📊 Storage Debug:');
-    console.log('  - SessionStorage inventoryItems:', sessionData ? 'EXISTS' : 'NOT FOUND');
-    console.log('  - LocalStorage inventory_' + userId + ':', localData ? 'EXISTS' : 'NOT FOUND');
-    
-    // Show ALL localStorage keys that contain 'inventory'
-    const allKeys = Object.keys(localStorage);
-    const inventoryKeys = allKeys.filter(key => key.includes('inventory'));
-    console.log('📊 All inventory keys in localStorage:', inventoryKeys);
-    
-    if (sessionData) {
+    (async () => {
       try {
-        const parsedData = JSON.parse(sessionData);
-        console.log('[InventoryPage] 🔄 Loading from sessionStorage:', parsedData.length, 'items');
-        console.log('[InventoryPage] 📦 Sample items from sessionStorage:', parsedData.slice(0, 3));
-        
-        setItems(parsedData);
-        
-        // Also save to localStorage to ensure persistence
-        localStorage.setItem(`inventory_${userId}`, sessionData);
-        console.log('[InventoryPage] ✅ Saved sessionStorage data to localStorage');
-        
-        toast({
-          title: 'Inventory Restored',
-          description: `Loaded ${parsedData.length} items from session storage`
-        });
+        const inv = await fetchInventory(currentUser.id);
+        setItems(inv);
+        console.log('[InventoryPage] Manual refresh completed:', inv.length, 'items');
       } catch (error) {
-        console.error('[InventoryPage] Error parsing sessionStorage data:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to restore inventory from session storage',
-          variant: 'destructive'
-        });
+        console.error('[InventoryPage] Error during manual refresh:', error);
+        setInventoryError('Failed to refresh inventory');
+      } finally {
+        setLoading(false);
       }
-    } else if (localData) {
-      try {
-        const parsedData = JSON.parse(localData);
-        console.log('[InventoryPage] 🔄 Loading from localStorage:', parsedData.length, 'items');
-        console.log('[InventoryPage] 📦 Sample items from localStorage:', parsedData.slice(0, 3));
-        
-        setItems(parsedData);
-        
-        toast({
-          title: 'Inventory Loaded',
-          description: `Loaded ${parsedData.length} items from local storage`
-        });
-      } catch (error) {
-        console.error('[InventoryPage] Error parsing localStorage data:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load inventory from local storage',
-          variant: 'destructive'
-        });
-      }
-    } else {
-      console.log('[InventoryPage] ⚠️ No inventory data found in any storage');
-      
-      // Try to load from any inventory key found
-      if (inventoryKeys.length > 0) {
-        console.log('[InventoryPage] 🔍 Trying to load from other inventory keys...');
-        for (const key of inventoryKeys) {
-          try {
-            const data = localStorage.getItem(key);
-            if (data) {
-              const parsed = JSON.parse(data);
-              console.log(`[InventoryPage] 📦 Found data in key '${key}':`, parsed.length, 'items');
-              if (parsed.length > 0) {
-                setItems(parsed);
-                toast({
-                  title: 'Inventory Found',
-                  description: `Loaded ${parsed.length} items from ${key}`
-                });
-                return;
-              }
-            }
-          } catch (error) {
-            console.error(`[InventoryPage] Error parsing data from ${key}:`, error);
-          }
-        }
-      }
-      
-      toast({
-        title: 'No Data',
-        description: 'No inventory data found in session or local storage',
-        variant: 'destructive'
-      });
-    }
-  }, [currentUser, toast]);
-
-  const debugStorage = useCallback(() => {
-    const userId = currentUser?.id || 'default_user';
-    console.log('🔍 DEBUG STORAGE - User ID:', userId);
-    
-    // Check all localStorage keys
-    const allKeys = Object.keys(localStorage);
-    console.log('📊 All localStorage keys:', allKeys);
-    
-    // Check inventory-related keys
-    const inventoryKeys = allKeys.filter(key => key.includes('inventory'));
-    console.log('📊 Inventory keys:', inventoryKeys);
-    
-    // Check each inventory key
-    inventoryKeys.forEach(key => {
-      const data = localStorage.getItem(key);
-      console.log(`📦 Key '${key}':`, data ? JSON.parse(data) : 'EMPTY');
-    });
-    
-    // Check sessionStorage
-    const sessionKeys = Object.keys(sessionStorage);
-    console.log('📊 All sessionStorage keys:', sessionKeys);
-    
-    const sessionInventory = sessionStorage.getItem('inventoryItems');
-    console.log('📦 sessionStorage inventoryItems:', sessionInventory ? JSON.parse(sessionInventory) : 'EMPTY');
-    
-    toast({
-      title: 'Debug Complete',
-      description: 'Check console for storage details'
-    });
-  }, [currentUser, toast]);
+    })();
+  }, [currentUser, fetchInventory]);
   
   // Reset selected rows when items change
   useLayoutEffect(() => { 
@@ -587,23 +432,23 @@ export default function InventoryPage() {
     setEditPanelOpen(true);
   }, []);
 
-  const saveEditPanel = useCallback(() => {
+  const saveEditPanel = useCallback(async () => {
     const userId = currentUser?.id;
     if (!userId || !selectedItem) return;
     
-    const inventory = safeGetInventory(userId);
-    const idx = inventory.findIndex((i: any) => String(i.id) === String(selectedItem.id));
+    const idx = items.findIndex((i: any) => String(i.id) === String(selectedItem.id));
     if (idx === -1) return;
     
-    inventory[idx] = { ...inventory[idx], ...editForm };
-    safeSetInventory(userId, inventory);
+    const updatedInventory = [...items];
+    updatedInventory[idx] = { ...updatedInventory[idx], ...editForm };
+    await syncInventory(userId, updatedInventory);
     setEditPanelOpen(false);
     setUpdatedRowId(selectedItem.id);
     setTimeout(() => setUpdatedRowId(null), 1200);
     
     // Update items state directly
-    setItems([...inventory]);
-  }, [currentUser?.id, selectedItem, editForm]);
+    setItems(updatedInventory);
+  }, [currentUser?.id, selectedItem, editForm, items, syncInventory]);
 
   const openDeleteDialog = useCallback((item: any) => {
     console.log('[InventoryPage] openDeleteDialog called with:', item);
@@ -611,35 +456,33 @@ export default function InventoryPage() {
     setDeleteDialogOpen(true);
   }, []);
 
-  const confirmDelete = useCallback(() => {
+  const confirmDelete = useCallback(async () => {
     const userId = currentUser?.id;
     if (!userId || !selectedItem) return;
     
-    const inventory = safeGetInventory(userId);
-    const newInventory = inventory.filter((i: any) => String(i.id) !== String(selectedItem.id));
-    safeSetInventory(userId, newInventory);
+    const newInventory = items.filter((i: any) => String(i.id) !== String(selectedItem.id));
+    await syncInventory(userId, newInventory);
     setDeleteDialogOpen(false);
     setSelectedItem(null);
     
     // Update items state directly
     setItems([...newInventory]);
-  }, [currentUser?.id, selectedItem]);
+  }, [currentUser?.id, selectedItem, items, syncInventory]);
 
-  const batchDeleteSelected = useCallback(() => {
+  const batchDeleteSelected = useCallback(async () => {
     const userId = currentUser?.id;
     if (!userId) return;
     
-    const inventory = safeGetInventory(userId);
-    const newInventory = inventory.filter((i: any) => !selectedRowIds[i.id]);
-    safeSetInventory(userId, newInventory);
+    const newInventory = items.filter((i: any) => !selectedRowIds[i.id]);
+    await syncInventory(userId, newInventory);
     setSelectedRowIds({});
     
     // Update items state directly
     setItems([...newInventory]);
-  }, [currentUser?.id, selectedRowIds]);
+  }, [currentUser?.id, selectedRowIds, items, syncInventory]);
 
   // Add new item function
-  const addNewItem = useCallback(() => {
+  const addNewItem = useCallback(async () => {
     const userId = currentUser?.id;
     if (!userId) return;
 
@@ -661,24 +504,23 @@ export default function InventoryPage() {
       totalUsed: 0
     };
 
-    const addedItem = addInventoryItem(userId, newItem);
-    if (addedItem) {
-      // Update items state directly
-      const currentInventory = safeGetInventory(userId);
-      setItems([...currentInventory]);
-      
-      // Reset form and close dialog
-      setNewItemForm({
-        name: '',
-        quantity: '',
-        unit: 'g',
-        category: '',
-        lowStockThreshold: '',
-        expiryDate: ''
-      });
-      setAddItemDialogOpen(false);
-    }
-  }, [currentUser?.id, newItemForm]);
+    const updatedInventory = [...items, newItem];
+    await syncInventory(userId, updatedInventory);
+
+    // Update items state directly
+    setItems(updatedInventory);
+    
+    // Reset form and close dialog
+    setNewItemForm({
+      name: '',
+      quantity: '',
+      unit: 'g',
+      category: '',
+      lowStockThreshold: '',
+      expiryDate: ''
+    });
+    setAddItemDialogOpen(false);
+  }, [currentUser?.id, newItemForm, items, syncInventory]);
 
   // Export functions
   const exportCSV = useCallback(() => {
