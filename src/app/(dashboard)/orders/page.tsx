@@ -1117,128 +1117,122 @@ export default function OrdersPage() {
       const userId = currentUser?.id || 'default_user';
       const menuDataKey = `menu_data_${userId}`;
       const storedMenuData = localStorage.getItem(menuDataKey);
-      
+
       if (storedMenuData) {
         const menuData = JSON.parse(storedMenuData);
-        if (menuData?.version !== MENU_DATA_VERSION) {
-          localStorage.removeItem(menuDataKey);
-        } else {
-        console.log('📋 [ORDERS] Loading saved menu data:', menuData);
-        console.log('📋 [ORDERS] Sample menu item price:', menuData.menuItems?.[0]?.price, typeof menuData.menuItems?.[0]?.price);
-        
-        // Convert number prices back to strings for display
-        const convertedMenuItems = (menuData.menuItems || []).map((item: any) => ({
-          ...item,
-          price: typeof item.price === 'number' ? item.price.toString() : item.price,
-          sizes: item.sizes?.map((size: any) => ({
-            ...size,
-            price: typeof size.price === 'number' ? size.price.toString() : size.price
-          }))
-        }));
-        
-        setMenuItems(convertedMenuItems);
-        setCategories(menuData.categories || []);
-        seedInventoryFromMenu(userId, convertedMenuItems);
-        
-        // Load combos
-        const combosKey = `combos_data_${userId}`;
-        const storedCombos = localStorage.getItem(combosKey);
-        if (storedCombos) {
-          setCombos(JSON.parse(storedCombos));
-        }
-      } else {
-        // Try to load from menu service as fallback
-        try {
-          const { getDishes } = await import('@/server/lib/menuService');
-          const savedDishes = getDishes(userId);
-          if (savedDishes && savedDishes.length > 0) {
-            console.log('📋 [ORDERS] Loading menu from menu service:', savedDishes.length, 'items');
-            
-            // Convert number prices to strings for display
-            const convertedDishes = savedDishes.map((item: any) => ({
-              ...item,
-              price: typeof item.price === 'number' ? item.price.toString() : item.price,
-              sizes: item.sizes?.map((size: any) => ({
-                ...size,
-                price: typeof size.price === 'number' ? size.price.toString() : size.price
-              }))
-            }));
-            
-            setMenuItems(convertedDishes);
-            const uniqueCategories = [...new Set(convertedDishes.map((item: MenuItem) => item.category))];
-            setCategories(uniqueCategories);
-            seedInventoryFromMenu(userId, convertedDishes);
-          } else {
-            // Load from sessionStorage as final fallback
-            const sessionMenuData = sessionStorage.getItem('extractedMenuItems');
-            if (sessionMenuData) {
-              const menuData = JSON.parse(sessionMenuData);
-              console.log('📋 [ORDERS] Loading menu from sessionStorage:', menuData.length, 'items');
-              setMenuItems(menuData);
-              const uniqueCategories = [...new Set(menuData.map((item: MenuItem) => item.category))] as string[];
-              setCategories(uniqueCategories);
-            } else {
-              // Try to load from API as final fallback
-              try {
-                const response = await fetch('/api/menuCsv');
-                const data = await response.json();
+        if (menuData?.version === MENU_DATA_VERSION) {
+          console.log('📋 [ORDERS] Loading saved menu data:', menuData);
+          console.log('📋 [ORDERS] Sample menu item price:', menuData.menuItems?.[0]?.price, typeof menuData.menuItems?.[0]?.price);
 
-                if (data.menu && Array.isArray(data.menu) && data.menu.length > 0) {
-                  console.log('📋 [ORDERS] Loading menu from API:', data.menu.length, 'items');
+          const convertedMenuItems = (menuData.menuItems || []).map((item: any) => ({
+            ...item,
+            price: typeof item.price === 'number' ? item.price.toString() : item.price,
+            sizes: item.sizes?.map((size: any) => ({
+              ...size,
+              price: typeof size.price === 'number' ? size.price.toString() : size.price
+            }))
+          }));
 
-                  const menuItemsFromApi = data.menu.map((item: any) => ({
-                    ...item,
-                    price: typeof item.price === 'number' ? item.price.toString() : item.price,
-                    sizes: item.sizes?.map((size: any) => ({
-                      ...size,
-                      price: typeof size.price === 'number' ? size.price.toString() : size.price
-                    }))
-                  }));
+          setMenuItems(convertedMenuItems);
+          setCategories(menuData.categories || []);
+          seedInventoryFromMenu(userId, convertedMenuItems);
 
-                  const uniqueCategories = [...new Set(menuItemsFromApi.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
-                  setMenuItems(menuItemsFromApi);
-                  setCategories(uniqueCategories);
-                  seedInventoryFromMenu(userId, menuItemsFromApi);
-
-                  const menuData = {
-                    menuItems: menuItemsFromApi,
-                    categories: uniqueCategories,
-                    lastUpdated: new Date().toISOString()
-                  };
-                  localStorage.setItem(menuDataKey, JSON.stringify(menuData));
-
-                  try {
-                    const { saveDishes } = await import('@/server/lib/menuService');
-                    const convertedMenu = menuItemsFromApi.map((item: any) => ({
-                      ...item,
-                      price: typeof item.price === 'string'
-                        ? parseFloat(item.price.replace(/[^\d.,]/g, '').replace(',', '.'))
-                        : item.price
-                    }));
-                    saveDishes(userId, convertedMenu);
-                  } catch (saveError) {
-                    console.error('Error saving menu from API:', saveError);
-                  }
-
-                  seedInventoryFromMenu(userId, menuItemsFromApi);
-                } else {
-                  console.log('📋 [ORDERS] No menu data found');
-                  setMenuItems([]);
-                  setCategories([]);
-                }
-              } catch (apiError) {
-                console.error('Error loading menu from API:', apiError);
-                setMenuItems([]);
-                setCategories([]);
-              }
-            }
+          const combosKey = `combos_data_${userId}`;
+          const storedCombos = localStorage.getItem(combosKey);
+          if (storedCombos) {
+            setCombos(JSON.parse(storedCombos));
           }
-        } catch (serviceError) {
-          console.error('Error loading from menu service:', serviceError);
-          setMenuItems([]);
-          setCategories([]);
+          return;
         }
+
+        localStorage.removeItem(menuDataKey);
       }
+
+      try {
+        const response = await fetch('/api/menuCsv');
+        const data = await response.json();
+
+        if (data.menu && Array.isArray(data.menu) && data.menu.length > 0) {
+          console.log('📋 [ORDERS] Loading menu from API:', data.menu.length, 'items');
+
+          const menuItemsFromApi = data.menu.map((item: any) => ({
+            ...item,
+            price: typeof item.price === 'number' ? item.price.toString() : item.price,
+            sizes: item.sizes?.map((size: any) => ({
+              ...size,
+              price: typeof size.price === 'number' ? size.price.toString() : size.price
+            }))
+          }));
+
+          const uniqueCategories = [...new Set(menuItemsFromApi.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
+          setMenuItems(menuItemsFromApi);
+          setCategories(uniqueCategories);
+          seedInventoryFromMenu(userId, menuItemsFromApi);
+
+          const menuData = {
+            version: MENU_DATA_VERSION,
+            menuItems: menuItemsFromApi,
+            categories: uniqueCategories,
+            lastUpdated: new Date().toISOString()
+          };
+          localStorage.setItem(menuDataKey, JSON.stringify(menuData));
+
+          try {
+            const { saveDishes } = await import('@/server/lib/menuService');
+            const convertedMenu = menuItemsFromApi.map((item: any) => ({
+              ...item,
+              price: typeof item.price === 'string'
+                ? parseFloat(item.price.replace(/[^\d.,]/g, '').replace(',', '.'))
+                : item.price
+            }));
+            saveDishes(userId, convertedMenu);
+          } catch (saveError) {
+            console.error('Error saving menu from API:', saveError);
+          }
+          return;
+        }
+      } catch (apiError) {
+        console.error('Error loading menu from API:', apiError);
+      }
+
+      try {
+        const { getDishes } = await import('@/server/lib/menuService');
+        const savedDishes = getDishes(userId);
+        if (savedDishes && savedDishes.length > 0) {
+          console.log('📋 [ORDERS] Loading menu from menu service:', savedDishes.length, 'items');
+
+          const convertedDishes = savedDishes.map((item: any) => ({
+            ...item,
+            price: typeof item.price === 'number' ? item.price.toString() : item.price,
+            sizes: item.sizes?.map((size: any) => ({
+              ...size,
+              price: typeof size.price === 'number' ? size.price.toString() : size.price
+            }))
+          }));
+
+          setMenuItems(convertedDishes);
+          const uniqueCategories = [...new Set(convertedDishes.map((item: MenuItem) => item.category))];
+          setCategories(uniqueCategories);
+          seedInventoryFromMenu(userId, convertedDishes);
+          return;
+        }
+      } catch (serviceError) {
+        console.error('Error loading from menu service:', serviceError);
+      }
+
+      const sessionMenuData = sessionStorage.getItem('extractedMenuItems');
+      if (sessionMenuData) {
+        const menuData = JSON.parse(sessionMenuData);
+        console.log('📋 [ORDERS] Loading menu from sessionStorage:', menuData.length, 'items');
+        setMenuItems(menuData);
+        const uniqueCategories = [...new Set(menuData.map((item: MenuItem) => item.category))] as string[];
+        setCategories(uniqueCategories);
+        return;
+      }
+
+      console.log('📋 [ORDERS] No menu data found');
+      setMenuItems([]);
+      setCategories([]);
     } catch (error) {
       console.error('Error loading menu data:', error);
       setMenuItems([]);
@@ -1262,105 +1256,103 @@ export default function OrdersPage() {
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
+      } else {
+        return [...prev, { menuItem, quantity: 1, selectedSize }];
+      }
+    });
+  };
 
-            // Load combos
-            const combosKey = `combos_data_${userId}`;
-            const storedCombos = localStorage.getItem(combosKey);
-            if (storedCombos) {
-              setCombos(JSON.parse(storedCombos));
-            }
-            return;
-            }
+  const updateQuantity = (menuItemId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeFromOrder(menuItemId);
+      return;
+    }
+
+    setOrderItems(prev =>
+      prev.map(item =>
+        item.menuItem.id === menuItemId
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
+  };
+
+  const updateNotes = (menuItemId: string, notes: string) => {
+    setOrderItems(prev =>
+      prev.map(item =>
+        item.menuItem.id === menuItemId
+          ? { ...item, notes }
+          : item
+      )
+    );
+  };
+
+  const removeFromOrder = (menuItemId: string) => {
+    setOrderItems(prev => prev.filter(item => item.menuItem.id !== menuItemId));
+  };
+
+  // Add-ons management functions
+  const addAddOn = (menuItemId: string, addOn: AddOn) => {
+    setOrderItems(prev =>
+      prev.map(item => {
+        if (item.menuItem.id === menuItemId) {
+          const existingAddOns = item.addOns || [];
+          // Check if add-on already exists
+          const addOnExists = existingAddOns.some(existing => existing.id === addOn.id);
+          if (!addOnExists) {
+            return {
+              ...item,
+              addOns: [...existingAddOns, addOn]
+            };
           }
+        }
+        return item;
+      })
+    );
+  };
 
-          // Try to load from API first for canonical data
-          try {
-            const response = await fetch('/api/menuCsv');
-            const data = await response.json();
+  const removeAddOn = (menuItemId: string, addOnId: string) => {
+    setOrderItems(prev =>
+      prev.map(item => {
+        if (item.menuItem.id === menuItemId) {
+          return {
+            ...item,
+            addOns: (item.addOns || []).filter(addOn => addOn.id !== addOnId)
+          };
+        }
+        return item;
+      })
+    );
+  };
 
-            if (data.menu && Array.isArray(data.menu) && data.menu.length > 0) {
-              console.log('📋 [ORDERS] Loading menu from API:', data.menu.length, 'items');
+  const getFilteredAddOns = (menuItem: MenuItem) => {
+    // Get dish-specific add-ons from menu data
+    return getDishAddOns(menuItem);
+  };
 
-              const menuItemsFromApi = data.menu.map((item: any) => ({
-                ...item,
-                price: typeof item.price === 'number' ? item.price.toString() : item.price,
-                sizes: item.sizes?.map((size: any) => ({
-                  ...size,
-                  price: typeof size.price === 'number' ? size.price.toString() : size.price
-                }))
-              }));
+  // Combo recommendation functions
+  const getComboRecommendations = (menuItem: MenuItem): Combo[] => {
+    return combos.filter(combo => 
+      combo.isActive && 
+      combo.items.some(item => item.menuItem.id === menuItem.id)
+    );
+  };
 
-              const uniqueCategories = [...new Set(menuItemsFromApi.map((item: MenuItem) => item.category).filter(Boolean))] as string[];
-              setMenuItems(menuItemsFromApi);
-              setCategories(uniqueCategories);
-              seedInventoryFromMenu(userId, menuItemsFromApi);
-
-              const menuData = {
-                version: MENU_DATA_VERSION,
-                menuItems: menuItemsFromApi,
-                categories: uniqueCategories,
-                lastUpdated: new Date().toISOString()
-              };
-              localStorage.setItem(menuDataKey, JSON.stringify(menuData));
-
-              try {
-                const { saveDishes } = await import('@/server/lib/menuService');
-                const convertedMenu = menuItemsFromApi.map((item: any) => ({
-                  ...item,
-                  price: typeof item.price === 'string'
-                    ? parseFloat(item.price.replace(/[^\d.,]/g, '').replace(',', '.'))
-                    : item.price
-                }));
-                saveDishes(userId, convertedMenu);
-              } catch (saveError) {
-                console.error('Error saving menu from API:', saveError);
-              }
-              return;
-            }
-          } catch (apiError) {
-            console.error('Error loading menu from API:', apiError);
-          }
-
-          // Fallback to menu service
-          try {
-            const { getDishes } = await import('@/server/lib/menuService');
-            const savedDishes = getDishes(userId);
-            if (savedDishes && savedDishes.length > 0) {
-              console.log('📋 [ORDERS] Loading menu from menu service:', savedDishes.length, 'items');
-
-              const convertedDishes = savedDishes.map((item: any) => ({
-                ...item,
-                price: typeof item.price === 'number' ? item.price.toString() : item.price,
-                sizes: item.sizes?.map((size: any) => ({
-                  ...size,
-                  price: typeof size.price === 'number' ? size.price.toString() : size.price
-                }))
-              }));
-
-              setMenuItems(convertedDishes);
-              const uniqueCategories = [...new Set(convertedDishes.map((item: MenuItem) => item.category))];
-              setCategories(uniqueCategories);
-              seedInventoryFromMenu(userId, convertedDishes);
-              return;
-            }
-          } catch (serviceError) {
-            console.error('Error loading from menu service:', serviceError);
-          }
-
-          // Final fallback to sessionStorage
-          const sessionMenuData = sessionStorage.getItem('extractedMenuItems');
-          if (sessionMenuData) {
-            const menuData = JSON.parse(sessionMenuData);
-            console.log('📋 [ORDERS] Loading menu from sessionStorage:', menuData.length, 'items');
-            setMenuItems(menuData);
-            const uniqueCategories = [...new Set(menuData.map((item: MenuItem) => item.category))] as string[];
-            setCategories(uniqueCategories);
-            return;
-          }
-
-          console.log('📋 [ORDERS] No menu data found');
-          setMenuItems([]);
-          setCategories([]);
+  const addComboToOrder = (combo: Combo) => {
+    // Calculate discounted price for each item in the combo
+    const discountMultiplier = (100 - combo.discount) / 100;
+    
+    const newOrderItems: OrderItem[] = combo.items.map(comboItem => {
+      const originalPrice = parseFloat(comboItem.menuItem.price.toString());
+      const discountedPrice = originalPrice * discountMultiplier;
+      
+      return {
+      menuItem: comboItem.menuItem,
+      quantity: comboItem.quantity,
+      notes: `From combo: ${combo.name}`,
+      selectedSize: undefined,
+        addOns: [],
+        comboInfo: {
           comboId: combo.id,
           comboName: combo.name,
           comboDiscount: combo.discount,
