@@ -54,14 +54,23 @@ export default function HardwareHubPage() {
               Production line flow (blank for now).
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <span className="text-sm text-slate-600">Coming soon</span>
-            <Button asChild variant="outline">
-              <Link href="/apps-waste-watchdog/hardware/line">
-                Open Line
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+          <CardContent className="space-y-4">
+            <div className="overflow-hidden rounded-lg border bg-slate-50">
+              <img
+                src="/images/waste-watchdog-line.png"
+                alt="IOMS Waste Watchdog Line"
+                className="h-44 w-full object-cover"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600">Coming soon</span>
+              <Button asChild variant="outline">
+                <Link href="/apps-waste-watchdog/hardware/line">
+                  Open Line
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
