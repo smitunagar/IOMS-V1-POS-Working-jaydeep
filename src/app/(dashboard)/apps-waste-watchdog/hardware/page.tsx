@@ -24,14 +24,23 @@ export default function HardwareHubPage() {
               Camera + scale capture for AI waste tracking.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <span className="text-sm text-slate-600">Live station workflow</span>
-            <Button asChild>
-              <Link href="/apps-waste-watchdog/hardware/station">
-                Open Station
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+          <CardContent className="space-y-4">
+            <div className="overflow-hidden rounded-lg border bg-slate-50">
+              <img
+                src="/images/waste-watchdog-station.png"
+                alt="IOMS Waste Watchdog Station"
+                className="h-44 w-full object-cover"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600">Live station workflow</span>
+              <Button asChild>
+                <Link href="/apps-waste-watchdog/hardware/station">
+                  Open Station
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
