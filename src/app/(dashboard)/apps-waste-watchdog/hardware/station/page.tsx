@@ -42,22 +42,6 @@ interface ScanResult {
   confidence: number;
 }
 
-interface QueueItem {
-  id: number;
-  status: 'pending' | 'processing' | 'done' | 'error';
-  weightKg: number | null;
-  createdAt: string;
-  updatedAt: string;
-  result?: {
-    dishName?: string;
-    category?: string;
-    weightKg?: number;
-    confidence?: number;
-    co2Kg?: number;
-  };
-  error?: string | null;
-}
-
 interface WasteEventData {
   amountKg: number;
   type: 'food' | 'oil' | 'packaging' | 'organic';
@@ -98,8 +82,6 @@ export default function HardwareCapturePage() {
   const [scaleWeight, setScaleWeight] = useState<number | null>(null);
   const [scaleUnit, setScaleUnit] = useState<string>('kg');
   const [scaleStatus, setScaleStatus] = useState<'connected' | 'disconnected' | 'error'>('disconnected');
-  const [queueItems, setQueueItems] = useState<QueueItem[]>([]);
-  const [queueProcessing, setQueueProcessing] = useState(false);
   
   // Form data for manual confirmation
   const [wasteType, setWasteType] = useState<'food' | 'oil' | 'packaging' | 'organic'>('food');
@@ -288,78 +270,6 @@ export default function HardwareCapturePage() {
     };
   }, [scaleBridgeUrl]);
 
-  const mapQueueResultToScan = useCallback((result: QueueItem['result'], fallbackWeightKg?: number | null): ScanResult | null => {
-    if (!result) return null;
-    const dishName = result.dishName || 'Unknown Dish';
-    const category = result.category || 'food';
-    const weightKg = typeof result.weightKg === 'number'
-      ? result.weightKg
-      : (typeof fallbackWeightKg === 'number' ? fallbackWeightKg : 0.3);
-    const confidence = Math.min(1, (Number(result.confidence) || 80) / 100);
-    const matched = FOOD_LIBRARY.find(item => item.name.toLowerCase() === dishName.toLowerCase());
-    const costPerKg = matched?.costPerKg ?? 4.5;
-    const co2PerKg = matched?.co2PerKg ?? 2.1;
-
-    return {
-      items: [
-        {
-          name: dishName,
-          category,
-          weight: weightKg,
-          confidence
-        }
-      ],
-      totalWeightKg: Number(weightKg.toFixed(2)),
-      co2Kg: Number((weightKg * co2PerKg).toFixed(2)),
-      costEUR: Number((weightKg * costPerKg).toFixed(2)),
-      confidence
-    };
-  }, []);
-
-  const fetchQueue = useCallback(async () => {
-    try {
-      const response = await fetch('/api/waste/queue?limit=20');
-      if (!response.ok) return;
-      const data = await response.json();
-      const items: QueueItem[] = data.items || [];
-      setQueueItems(items);
-
-      const latestDone = items.find(item => item.status === 'done' && item.result);
-      if (latestDone?.result) {
-        const mapped = mapQueueResultToScan(latestDone.result, latestDone.weightKg ?? undefined);
-        if (mapped) {
-          setScanResult(mapped);
-          setLastScanAt(new Date(latestDone.updatedAt).toLocaleTimeString());
-        }
-      }
-    } catch (error) {
-      console.error('Queue fetch failed:', error);
-    }
-  }, [mapQueueResultToScan]);
-
-  const processQueue = useCallback(async () => {
-    if (queueProcessing) return;
-    const hasPending = queueItems.some(item => item.status === 'pending');
-    if (!hasPending) return;
-    setQueueProcessing(true);
-    try {
-      await fetch('/api/waste/queue/process', { method: 'POST' });
-      await fetchQueue();
-    } catch (error) {
-      console.error('Queue processing failed:', error);
-    } finally {
-      setQueueProcessing(false);
-    }
-  }, [fetchQueue, queueItems, queueProcessing]);
-
-  useEffect(() => {
-    fetchQueue();
-    const interval = setInterval(() => {
-      fetchQueue();
-      processQueue();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [fetchQueue, processQueue]);
 
   // Record waste event to POS system
   const recordWasteToPOS = async (wasteData: any) => {
@@ -469,45 +379,6 @@ export default function HardwareCapturePage() {
     setLastSnapshotAt(new Date().toLocaleTimeString());
   }, []);
 
-  const buildMockScanResult = useCallback((weightOverride?: number | null): ScanResult => {
-    const useOverride = typeof weightOverride === 'number' && !Number.isNaN(weightOverride);
-    const itemCount = useOverride ? 1 : Math.floor(Math.random() * 3) + 1;
-    const items = Array.from({ length: itemCount }).map(() => {
-      const source = FOOD_LIBRARY[Math.floor(Math.random() * FOOD_LIBRARY.length)];
-      const weight = useOverride
-        ? Number(weightOverride!.toFixed(2))
-        : Number((Math.random() * 2 + 0.3).toFixed(2));
-      return {
-        name: source.name,
-        category: source.category,
-        weight,
-        confidence: Number((0.72 + Math.random() * 0.25).toFixed(2))
-      };
-    });
-
-    const totalWeightKg = useOverride
-      ? Number(weightOverride!.toFixed(2))
-      : Number(items.reduce((sum, item) => sum + item.weight, 0).toFixed(2));
-    const costEUR = Number(items.reduce((sum, item) => {
-      const source = FOOD_LIBRARY.find(entry => entry.name === item.name);
-      return sum + item.weight * (source?.costPerKg ?? 4.5);
-    }, 0).toFixed(2));
-    const co2Kg = Number(items.reduce((sum, item) => {
-      const source = FOOD_LIBRARY.find(entry => entry.name === item.name);
-      return sum + item.weight * (source?.co2PerKg ?? 2.1);
-    }, 0).toFixed(2));
-
-    const confidence = Number((items.reduce((sum, item) => sum + item.confidence, 0) / items.length).toFixed(2));
-
-    return {
-      items,
-      totalWeightKg,
-      co2Kg,
-      costEUR,
-      confidence
-    };
-  }, []);
-
   const toDataUrl = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result as string);
@@ -522,43 +393,69 @@ export default function HardwareCapturePage() {
     return match ? Number(match[1]) : 0.5;
   };
 
-  const enqueueSnapshot = useCallback(async (imageBlob: Blob) => {
+  const mapAnalysisToScan = useCallback((analysis: any, weightOverride?: number | null): ScanResult => {
+    const dishName = analysis?.dishName || 'Unknown Dish';
+    const category = analysis?.category || 'food';
+    const fallbackWeight = parseWeightKg(analysis?.estimatedWeight);
+    const safeOverride = typeof weightOverride === 'number' && !Number.isNaN(weightOverride)
+      ? weightOverride
+      : null;
+    const weightKg = safeOverride ?? fallbackWeight;
+    const confidence = Math.min(1, (Number(analysis?.confidence) || 80) / 100);
+    const matched = FOOD_LIBRARY.find(item => item.name.toLowerCase() === dishName.toLowerCase());
+    const costPerKg = matched?.costPerKg ?? 4.5;
+    const co2PerKg = matched?.co2PerKg ?? 2.1;
+    const roundedWeight = Number(weightKg.toFixed(2));
+
+    return {
+      items: [
+        {
+          name: dishName,
+          category,
+          weight: roundedWeight,
+          confidence
+        }
+      ],
+      totalWeightKg: roundedWeight,
+      co2Kg: Number((roundedWeight * co2PerKg).toFixed(2)),
+      costEUR: Number((roundedWeight * costPerKg).toFixed(2)),
+      confidence
+    };
+  }, [parseWeightKg]);
+
+  const analyzeSnapshot = useCallback(async (imageBlob: Blob) => {
     try {
       scanInProgressRef.current = true;
       const imageDataUrl = await toDataUrl(imageBlob);
-      const weightKg = typeof scaleWeightRef.current === 'number'
-        ? scaleWeightRef.current
-        : null;
-
-      const response = await fetch('/api/waste/queue', {
+      const response = await fetch('/api/analyzeWaste', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageDataUrl, weightKg })
+        body: JSON.stringify({ image: imageDataUrl })
       });
 
       if (!response.ok) {
-        throw new Error('Queue enqueue failed');
+        throw new Error('Analysis failed');
       }
 
-      await fetchQueue();
-
-      toast({
-        title: 'Queued for analysis',
-        description: 'Captured waste image stored. Analysis will run in the background.',
-        variant: 'default'
-      });
+      const data = await response.json();
+      const weightOverride = typeof scaleWeightRef.current === 'number'
+        ? scaleWeightRef.current
+        : null;
+      const mapped = mapAnalysisToScan(data, weightOverride);
+      setScanResult(mapped);
+      setLastScanAt(new Date().toLocaleTimeString());
     } catch (error) {
-      console.error('Queue enqueue error:', error);
+      console.error('Analysis error:', error);
       toast({
-        title: 'Queue Error',
-        description: 'Unable to queue this capture. Please try again.',
+        title: 'Scan Failed',
+        description: 'Unable to analyze this image. Please try again.',
         variant: 'destructive'
       });
     } finally {
       scanInProgressRef.current = false;
       setIsScanning(false);
     }
-  }, [fetchQueue]);
+  }, [mapAnalysisToScan, toDataUrl]);
 
   const capturePhoto = useCallback(async (options?: { silent?: boolean; source?: 'auto' | 'manual' }) => {
     if (!checkThrottle(options?.silent)) return;
@@ -590,11 +487,11 @@ export default function HardwareCapturePage() {
       canvas.toBlob(async (blob) => {
         if (blob) {
           updateSnapshotUrl(blob);
-          await enqueueSnapshot(blob);
+          await analyzeSnapshot(blob);
         }
       }, 'image/jpeg', 0.7);
     }
-  }, [checkThrottle, enqueueSnapshot, updateSnapshotUrl]);
+  }, [checkThrottle, analyzeSnapshot, updateSnapshotUrl]);
 
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -613,7 +510,7 @@ export default function HardwareCapturePage() {
     if (!selectedFile || !checkThrottle()) return;
     
     setIsScanning(true);
-    await enqueueSnapshot(selectedFile);
+    await analyzeSnapshot(selectedFile);
   };
 
 
@@ -905,44 +802,6 @@ export default function HardwareCapturePage() {
                 </CardContent>
               </Card>
 
-              {/* Analysis Queue */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Activity className="w-5 h-5" />
-                    <span>Analysis Queue</span>
-                  </CardTitle>
-                  <CardDescription>Captured items are analyzed in the background.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {queueItems.length === 0 ? (
-                    <div className="text-sm text-slate-500">No queued captures yet.</div>
-                  ) : (
-                    queueItems.map((item) => (
-                      <div key={item.id} className="flex items-start justify-between rounded-lg border bg-white p-3">
-                        <div>
-                          <p className="text-sm font-medium text-slate-800">Capture #{item.id}</p>
-                          <p className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleTimeString()}</p>
-                          {item.result?.dishName && (
-                            <p className="text-xs text-slate-600 mt-1">{item.result.dishName}</p>
-                          )}
-                          {item.error && (
-                            <p className="text-xs text-red-600 mt-1">{item.error}</p>
-                          )}
-                        </div>
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          item.status === 'done' ? 'bg-emerald-50 text-emerald-700'
-                            : item.status === 'processing' ? 'bg-amber-50 text-amber-700'
-                            : item.status === 'error' ? 'bg-red-50 text-red-700'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}>
-                          {item.status}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
             </div>
           </div>
         </TabsContent>
