@@ -1,0 +1,5 @@
+{
+  "name": "Managr Dashboard",
+  "description": "A kitchen management dashboard for forecasting, production planning, and waste tracking.",
+  "requestFramePermissions": []
+}

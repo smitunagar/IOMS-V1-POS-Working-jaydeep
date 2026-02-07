@@ -17,104 +17,13 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
-  Minus,
-} from "lucide-react";
+  "use client";
 
-export default function MensaIOMSDashboardPage() {
-  const [realStats, setRealStats] = useState({
-    totalOrders: 0,
-    pendingOrders: 0,
-    completedOrders: 0,
-    menuItems: 0,
-  });
+  import ManagrDashboard from "@/app/managr-dashboard/App";
 
-  // Artificial data for KPIs
-  const [kpiData] = useState({
-    liveQueueLoad: 7, // Green (< 10)
-    averageServiceTime: 19.5, // seconds (within target 18-25)
-    ordersProcessedToday: 342,
-    ordersProcessedShift: 127,
-    paymentSuccessRate: {
-      cash: 98.5,
-      card: 99.2,
-      campusCard: 97.8,
-      overall: 98.7,
-    },
-    cashDrawerBalance: 1247.50,
-    topSellingItems: [
-      { name: "Veggie Bowl", sales: 89, trend: "up" },
-      { name: "Pasta Carbonara", sales: 67, trend: "stable" },
-      { name: "Chicken Wrap", sales: 54, trend: "up" },
-      { name: "Caesar Salad", sales: 43, trend: "down" },
-      { name: "Soup of the Day", sales: 38, trend: "stable" },
-    ],
-    stockoutAlerts: [
-      { item: "Pasta", remaining: 12, status: "low" },
-      { item: "Tomatoes", remaining: 8, status: "critical" },
-      { item: "Lettuce", remaining: 15, status: "low" },
-    ],
-    allergenFlags: 6,
-    refundsToday: 3,
-    voidsToday: 2,
-  });
-
-  useEffect(() => {
-    // Fetch real stats
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/mensa-orders/scheduled');
-        const data = await response.json();
-        
-        if (data.success) {
-          const orders = data.data || [];
-          setRealStats({
-            totalOrders: orders.length,
-            pendingOrders: orders.filter((o: any) => o.status?.toLowerCase() === 'pending' || o.status?.toLowerCase() === 'scheduled').length,
-            completedOrders: orders.filter((o: any) => o.status?.toLowerCase() === 'completed' || o.status?.toLowerCase() === 'confirmed').length,
-            menuItems: 0, // TODO: Fetch from menu management API
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-      }
-    };
-
-    fetchStats();
-  }, []);
-
-  const getQueueStatus = (load: number) => {
-    if (load < 10) return { 
-      label: 'Normal',
-      badgeBg: 'bg-[#DCFCE7]',
-      badgeText: 'text-[#166534]',
-      progressColor: '#16A34A'
-    };
-    if (load < 20) return { 
-      label: 'Beschäftigt',
-      badgeBg: 'bg-[#FEF3C7]',
-      badgeText: 'text-[#92400E]',
-      progressColor: '#F59E0B'
-    };
-    return { 
-      label: 'Überlastet',
-      badgeBg: 'bg-[#FEE2E2]',
-      badgeText: 'text-[#7F1D1D]',
-      progressColor: '#DC2626'
-    };
-  };
-
-  const queueStatus = getQueueStatus(kpiData.liveQueueLoad);
-
-  const getTrendIcon = (trend: string) => {
-    if (trend === 'up') return <ArrowUpRight className="w-3.5 h-3.5" />;
-    if (trend === 'down') return <ArrowDownRight className="w-3.5 h-3.5" />;
-    return <Minus className="w-3.5 h-3.5" />;
-  };
-
-  // Format numbers with German locale (comma as decimal separator)
-  const formatGermanNumber = (num: number, decimals: number = 1): string => {
-    return num.toFixed(decimals).replace('.', ',');
-  };
+  export default function MensaIOMSDashboardPage() {
+    return <ManagrDashboard />;
+  }
 
   return (
     <AppLayout>
