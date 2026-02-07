@@ -1,5 +1,12 @@
 "use client";
 
+import ManagrDashboard from "@/app/managr-dashboard/App";
+
+export default function MensaIOMSDashboardPage() {
+  return <ManagrDashboard />;
+}
+/* Legacy dashboard removed
+
 import { AppLayout } from "@/shared/components/layout/AppLayout";
 import { useState, useEffect } from "react";
 import {
