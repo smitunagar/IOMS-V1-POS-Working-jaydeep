@@ -13,6 +13,8 @@ interface LineScanResult {
   weightKg: number;
   co2Kg: number;
   confidence: number;
+  matchedMenuItem?: string | null;
+  inMenu?: boolean;
 }
 
 const DEFAULT_CO2_PER_KG = 2.1;
@@ -115,7 +117,9 @@ export default function WasteWatchdogLinePage() {
         itemName,
         weightKg,
         co2Kg,
-        confidence: 1
+        confidence: 1,
+        matchedMenuItem: data.matchedMenuItem ?? null,
+        inMenu: data.inMenu ?? false
       });
       setLastScanAt(new Date().toLocaleTimeString());
     } catch (error) {
@@ -234,6 +238,19 @@ export default function WasteWatchdogLinePage() {
                 {isScanning ? 'Scanning...' : 'Capture Waste'}
               </Button>
             </div>
+
+                {scanResult && (
+                  <div className="flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
+                    <span className="text-slate-600">Menu match</span>
+                    {scanResult.inMenu && scanResult.matchedMenuItem ? (
+                      <span className="font-medium text-emerald-600">
+                        {scanResult.matchedMenuItem}
+                      </span>
+                    ) : (
+                      <span className="font-medium text-rose-600">Not in menu</span>
+                    )}
+                  </div>
+                )}
           </CardContent>
         </Card>
 

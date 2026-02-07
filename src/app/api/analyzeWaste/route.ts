@@ -39,6 +39,27 @@ const parseWeightKg = (weightText: string | number | undefined) => {
   return Number.isFinite(value) ? value : null;
 };
 
+const normalizeName = (value: string) => value
+  .toLowerCase()
+  .replace(/[^a-z0-9\s]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const scoreNameMatch = (dishName: string, menuName: string) => {
+  const dishTokens = normalizeName(dishName).split(' ').filter(Boolean);
+  const menuTokens = normalizeName(menuName).split(' ').filter(Boolean);
+  if (!dishTokens.length || !menuTokens.length) return 0;
+  const dishSet = new Set(dishTokens);
+  const common = menuTokens.filter(token => dishSet.has(token)).length;
+  let score = common / Math.max(dishTokens.length, menuTokens.length);
+  const dishNorm = normalizeName(dishName);
+  const menuNorm = normalizeName(menuName);
+  if (menuNorm.includes(dishNorm) || dishNorm.includes(menuNorm)) {
+    score += 0.2;
+  }
+  return score;
+};
+
 const getMenuIngredientsForDish = async (dishName?: string | null) => {
   if (!dishName) return null;
   try {
@@ -49,6 +70,8 @@ const getMenuIngredientsForDish = async (dishName?: string | null) => {
 
     const row = exact.rows?.[0] || null;
     let itemId = row?.item_id ?? null;
+    let matchedName = row?.name ?? null;
+    let matchScore = row ? 1 : 0;
 
     if (!itemId) {
       const fuzzy = await query(
@@ -56,6 +79,36 @@ const getMenuIngredientsForDish = async (dishName?: string | null) => {
         [`%${dishName}%`]
       );
       itemId = fuzzy.rows?.[0]?.item_id ?? null;
+      matchedName = fuzzy.rows?.[0]?.name ?? null;
+      matchScore = itemId ? 0.6 : 0;
+    }
+
+    if (!itemId) {
+      const tokens = normalizeName(dishName).split(' ').filter(token => token.length > 2);
+      if (tokens.length) {
+        const tokenA = tokens[0];
+        const tokenB = tokens[1] || tokens[0];
+        const candidates = await query(
+          `SELECT item_id, name FROM menu_item WHERE name ILIKE $1 OR name ILIKE $2 LIMIT 50`,
+          [`%${tokenA}%`, `%${tokenB}%`]
+        );
+
+        let bestScore = 0;
+        let bestRow: { item_id: string; name: string } | null = null;
+        for (const candidate of candidates.rows || []) {
+          const score = scoreNameMatch(dishName, candidate.name);
+          if (score > bestScore) {
+            bestScore = score;
+            bestRow = candidate;
+          }
+        }
+
+        if (bestRow && bestScore >= 0.3) {
+          itemId = bestRow.item_id;
+          matchedName = bestRow.name;
+          matchScore = bestScore;
+        }
+      }
     }
 
     if (!itemId) return null;
@@ -69,7 +122,11 @@ const getMenuIngredientsForDish = async (dishName?: string | null) => {
       [itemId]
     );
 
-    return ingredients.rows?.map((row: any) => row.name).filter(Boolean) || [];
+    return {
+      matchedName,
+      matchScore,
+      ingredients: ingredients.rows?.map((row: any) => row.name).filter(Boolean) || []
+    };
   } catch (error) {
     console.error('❌ Failed to load menu ingredients:', error);
     return null;
@@ -221,7 +278,8 @@ Analyze the image now:
     console.log(`✅ Waste analysis successful:`, analysisData);
 
     const resolvedWeightKg = weightKgFromBody ?? parseWeightKg(analysisData?.estimatedWeight);
-    const recipeIngredients = await getMenuIngredientsForDish(analysisData?.dishName);
+    const recipeResult = await getMenuIngredientsForDish(analysisData?.dishName);
+    const recipeIngredients = recipeResult?.ingredients || null;
     const co2Result = recipeIngredients && resolvedWeightKg
       ? await calculateCo2FromIngredients(recipeIngredients, resolvedWeightKg)
       : null;
@@ -234,6 +292,9 @@ Analyze the image now:
       confidence: analysisData.confidence || 80,
       weightKg: resolvedWeightKg ?? undefined,
       recipeIngredients: recipeIngredients || undefined,
+      matchedMenuItem: recipeResult?.matchedName || undefined,
+      menuMatchScore: recipeResult?.matchScore ?? undefined,
+      inMenu: Boolean(recipeResult?.matchedName),
       co2Kg: co2Result?.co2Kg ?? undefined,
       co2ePerKg: co2Result?.co2ePerKg ?? undefined,
       co2Matches: co2Result?.matches ?? undefined,

@@ -38,6 +38,9 @@ interface ScanResult {
   co2Kg: number;
   costEUR: number;
   confidence: number;
+  matchedMenuItem?: string | null;
+  inMenu?: boolean;
+  menuMatchScore?: number | null;
 }
 
 interface WasteEventData {
@@ -427,7 +430,10 @@ export default function HardwareCapturePage() {
       totalWeightKg: roundedWeight,
       co2Kg: safeCo2,
       costEUR: safeCost,
-      confidence
+      confidence,
+      matchedMenuItem: analysis?.matchedMenuItem ?? null,
+      inMenu: analysis?.inMenu ?? false,
+      menuMatchScore: typeof analysis?.menuMatchScore === 'number' ? analysis.menuMatchScore : null,
     };
   }, [parseWeightKg]);
 
@@ -798,6 +804,17 @@ export default function HardwareCapturePage() {
                         </div>
                       </div>
 
+                      <div className="flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
+                        <span className="text-slate-600">Menu match</span>
+                        {scanResult.inMenu && scanResult.matchedMenuItem ? (
+                          <span className="font-medium text-emerald-600">
+                            {scanResult.matchedMenuItem}
+                          </span>
+                        ) : (
+                          <span className="font-medium text-rose-600">Not in menu</span>
+                        )}
+                      </div>
+
                       {/* Detected Items */}
                       <div className="space-y-2">
                         <h4 className="font-medium">Detected Items:</h4>
@@ -919,6 +936,17 @@ export default function HardwareCapturePage() {
                         <p className="text-sm text-slate-600">kg CO₂</p>
                       </div>
                     </div>
+
+                      <div className="flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
+                        <span className="text-slate-600">Menu match</span>
+                        {scanResult.inMenu && scanResult.matchedMenuItem ? (
+                          <span className="font-medium text-emerald-600">
+                            {scanResult.matchedMenuItem}
+                          </span>
+                        ) : (
+                          <span className="font-medium text-rose-600">Not in menu</span>
+                        )}
+                      </div>
 
                     <div className="space-y-2">
                       <h4 className="font-medium">Detected Items:</h4>
