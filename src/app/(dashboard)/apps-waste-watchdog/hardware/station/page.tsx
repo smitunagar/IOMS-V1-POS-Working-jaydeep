@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
-import { Progress } from '@/shared/components/ui/progress';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
@@ -17,7 +16,6 @@ import {
   Upload, 
   Scan, 
   CheckCircle, 
-  AlertTriangle, 
   RefreshCw,
   Eye,
   Scale,
@@ -82,6 +80,7 @@ export default function HardwareCapturePage() {
   const [scaleWeight, setScaleWeight] = useState<number | null>(null);
   const [scaleUnit, setScaleUnit] = useState<string>('kg');
   const [scaleStatus, setScaleStatus] = useState<'connected' | 'disconnected' | 'error'>('disconnected');
+  const [tareWeightGrams, setTareWeightGrams] = useState<number>(355.3);
   
   // Form data for manual confirmation
   const [wasteType, setWasteType] = useState<'food' | 'oil' | 'packaging' | 'organic'>('food');
@@ -165,9 +164,14 @@ export default function HardwareCapturePage() {
     seedMensaPilotData(currentUser.id);
   }, [currentUser?.id, isMensaPilot]);
 
+  const tareWeightKg = tareWeightGrams / 1000;
+  const netWeightKg = scaleWeight !== null
+    ? Math.max(0, scaleWeight - tareWeightKg)
+    : null;
+
   useEffect(() => {
-    scaleWeightRef.current = scaleWeight;
-  }, [scaleWeight]);
+    scaleWeightRef.current = netWeightKg;
+  }, [netWeightKg]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -401,11 +405,15 @@ export default function HardwareCapturePage() {
       ? weightOverride
       : null;
     const weightKg = safeOverride ?? fallbackWeight;
+    const resolvedWeight = Number.isFinite(weightKg) ? weightKg : fallbackWeight;
+    const finalWeight = Number.isFinite(resolvedWeight) ? resolvedWeight : 0.5;
     const confidence = Math.min(1, (Number(analysis?.confidence) || 80) / 100);
     const matched = FOOD_LIBRARY.find(item => item.name.toLowerCase() === dishName.toLowerCase());
     const costPerKg = matched?.costPerKg ?? 4.5;
     const co2PerKg = matched?.co2PerKg ?? 2.1;
-    const roundedWeight = Number(weightKg.toFixed(2));
+    const roundedWeight = Number(finalWeight.toFixed(2));
+    const safeCost = Number.isFinite(roundedWeight) ? Number((roundedWeight * costPerKg).toFixed(2)) : 0;
+    const safeCo2 = Number.isFinite(roundedWeight) ? Number((roundedWeight * co2PerKg).toFixed(2)) : 0;
 
     return {
       items: [
@@ -417,8 +425,8 @@ export default function HardwareCapturePage() {
         }
       ],
       totalWeightKg: roundedWeight,
-      co2Kg: Number((roundedWeight * co2PerKg).toFixed(2)),
-      costEUR: Number((roundedWeight * costPerKg).toFixed(2)),
+      co2Kg: safeCo2,
+      costEUR: safeCost,
       confidence
     };
   }, [parseWeightKg]);
@@ -430,7 +438,12 @@ export default function HardwareCapturePage() {
       const response = await fetch('/api/analyzeWaste', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageDataUrl })
+        body: JSON.stringify({
+          image: imageDataUrl,
+          source: 'station',
+          station,
+          weightKg: typeof scaleWeightRef.current === 'number' ? scaleWeightRef.current : null
+        })
       });
 
       if (!response.ok) {
@@ -455,7 +468,7 @@ export default function HardwareCapturePage() {
       scanInProgressRef.current = false;
       setIsScanning(false);
     }
-  }, [mapAnalysisToScan, toDataUrl]);
+  }, [mapAnalysisToScan, station, toDataUrl]);
 
   const capturePhoto = useCallback(async (options?: { silent?: boolean; source?: 'auto' | 'manual' }) => {
     if (!checkThrottle(options?.silent)) return;
@@ -635,15 +648,47 @@ export default function HardwareCapturePage() {
                     <span className="text-xs text-slate-500">{scaleStatus}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-500">Live weight</p>
+                    <p className="text-xs text-slate-500">Net weight</p>
                     <p className="text-lg font-semibold text-slate-900">
-                      {scaleWeight !== null
+                      {netWeightKg !== null
                         ? (normalizeScaleUnit(scaleUnit) === 'g'
-                          ? `${(scaleWeight * 1000).toFixed(2)} g`
-                          : `${scaleWeight.toFixed(3)} kg`)
+                          ? `${(netWeightKg * 1000).toFixed(2)} g`
+                          : `${netWeightKg.toFixed(3)} kg`)
                         : '—'}
                     </p>
+                    <p className="text-[11px] text-slate-400">
+                      Gross: {scaleWeight !== null ? `${(scaleWeight * 1000).toFixed(2)} g` : '—'} • Tare: {tareWeightGrams.toFixed(2)} g
+                    </p>
                   </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-slate-50 px-4 py-3">
+                  <div className="flex-1 min-w-[180px]">
+                    <Label htmlFor="tare-weight" className="text-xs text-slate-600">Plate tare (g)</Label>
+                    <Input
+                      id="tare-weight"
+                      type="number"
+                      step="0.01"
+                      value={tareWeightGrams}
+                      onChange={(event) => {
+                        const value = Number(event.target.value);
+                        setTareWeightGrams(Number.isFinite(value) ? Math.max(0, value) : 0);
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-5"
+                    onClick={() => {
+                      if (scaleWeight !== null) {
+                        setTareWeightGrams(Number((scaleWeight * 1000).toFixed(2)));
+                      }
+                    }}
+                    disabled={scaleWeight === null}
+                  >
+                    Use current as tare
+                  </Button>
                 </div>
                 <div className="relative bg-slate-100 rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
                   <video
@@ -737,16 +782,6 @@ export default function HardwareCapturePage() {
                   )}
                   {scanResult ? (
                     <div className="space-y-4">
-                      {/* Confidence Warning */}
-                      {scanResult.confidence < 0.7 && (
-                        <div className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                          <span className="text-sm text-yellow-800">
-                            Low confidence detection. Please verify results.
-                          </span>
-                        </div>
-                      )}
-
                       {/* Summary */}
                       <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg">
                         <div className="text-center">
@@ -784,13 +819,6 @@ export default function HardwareCapturePage() {
                       </div>
 
                       {/* Overall Confidence */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-600">Detection Confidence</span>
-                          <span className="font-medium">{(scanResult.confidence * 100).toFixed(0)}%</span>
-                        </div>
-                        <Progress value={scanResult.confidence * 100} className="w-full" />
-                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-12">
@@ -877,15 +905,6 @@ export default function HardwareCapturePage() {
                 {scanResult ? (
                   <div className="space-y-4">
                     {/* Same content as camera tab */}
-                    {scanResult.confidence < 0.7 && (
-                      <div className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                        <span className="text-sm text-yellow-800">
-                          Low confidence detection. Please verify results.
-                        </span>
-                      </div>
-                    )}
-
                     <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg">
                       <div className="text-center">
                         <p className="text-2xl font-bold text-blue-600">{(scanResult.totalWeightKg * 1000).toFixed(2)}</p>
@@ -920,13 +939,6 @@ export default function HardwareCapturePage() {
                       ))}
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-600">Detection Confidence</span>
-                        <span className="font-medium">{(scanResult.confidence * 100).toFixed(0)}%</span>
-                      </div>
-                      <Progress value={scanResult.confidence * 100} className="w-full" />
-                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-12">

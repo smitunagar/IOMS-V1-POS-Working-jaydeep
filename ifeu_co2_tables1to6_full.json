@@ -1,0 +1,747 @@
+{
+  "metadata": {
+    "source": "ifeu – Environmental footprints of food products and dishes in Germany (2020)",
+    "reference_year": 2019,
+    "region": "Germany",
+    "system_boundary_products": "at the supermarket checkout",
+    "unit_products": "kg CO2e per kg food",
+    "unit_dishes": "kg CO2e per serving (prepared on the plate)",
+    "extracted_from_tables": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "notes": "This JSON includes every row from CO2 Tables 1–6 in the provided PDF. Tables 1–5 are food products (per kg). Table 6 lists dishes/measures (per serving)."
+  },
+  "categories": {
+    "fruit_and_vegetables": {
+      "apple_organic_average": {
+        "label": "Apple (organic), average",
+        "co2e": 0.2,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 1
+      },
+      "apple_average": {
+        "label": "Apple, average",
+        "co2e": 0.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 2
+      },
+      "apple_from_new_zealand": {
+        "label": "Apple, from New Zealand",
+        "co2e": 0.8,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 3
+      },
+      "apple_regionalin_april": {
+        "label": "Apple, regionalin April",
+        "co2e": 0.4,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 4
+      },
+      "apple_regionalin_autumn": {
+        "label": "Apple, regionalin autumn",
+        "co2e": 0.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 5
+      },
+      "aspara_gus": {
+        "label": "Aspara gus",
+        "co2e": 0.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 6
+      },
+      "avocado_organi_c_from_peru": {
+        "label": "Avocado (organi c), from Peru",
+        "co2e": 0.8,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 7
+      },
+      "avocad_o_average": {
+        "label": "Avocad o, average",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 8
+      },
+      "avocad_o_fromp_eru": {
+        "label": "Avocad o, fromP eru",
+        "co2e": 0.8,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 9
+      },
+      "banana": {
+        "label": "Banana",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 10
+      },
+      "beans_in_can": {
+        "label": "Beans, in can",
+        "co2e": 1.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 11
+      },
+      "beans_fresh": {
+        "label": "Beans, fresh",
+        "co2e": 0.8,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 12
+      },
+      "beetro_ot_fresh": {
+        "label": "Beetro ot, fresh",
+        "co2e": 0.2,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 13
+      },
+      "beetro_ot_in_glass_jar": {
+        "label": "Beetro ot, in glass jar",
+        "co2e": 1.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 14
+      },
+      "bell_pe_pper": {
+        "label": "Bell pe pper",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 15
+      },
+      "brocco_li_fresh": {
+        "label": "Brocco li, fresh",
+        "co2e": 0.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 16
+      },
+      "brocco_li_frozen": {
+        "label": "Brocco li, frozen",
+        "co2e": 0.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 17
+      },
+      "brussels_sprouts_fresh": {
+        "label": "Brussels sprouts, fresh",
+        "co2e": 0.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 18
+      },
+      "brussels_sprouts_frozen": {
+        "label": "Brussels sprouts, frozen",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 1,
+        "row_no": 19
+      }
+    },
+    "dairy_eggs_substitutes": {
+      "butter": {
+        "label": "Butter",
+        "co2e": 9.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 1
+      },
+      "butter_organic": {
+        "label": "Butter (organic)",
+        "co2e": 11.5,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 2
+      },
+      "cheese_organic_av_erage": {
+        "label": "Cheese (organic), av erage",
+        "co2e": 7.2,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 3
+      },
+      "cheese_organic_cr_eam_cheese": {
+        "label": "Cheese (organic), cr eam cheese",
+        "co2e": 6.9,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 4
+      },
+      "cheese_substitute_v_egan_based_on_cocon_ut_oil": {
+        "label": "Cheese substitute, v egan, based on cocon ut oil",
+        "co2e": 2.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 5
+      },
+      "chees_e_average": {
+        "label": "Chees e, average",
+        "co2e": 5.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 6
+      },
+      "chees_e_cream_chee_se": {
+        "label": "Chees e, cream chee se",
+        "co2e": 5.5,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 7
+      },
+      "chees_e_feta": {
+        "label": "Chees e, feta",
+        "co2e": 7.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 8
+      },
+      "chees_e_hard_cheese_like_emme_ntal": {
+        "label": "Chees e, hard cheese, like Emme ntal",
+        "co2e": 6.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 9
+      },
+      "chees_e_hard_cheese_like_parme_san": {
+        "label": "Chees e, hard cheese, like parme san",
+        "co2e": 6.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 10
+      },
+      "cream": {
+        "label": "Cream",
+        "co2e": 4.2,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 11
+      },
+      "cream_organic": {
+        "label": "Cream (organic)",
+        "co2e": 5.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 12
+      },
+      "cream_substitute_ba_sed_on_oat": {
+        "label": "Cream substitute, ba sed on oat",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 13
+      },
+      "curd_organic_40_fat": {
+        "label": "Curd (organic), 40 % fat",
+        "co2e": 4.1,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 14
+      },
+      "curd_substitute_soya": {
+        "label": "Curd substitute, soya",
+        "co2e": 0.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 15
+      },
+      "curd_40_fat": {
+        "label": "Curd, 40 % fat",
+        "co2e": 3.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 16
+      },
+      "curd_low_fat_curd_1_0_fat": {
+        "label": "Curd, low-fat curd, 1 0 % fat",
+        "co2e": 2.4,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 17
+      },
+      "egg": {
+        "label": "Egg",
+        "co2e": 3.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 2,
+        "row_no": 18
+      }
+    },
+    "meat_and_protein": {
+      "be_ef_average_3": {
+        "label": "Be ef, average 3",
+        "co2e": 13.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 1
+      },
+      "be_ef_organic_3": {
+        "label": "Be ef (organic)3",
+        "co2e": 21.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 2
+      },
+      "be_ef_patty_fr_ozen": {
+        "label": "Be ef patty, fr ozen",
+        "co2e": 9.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 3
+      },
+      "m_inced_beef4": {
+        "label": "M inced beef4",
+        "co2e": 9.2,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 4
+      },
+      "m_inced_beef_organic_4": {
+        "label": "M inced beef (organic)4",
+        "co2e": 15.1,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 5
+      },
+      "c_hicken_aver_age": {
+        "label": "C hicken, aver age",
+        "co2e": 5.5,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 6
+      },
+      "c_hicken_froz_en": {
+        "label": "C hicken, froz en",
+        "co2e": 5.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 7
+      },
+      "c_hicken_nug_gets": {
+        "label": "C hicken, nug gets",
+        "co2e": 3.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 8
+      },
+      "c_hicken_saus_age_slices": {
+        "label": "C hicken, saus age slices",
+        "co2e": 2.9,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 9
+      },
+      "fi_sh_aquacul_ture": {
+        "label": "Fi sh, aquacul ture",
+        "co2e": 5.1,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 10
+      },
+      "fi_sh_wild_cat_ch_bulk_good_fr_ozen": {
+        "label": "Fi sh, wild-cat ch, bulk good, fr ozen",
+        "co2e": 2.4,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 11
+      },
+      "fi_sh_wild_cat_ch_fresh": {
+        "label": "Fi sh, wild-cat ch, fresh",
+        "co2e": 4.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 12
+      },
+      "fi_sh_wild_cat_ch_speciality_fr_ozen": {
+        "label": "Fi sh, wild-cat ch, speciality, fr ozen",
+        "co2e": 10.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 13
+      },
+      "g_ame_meat_deer5": {
+        "label": "G ame meat, deer5",
+        "co2e": 11.5,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 14
+      },
+      "lu_pine_flour": {
+        "label": "Lu pine flour",
+        "co2e": 0.4,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 3,
+        "row_no": 15
+      }
+    },
+    "starch_oil_sugar": {
+      "bread_organic_bro_wn_bread": {
+        "label": "Bread (organic), bro wn bread",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 1
+      },
+      "bread_bun_white_bre_ad": {
+        "label": "Bread bun, white bre ad",
+        "co2e": 0.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 2
+      },
+      "bread_brown_bread": {
+        "label": "Bread, brown bread",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 3
+      },
+      "bulgur": {
+        "label": "Bulgur",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 4
+      },
+      "choc_olate_milk_choc_olate_bar_35_co_coa_content": {
+        "label": "Choc olate, Milk choc olate, bar, 35 % co coa content",
+        "co2e": 4.1,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 5
+      },
+      "coco_nut_oil": {
+        "label": "Coco nut oil",
+        "co2e": 2.3,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 6
+      },
+      "fries": {
+        "label": "Fries",
+        "co2e": 0.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 7
+      },
+      "gnoc_chi": {
+        "label": "Gnoc chi",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 8
+      },
+      "hone_y_jar": {
+        "label": "Hone y, jar",
+        "co2e": 2.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 9
+      },
+      "marg_arine_organic_full_fat": {
+        "label": "Marg arine (organic), full-fat",
+        "co2e": 2.5,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 10
+      },
+      "marg_arine_full_fat": {
+        "label": "Marg arine, full-fat",
+        "co2e": 2.8,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 11
+      },
+      "marg_arine_semi_fat": {
+        "label": "Marg arine, semi-fat",
+        "co2e": 1.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 12
+      },
+      "oat_fl_akes": {
+        "label": "Oat fl akes",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 13
+      },
+      "olive_oil_glass_dispos_able_bottle": {
+        "label": "Olive oil, glass dispos able bottle",
+        "co2e": 3.2,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 14
+      },
+      "palm_fat6": {
+        "label": "Palm fat6",
+        "co2e": 2.9,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 15
+      },
+      "pasta": {
+        "label": "Pasta",
+        "co2e": 0.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 16
+      },
+      "pasta_organic": {
+        "label": "Pasta (organic)",
+        "co2e": 0.8,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 17
+      },
+      "pastry_products": {
+        "label": "Pastry products",
+        "co2e": 1.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 18
+      },
+      "pean_ut_butter": {
+        "label": "Pean ut butter",
+        "co2e": 2.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 19
+      },
+      "fries_frozen": {
+        "label": "Fries, frozen",
+        "co2e": 0.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 4,
+        "row_no": 20
+      }
+    },
+    "beverages": {
+      "beer_0_5_l_ret_urnab_leg_lass_bottle": {
+        "label": "Beer, 0.5 L ret urnab leg lass bottle",
+        "co2e": 0.9,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 1
+      },
+      "beer_0_5_l_tin_plate_can": {
+        "label": "Beer, 0.5 L tin plate can",
+        "co2e": 1.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 2
+      },
+      "cocoa_ground": {
+        "label": "Cocoa, ground",
+        "co2e": 5.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 3
+      },
+      "coffee_ground": {
+        "label": "Coffee, ground",
+        "co2e": 5.6,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 4
+      },
+      "juice_apple_jui_ce_1_0_l_compositec_arton": {
+        "label": "Juice, apple jui ce, 1 .0 L compositec arton",
+        "co2e": 0.4,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 5
+      },
+      "juice_apple_jui_ce_1_0_l_returnableg_lass_bottle": {
+        "label": "Juice, apple jui ce, 1 .0 L returnableg lass bottle",
+        "co2e": 0.4,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 6
+      },
+      "juice_orangej_uice_l_composite_carton": {
+        "label": "Juice, orangej uice, L composite carton",
+        "co2e": 0.7,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 7
+      },
+      "8": {
+        "label": "8",
+        "co2e": 0.4,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": null
+      },
+      "miner_al_water_0_7_l_ret_urnable_glass_bottle": {
+        "label": "Miner al water, 0.7 L ret urnable glass bottle",
+        "co2e": 0.2,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 9
+      },
+      "water_tap_wa_ter": {
+        "label": "Water, tap wa ter",
+        "co2e": 0.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 10
+      },
+      "wine_0_75_ld_ispos_able_glass_botte": {
+        "label": "Wine, 0.75 Ld ispos able glass botte",
+        "co2e": 1.0,
+        "unit": "kg_co2e_per_kg",
+        "source_table": 5,
+        "row_no": 11
+      }
+    },
+    "dishes": {
+      "dish_1_beef_patty_with_rice_and_fresh_peas": {
+        "label": "Dish 1 : Beef patty with rice and fresh peas",
+        "co2e": 2.0,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_1_chicken_breast_fillet_insteadof_beef_patty": {
+        "label": "with measure 1: Chicken breast fillet insteadof beef patty",
+        "co2e": 1.3,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_2_veggie_patty_based_on_soya_in_stead_of_beef_patty": {
+        "label": "with measure 2: Veggie patty based on soya in stead of beef patty",
+        "co2e": 1.0,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_3_pasta_instead_of_rice": {
+        "label": "with measure 3: Pasta instead of rice",
+        "co2e": 1.9,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_4_potatoes_instead_of_rice": {
+        "label": "with measure 4: Potatoes instead of rice",
+        "co2e": 1.9,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_5_frozen_peas_instead_of_freshp_eas": {
+        "label": "with measure 5: Frozen peas instead of freshp eas",
+        "co2e": 2.0,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_6_fresh_carrots_instead_of_fresh_peas": {
+        "label": "with measure 6: Fresh carrots instead of fresh peas",
+        "co2e": 1.9,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "dish_2_lasagne": {
+        "label": "Dish 2 : Lasagne",
+        "co2e": 1.6,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_1_minced_pork_instead_of_minced_beef": {
+        "label": "with measure 1: Minced pork instead of minced beef",
+        "co2e": 1.0,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_2_soya_granules_inste_ad_of_minc_ed_beef": {
+        "label": "with measure 2: Soya granules inste ad of minc ed beef",
+        "co2e": 0.7,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_3_vegan_cheese_subs_titute_based_on_coconut_oil_instead_of_cheese": {
+        "label": "with measure 3: Vegan cheese subs titute based on coconut oil instead of cheese",
+        "co2e": 1.5,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_4_oat_drink_insteadof_cow_s_milk": {
+        "label": "with measure 4: Oat drink insteadof cow's milk",
+        "co2e": 1.5,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "with_measure_5_strained_tomatoes_from_comp_osite_carton_instead_of_canned": {
+        "label": "with measure 5: Strained tomatoes from comp osite carton instead of canned",
+        "co2e": 1.5,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "dish_3_beef_goula_sh": {
+        "label": "Dish 3 : Beef goula sh",
+        "co2e": 2.6,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "dish_4_pollock_fill_et_with_cauliflower_and_cousco_us": {
+        "label": "Dish 4 : Pollock fill et with cauliflower and cousco us",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "dish_5_rice_veget_able_gratin": {
+        "label": "Dish 5 : Rice-veget able gratin",
+        "co2e": 1.0,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "dish_4_spaghetti_with_paprika_cream_sauce": {
+        "label": "Dish 4 : Spaghetti with paprika cream sauce",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "dish_7_soya_bolog_nese_with_rice": {
+        "label": "Dish 7 : Soya bolog nese with rice",
+        "co2e": 0.9,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      },
+      "dish_8_penne_nap_oli": {
+        "label": "Dish 8 : Penne Nap oli",
+        "co2e": 0.6,
+        "unit": "kg_co2e_per_serving",
+        "source_table": 6,
+        "row_no": null
+      }
+    }
+  }
+}

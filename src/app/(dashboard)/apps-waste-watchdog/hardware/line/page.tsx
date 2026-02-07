@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
-import { Progress } from '@/shared/components/ui/progress';
 import { Badge } from '@/shared/components/ui/badge';
-import { Camera, RefreshCw, Scan, AlertTriangle } from 'lucide-react';
+import { Camera, RefreshCw, Scan } from 'lucide-react';
 import { toast } from '@/shared/hooks/use-toast';
 
 interface LineScanResult {
@@ -95,7 +94,10 @@ export default function WasteWatchdogLinePage() {
       const response = await fetch('/api/analyzeWaste', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageDataUrl })
+        body: JSON.stringify({
+          image: imageDataUrl,
+          source: 'line'
+        })
       });
 
       if (!response.ok) {
@@ -106,7 +108,6 @@ export default function WasteWatchdogLinePage() {
       const itemName = data.dishName || 'Unknown item';
       const photoType = data.category || 'Food Waste';
       const weightKg = parseWeightKg(data.estimatedWeight);
-      const confidence = Math.min(1, (Number(data.confidence) || 80) / 100);
       const co2Kg = Number((weightKg * DEFAULT_CO2_PER_KG).toFixed(2));
 
       setScanResult({
@@ -114,7 +115,7 @@ export default function WasteWatchdogLinePage() {
         itemName,
         weightKg,
         co2Kg,
-        confidence
+        confidence: 1
       });
       setLastScanAt(new Date().toLocaleTimeString());
     } catch (error) {
@@ -247,15 +248,6 @@ export default function WasteWatchdogLinePage() {
           <CardContent>
             {scanResult ? (
               <div className="space-y-4">
-                {scanResult.confidence < 0.7 && (
-                  <div className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm text-yellow-800">
-                      Low confidence detection. Please verify results.
-                    </span>
-                  </div>
-                )}
-
                 <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg">
                   <div className="text-center">
                     <p className="text-xs text-slate-600">Photo Type</p>
@@ -276,13 +268,6 @@ export default function WasteWatchdogLinePage() {
                   <p className="text-base font-semibold text-slate-900">{scanResult.itemName}</p>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Detection Confidence</span>
-                    <span className="font-medium">{(scanResult.confidence * 100).toFixed(0)}%</span>
-                  </div>
-                  <Progress value={scanResult.confidence * 100} className="w-full" />
-                </div>
               </div>
             ) : (
               <div className="text-center py-12">
