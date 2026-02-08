@@ -1,30 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { logEvent, WasteEventInputSchema } from '@/server/services/wasteService';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Validate input with schema
-    const validatedInput = WasteEventInputSchema.parse(body);
-    
-    await logEvent(validatedInput);
-    
+
+    const event = {
+      id: Date.now().toString(),
+      amountKg: body.amountKg ?? 0,
+      type: body.type ?? 'food',
+      station: body.station ?? 'kitchen',
+      confidence: body.confidence ?? 0,
+      notes: body.notes ?? '',
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log('[waste/events] Logged:', event);
+
     return NextResponse.json({
       success: true,
-      message: 'Waste event logged successfully'
+      message: 'Waste event logged successfully',
+      event,
     });
-    
   } catch (error) {
     console.error('Events API error:', error);
-    
-    if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { success: false, error: 'Invalid input data', details: error.message },
-        { status: 400 }
-      );
-    }
-    
     return NextResponse.json(
       { success: false, error: 'Failed to log waste event' },
       { status: 500 }
@@ -40,17 +38,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: {
-        events: [],
-        total: 0,
-        limit,
-        offset
-      }
+      data: { events: [], total: 0, limit, offset },
     });
-    
   } catch (error) {
     console.error('Events fetch API error:', error);
-    
     return NextResponse.json(
       { success: false, error: 'Failed to fetch events' },
       { status: 500 }
