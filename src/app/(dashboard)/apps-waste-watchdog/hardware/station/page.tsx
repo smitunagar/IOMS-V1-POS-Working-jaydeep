@@ -179,6 +179,17 @@ export default function HardwareCapturePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Exponential backoff: 2s → 4s → 8s → 16s → 30s cap
+    let reconnectDelay = 2000;
+    const RECONNECT_MIN = 2000;
+    const RECONNECT_MAX = 30000;
+    const resetBackoff = () => { reconnectDelay = RECONNECT_MIN; };
+    const nextBackoff = () => {
+      const delay = reconnectDelay;
+      reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX);
+      return delay;
+    };
+
     const connect = async () => {
       if (scaleSocketRef.current?.readyState === WebSocket.OPEN) return;
 
@@ -190,16 +201,19 @@ export default function HardwareCapturePage() {
           const response = await fetch(healthUrl, { signal: controller.signal });
           if (!response.ok) {
             setScaleStatus('disconnected');
-            scaleReconnectRef.current = setTimeout(connect, 1500);
+            scaleReconnectRef.current = setTimeout(connect, nextBackoff());
             return;
           }
         } catch {
           setScaleStatus('disconnected');
-          scaleReconnectRef.current = setTimeout(connect, 1500);
+          scaleReconnectRef.current = setTimeout(connect, nextBackoff());
           return;
         } finally {
           clearTimeout(timeout);
         }
+
+        // Health check passed — reset backoff before connecting WS
+        resetBackoff();
 
         const socket = new WebSocket(scaleBridgeUrl);
         scaleSocketRef.current = socket;
@@ -207,6 +221,7 @@ export default function HardwareCapturePage() {
         socket.addEventListener('open', () => {
           scaleHasConnectedRef.current = true;
           setScaleStatus('connected');
+          resetBackoff();
         });
 
         socket.addEventListener('message', (event) => {
@@ -217,37 +232,32 @@ export default function HardwareCapturePage() {
               setScaleUnit(unit);
               setScaleWeight(toKg(payload.weight, unit));
             }
-          } catch (error) {
-            console.error('Scale message parse error:', error);
+          } catch {
+            // ignore parse errors silently
           }
         });
 
         socket.addEventListener('close', () => {
           setScaleStatus('disconnected');
-          scaleReconnectRef.current = setTimeout(connect, 1500);
+          scaleReconnectRef.current = setTimeout(connect, nextBackoff());
         });
 
         socket.addEventListener('error', () => {
-          if (!scaleHasConnectedRef.current) {
-            setScaleStatus('disconnected');
-          } else {
-            setScaleStatus('error');
-          }
-          scaleReconnectRef.current = setTimeout(connect, 1500);
+          setScaleStatus(scaleHasConnectedRef.current ? 'error' : 'disconnected');
+          scaleReconnectRef.current = setTimeout(connect, nextBackoff());
         });
-      } catch (error) {
-        console.error('Scale websocket error:', error);
+      } catch {
         setScaleStatus(scaleHasConnectedRef.current ? 'error' : 'disconnected');
-        scaleReconnectRef.current = setTimeout(connect, 1500);
+        scaleReconnectRef.current = setTimeout(connect, nextBackoff());
       }
     };
 
     connect();
 
-    // HTTP polling only as a fallback when WebSocket is not connected
+    // HTTP polling only as a fallback when WebSocket is not connected (10s interval)
     if (!scalePollRef.current) {
       scalePollRef.current = setInterval(async () => {
-        // Skip polling when WebSocket is alive — avoid double-updates / flicker
+        // Skip polling when WebSocket is alive
         if (scaleSocketRef.current?.readyState === WebSocket.OPEN) return;
         try {
           const healthUrl = getScaleHealthUrl();
@@ -261,9 +271,9 @@ export default function HardwareCapturePage() {
             setScaleWeight(toKg(data.weight, unit));
           }
         } catch {
-          // ignore polling errors
+          // ignore polling errors silently
         }
-      }, 2000);
+      }, 10000);
     }
 
     return () => {
