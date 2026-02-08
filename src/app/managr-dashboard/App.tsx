@@ -5,13 +5,29 @@ import { WasteSnapshotSmall } from './components/WasteSnapshotSmall';
 import { ProductionTable } from './components/ProductionTable';
 import { WasteDetail } from './components/WasteDetail';
 import { EfficiencyGauge } from './components/EfficiencyGauge';
-import { TrendingUp, CalendarClock, BarChart3, PackageSearch, AlertTriangle } from 'lucide-react';
+import { TrendingUp, CalendarClock, BarChart3, PackageSearch, AlertTriangle, ShoppingBag } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, BarChart, Bar, Cell, LabelList } from 'recharts';
 
 type FoodType = 'all' | 'vegan' | 'vegetarian' | 'non-vegetarian';
-type PreorderSite = 'wilhelm' | 'morgen' | 'prinz';
-type PreorderWindow = '15m' | '60m' | 'today';
-type PreorderRow = { label: string; value: number; trend: string; site: PreorderSite };
+
+type LivePreorder = {
+  id: string;
+  orderNumber: string;
+  institution: string;
+  date: string;
+  time: string;
+  status: string;
+  items: number;
+  itemNames: string;
+  total: string;
+  studentEmail: string | null;
+  studentId: string | null;
+  paymentMethod: string | null;
+  transactionId: string | null;
+  source: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'demand' | 'waste' | 'inventory' | 'output'>('demand');
@@ -29,9 +45,9 @@ const App: React.FC = () => {
   const [wasteTrendFoodType, setWasteTrendFoodType] = useState<FoodType>('all');
   const [recommendedPrepFoodType, setRecommendedPrepFoodType] = useState<FoodType>('all');
   const [prepGuidanceFoodType, setPrepGuidanceFoodType] = useState<FoodType>('all');
-  const [preorderWindow, setPreorderWindow] = useState<PreorderWindow>('15m');
-  const [preorderSite, setPreorderSite] = useState<'all' | PreorderSite>('all');
+  const [livePreorders, setLivePreorders] = useState<LivePreorder[]>([]);
   const [preorderError, setPreorderError] = useState<string | null>(null);
+  const [preorderLoading, setPreorderLoading] = useState(true);
   const [wasteCaptureRange, setWasteCaptureRange] = useState<'yesterday' | '7d' | '30d'>('yesterday');
   const [wasteDetailRange, setWasteDetailRange] = useState<'today' | '7d' | '30d'>('7d');
   const [inventoryExpiryRange, setInventoryExpiryRange] = useState<'7d' | '14d' | '30d'>('7d');
@@ -71,145 +87,46 @@ const App: React.FC = () => {
     { label: 'Fri', value: 60, color: '#f9d75c' },
   ];
 
-  const preorderData: Record<PreorderWindow, PreorderRow[]> = {
-    '15m': [
-      { label: 'Mensa Wilhelmstraße', value: 0, trend: '0%', site: 'wilhelm' },
-      { label: 'Mensa Morgenstelle', value: 0, trend: '0%', site: 'morgen' },
-      { label: 'Mensa Prinz Karl', value: 0, trend: '0%', site: 'prinz' },
-    ],
-    '60m': [
-      { label: 'Mensa Wilhelmstraße', value: 0, trend: '0%', site: 'wilhelm' },
-      { label: 'Mensa Morgenstelle', value: 0, trend: '0%', site: 'morgen' },
-      { label: 'Mensa Prinz Karl', value: 0, trend: '0%', site: 'prinz' },
-    ],
-    today: [
-      { label: 'Mensa Wilhelmstraße', value: 0, trend: '0%', site: 'wilhelm' },
-      { label: 'Mensa Morgenstelle', value: 0, trend: '0%', site: 'morgen' },
-      { label: 'Mensa Prinz Karl', value: 0, trend: '0%', site: 'prinz' },
-    ],
-  };
-
-  const [livePreorderData, setLivePreorderData] = useState<Record<PreorderWindow, PreorderRow[]>>(preorderData);
-
-  const resolvePreorderSite = (institution?: string | null): PreorderSite | null => {
-    if (!institution) return null;
-    const normalized = institution.toLowerCase();
-    if (normalized.includes('wilhelm')) return 'wilhelm';
-    if (normalized.includes('morgen')) return 'morgen';
-    if (normalized.includes('prinz') || normalized.includes('karl')) return 'prinz';
-    // Fallback: map any other known Refectory / Mensa to 'wilhelm' so they still appear
-    if (normalized.includes('refectory') || normalized.includes('mensa') || normalized.includes('cafe')) return 'wilhelm';
-    return 'wilhelm'; // default bucket so no order is silently dropped
-  };
-
-  const resolveOrderTimestamp = (order: { createdAt?: string; date?: string; time?: string }) => {
-    if (order.createdAt) {
-      const parsed = new Date(order.createdAt);
-      if (!Number.isNaN(parsed.getTime())) return parsed;
-    }
-    if (order.date) {
-      const time = order.time && order.time.length > 0 ? order.time : '00:00:00';
-      const parsed = new Date(`${order.date}T${time}`);
-      if (!Number.isNaN(parsed.getTime())) return parsed;
-    }
-    return null;
-  };
-
-  const formatTrend = (current: number, previous: number) => {
-    if (previous === 0) {
-      return current === 0 ? '0%' : '+100%';
-    }
-    const change = Math.round(((current - previous) / previous) * 100);
-    return `${change >= 0 ? '+' : ''}${change}%`;
-  };
-
-  const buildPreorderSummary = (orders: Array<{
-    institution?: string;
-    createdAt?: string;
-    date?: string;
-    time?: string;
-    source?: string;
-  }>) => {
+  const formatTimeAgo = (dateStr: string) => {
     const now = new Date();
-    const windows: Record<Exclude<PreorderWindow, 'today'>, number> = {
-      '15m': 15,
-      '60m': 60,
-    };
+    const date = new Date(dateStr);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
+  };
 
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-    const yesterdayStart = new Date(todayStart);
-    yesterdayStart.setDate(todayStart.getDate() - 1);
-
-    const relevantOrders = orders
-      .map((order) => {
-        const timestamp = resolveOrderTimestamp(order);
-        if (!timestamp) return null;
-        const site = resolvePreorderSite(order.institution);
-        if (!site) return null;
-        const source = order.source?.toLowerCase();
-        if (source && !/student|app|pre-?order|campuseats|campus/.test(source)) return null;
-        return { timestamp, site };
-      })
-      .filter(Boolean) as Array<{ timestamp: Date; site: PreorderSite }>;
-
-    const countsForWindow = (start: Date, end: Date, site: PreorderSite) =>
-      relevantOrders.filter((order) => order.site === site && order.timestamp >= start && order.timestamp <= end).length;
-
-    const buildRows = (window: PreorderWindow): PreorderRow[] => {
-      return (['wilhelm', 'morgen', 'prinz'] as PreorderSite[]).map((site) => {
-        let current = 0;
-        let previous = 0;
-        if (window === 'today') {
-          current = countsForWindow(todayStart, now, site);
-          previous = countsForWindow(yesterdayStart, todayStart, site);
-        } else {
-          const minutes = windows[window];
-          const windowStart = new Date(now.getTime() - minutes * 60 * 1000);
-          const previousStart = new Date(now.getTime() - minutes * 2 * 60 * 1000);
-          current = countsForWindow(windowStart, now, site);
-          previous = countsForWindow(previousStart, windowStart, site);
-        }
-
-        const label = site === 'wilhelm'
-          ? 'Mensa Wilhelmstraße'
-          : site === 'morgen'
-          ? 'Mensa Morgenstelle'
-          : 'Mensa Prinz Karl';
-
-        return {
-          label,
-          value: current,
-          trend: formatTrend(current, previous),
-          site,
-        };
-      });
-    };
-
-    return {
-      '15m': buildRows('15m'),
-      '60m': buildRows('60m'),
-      today: buildRows('today'),
-    } as Record<PreorderWindow, PreorderRow[]>;
+  const statusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'scheduled': return 'bg-blue-100 text-blue-700';
+      case 'confirmed': return 'bg-green-100 text-green-700';
+      case 'ready': return 'bg-amber-100 text-amber-700';
+      case 'picked_up': case 'completed': return 'bg-gray-100 text-gray-600';
+      case 'cancelled': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-600';
+    }
   };
 
   const fetchLivePreorders = useCallback(async () => {
     try {
-      console.log('[PREORDERS] Fetching live preorders...');
       const response = await fetch('/api/mensa-orders/scheduled');
       const payload = await response.json();
-      console.log('[PREORDERS] API response:', { success: payload?.success, count: payload?.count, dataLength: payload?.data?.length });
       if (!response.ok || !payload?.success) {
         throw new Error(payload?.message || 'Failed to fetch live preorders');
       }
-
-      const summary = buildPreorderSummary(payload.data || []);
-      console.log('[PREORDERS] Summary:', JSON.stringify(summary));
-      setLivePreorderData(summary);
+      // Sort by createdAt descending (newest first)
+      const orders: LivePreorder[] = (payload.data || []).sort(
+        (a: LivePreorder, b: LivePreorder) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setLivePreorders(orders);
       setPreorderError(null);
     } catch (error: any) {
-      console.error('[PREORDERS] Error:', error);
       setPreorderError(error.message || 'Failed to fetch live preorders');
+    } finally {
+      setPreorderLoading(false);
     }
   }, []);
 
@@ -233,16 +150,57 @@ const App: React.FC = () => {
     if (typeof window === 'undefined') return;
     if (!('EventSource' in window)) return;
 
-    const source = new EventSource('/api/mensa-orders/stream');
-    source.addEventListener('scheduled-order', () => {
-      fetchLivePreorders();
-    });
-    source.addEventListener('error', () => {
-      source.close();
-    });
+    let reconnectTimer: ReturnType<typeof setTimeout>;
+    let es: EventSource;
+
+    const connect = () => {
+      es = new EventSource('/api/mensa-orders/stream');
+
+      es.addEventListener('scheduled-order', (event) => {
+        // New order pushed via SSE — prepend it to the list instantly
+        try {
+          const data = JSON.parse(event.data);
+          const newOrder: LivePreorder = {
+            id: data.id || '',
+            orderNumber: data.orderId || '',
+            institution: data.pickupLocation || '',
+            date: data.scheduledDate || '',
+            time: data.scheduledTime || '',
+            status: 'scheduled',
+            items: Array.isArray(data.items) ? data.items.length : 0,
+            itemNames: Array.isArray(data.items)
+              ? data.items.map((i: any) => i.name || i.item_name || i.itemName || 'Item').join(', ')
+              : '',
+            total: typeof data.totalAmount === 'number'
+              ? `€${data.totalAmount.toFixed(2).replace('.', ',')}`
+              : String(data.totalAmount || '€0,00'),
+            studentEmail: null,
+            studentId: null,
+            paymentMethod: null,
+            transactionId: null,
+            source: data.source || null,
+            createdAt: data.createdAt || new Date().toISOString(),
+            updatedAt: data.createdAt || new Date().toISOString(),
+          };
+          setLivePreorders((prev) => [newOrder, ...prev]);
+        } catch {
+          // Fallback: just re-fetch everything
+          fetchLivePreorders();
+        }
+      });
+
+      es.addEventListener('error', () => {
+        es.close();
+        // Reconnect after 5 seconds
+        reconnectTimer = setTimeout(connect, 5000);
+      });
+    };
+
+    connect();
 
     return () => {
-      source.close();
+      clearTimeout(reconnectTimer);
+      es?.close();
     };
   }, [fetchLivePreorders]);
 
@@ -697,9 +655,6 @@ const App: React.FC = () => {
 
   const posSalesHistory = posSalesHistoryData[posRange];
   const dayOfWeekPatterns = dayOfWeekData;
-  const livePreorders = livePreorderData[preorderWindow].filter((row) =>
-    preorderSite === 'all' ? true : row.site === preorderSite
-  );
   const foodTypeFactorMap = {
     all: 1,
     vegan: 0.35,
@@ -902,50 +857,76 @@ const App: React.FC = () => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <CalendarClock size={18} className="text-[#2d5a3f]" />
-                  <h3 className="text-sm font-semibold text-gray-800">Live pre-orders (Student app)</h3>
+                  <ShoppingBag size={18} className="text-[#2d5a3f]" />
+                  <h3 className="text-sm font-semibold text-gray-800">Live Pre-Orders (Student App)</h3>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-green-100 text-green-700 rounded-full px-2 py-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    Live
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={preorderWindow}
-                    onChange={(event) => setPreorderWindow(event.target.value as '15m' | '60m' | 'today')}
-                    className="text-xs font-semibold text-gray-600 bg-transparent border border-gray-200 rounded-full px-2 py-1"
-                  >
-                    <option value="15m">Last 15 min</option>
-                    <option value="60m">Last 60 min</option>
-                    <option value="today">Today</option>
-                  </select>
-                  <select
-                    value={preorderSite}
-                    onChange={(event) => setPreorderSite(event.target.value as 'all' | 'wilhelm' | 'morgen' | 'prinz')}
-                    className="text-xs font-semibold text-gray-600 bg-transparent border border-gray-200 rounded-full px-2 py-1"
-                  >
-                    <option value="all">All sites</option>
-                    <option value="wilhelm">Wilhelmstraße</option>
-                    <option value="morgen">Morgenstelle</option>
-                    <option value="prinz">Prinz Karl</option>
-                  </select>
-                </div>
+                <span className="text-xs text-gray-500 font-medium">{livePreorders.length} order{livePreorders.length !== 1 ? 's' : ''}</span>
               </div>
+
               {preorderError && (
                 <p className="text-xs text-red-600 mb-3">{preorderError}</p>
               )}
-              <div className="space-y-3">
-                {livePreorders.map((row) => (
-                  <div key={row.label} className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">{row.label}</p>
-                      <p className="text-xs text-gray-500">
-                        {preorderWindow === '15m' ? 'Last 15 minutes' : preorderWindow === '60m' ? 'Last 60 minutes' : 'Today'}
-                      </p>
+
+              {preorderLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-[#133E28] border-t-transparent rounded-full animate-spin" />
+                  <span className="ml-2 text-sm text-gray-500">Loading pre-orders...</span>
+                </div>
+              ) : livePreorders.length === 0 ? (
+                <div className="text-center py-8">
+                  <CalendarClock size={32} className="mx-auto text-gray-300 mb-2" />
+                  <p className="text-sm text-gray-500">No pre-orders yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Orders from the student app will appear here in real time</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                  {livePreorders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 hover:bg-gray-100 transition-colors"
+                    >
+                      {/* Left icon */}
+                      <div className="flex-shrink-0 mt-0.5">
+                        <div className="w-8 h-8 rounded-full bg-[#e8f5e9] flex items-center justify-center">
+                          <ShoppingBag size={14} className="text-[#2d5a3f]" />
+                        </div>
+                      </div>
+
+                      {/* Order details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="text-sm font-semibold text-gray-800 truncate">{order.orderNumber}</p>
+                          <span className={`text-[10px] font-semibold rounded-full px-2 py-0.5 ${statusColor(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 truncate" title={order.itemNames}>
+                          {order.items} item{order.items !== 1 ? 's' : ''}: {order.itemNames}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-400">
+                          <span>{order.institution}</span>
+                          <span>•</span>
+                          <span>{order.date} {order.time}</span>
+                          <span>•</span>
+                          <span>{formatTimeAgo(order.createdAt)}</span>
+                        </div>
+                      </div>
+
+                      {/* Total */}
+                      <div className="flex-shrink-0 text-right">
+                        <p className="text-sm font-bold text-gray-900">{order.total}</p>
+                        {order.source && (
+                          <p className="text-[10px] text-gray-400">{order.source}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">{row.value}</p>
-                      <p className="text-xs text-[#2d5a3f] font-semibold">{row.trend}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
