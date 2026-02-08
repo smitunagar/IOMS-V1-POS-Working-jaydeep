@@ -73,19 +73,19 @@ const App: React.FC = () => {
 
   const preorderData: Record<PreorderWindow, PreorderRow[]> = {
     '15m': [
-      { label: 'Mensa Wilhelmstraße', value: 46, trend: '+6%', site: 'wilhelm' },
-      { label: 'Mensa Morgenstelle', value: 28, trend: '+3%', site: 'morgen' },
-      { label: 'Mensa Prinz Karl', value: 19, trend: '+2%', site: 'prinz' },
+      { label: 'Mensa Wilhelmstraße', value: 0, trend: '0%', site: 'wilhelm' },
+      { label: 'Mensa Morgenstelle', value: 0, trend: '0%', site: 'morgen' },
+      { label: 'Mensa Prinz Karl', value: 0, trend: '0%', site: 'prinz' },
     ],
     '60m': [
-      { label: 'Mensa Wilhelmstraße', value: 128, trend: '+9%', site: 'wilhelm' },
-      { label: 'Mensa Morgenstelle', value: 74, trend: '+5%', site: 'morgen' },
-      { label: 'Mensa Prinz Karl', value: 52, trend: '+4%', site: 'prinz' },
+      { label: 'Mensa Wilhelmstraße', value: 0, trend: '0%', site: 'wilhelm' },
+      { label: 'Mensa Morgenstelle', value: 0, trend: '0%', site: 'morgen' },
+      { label: 'Mensa Prinz Karl', value: 0, trend: '0%', site: 'prinz' },
     ],
     today: [
-      { label: 'Mensa Wilhelmstraße', value: 640, trend: '+12%', site: 'wilhelm' },
-      { label: 'Mensa Morgenstelle', value: 410, trend: '+8%', site: 'morgen' },
-      { label: 'Mensa Prinz Karl', value: 280, trend: '+6%', site: 'prinz' },
+      { label: 'Mensa Wilhelmstraße', value: 0, trend: '0%', site: 'wilhelm' },
+      { label: 'Mensa Morgenstelle', value: 0, trend: '0%', site: 'morgen' },
+      { label: 'Mensa Prinz Karl', value: 0, trend: '0%', site: 'prinz' },
     ],
   };
 
@@ -195,16 +195,20 @@ const App: React.FC = () => {
 
   const fetchLivePreorders = useCallback(async () => {
     try {
+      console.log('[PREORDERS] Fetching live preorders...');
       const response = await fetch('/api/mensa-orders/scheduled');
       const payload = await response.json();
+      console.log('[PREORDERS] API response:', { success: payload?.success, count: payload?.count, dataLength: payload?.data?.length });
       if (!response.ok || !payload?.success) {
         throw new Error(payload?.message || 'Failed to fetch live preorders');
       }
 
       const summary = buildPreorderSummary(payload.data || []);
+      console.log('[PREORDERS] Summary:', JSON.stringify(summary));
       setLivePreorderData(summary);
       setPreorderError(null);
     } catch (error: any) {
+      console.error('[PREORDERS] Error:', error);
       setPreorderError(error.message || 'Failed to fetch live preorders');
     }
   }, []);
