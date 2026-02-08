@@ -139,6 +139,19 @@ wss.on('connection', (socket) => {
   socket.on('close', () => sockets.delete(socket));
 });
 
+// Heartbeat: broadcast latest weight every 2s even when stable,
+// so connected clients always show a live reading.
+setInterval(() => {
+  if (latestWeight === null || sockets.size === 0) return;
+  broadcast({
+    type: 'weight',
+    weight: latestWeight,
+    unit: SCALE_UNIT,
+    raw: latestRaw,
+    timestamp: new Date().toISOString(),
+  });
+}, 2000);
+
 const port = new SerialPort({
   path: SERIAL_PORT,
   baudRate: SERIAL_BAUD,
