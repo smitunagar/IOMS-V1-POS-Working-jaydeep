@@ -17,7 +17,7 @@ export default function HardwareHubPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <CardTitle className="text-xl">Mensa Wilhelmstraße · Tübingen</CardTitle>
             <img
-              src="/images/Logo-Horizontal-Studierendenwerk-Tübingen-Hohenheim.webp"
+              src="/images/Logo-Horizontal-Studierendenwerk-Tuebingen-Hohenheim.webp"
               alt="Studierendenwerk Tübingen-Hohenheim"
               className="h-10 w-auto"
             />

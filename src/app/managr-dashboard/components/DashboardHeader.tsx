@@ -8,7 +8,7 @@ export const DashboardHeader: React.FC = () => {
       <div className="bg-[#133E28] text-white px-6 py-4 flex items-center justify-between">
         <div className="bg-white rounded-xl px-3 py-2 shadow-sm">
           <img
-            src="/images/Logo-Horizontal-Studierendenwerk-Tübingen-Hohenheim.webp"
+            src="/images/Logo-Horizontal-Studierendenwerk-Tuebingen-Hohenheim.webp"
             alt="Studierendenwerk logo"
             className="h-8 w-auto"
           />
