@@ -25,7 +25,10 @@ import {
   User,
   MapPin,
   Pencil,
-  Leaf
+  Leaf,
+  Package,
+  ShieldCheck,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from '@/shared/hooks/use-toast';
 
@@ -35,11 +38,17 @@ interface ScanResult {
     category: string;
     weight: number;
     confidence: number;
+    freshness: 'fresh' | 'rotten';
+    freshnessConfidence: number;
+    freshnessReason: string;
   }>;
   totalWeightKg: number;
   co2Kg: number;
   costEUR: number;
   confidence: number;
+  freshness: 'fresh' | 'rotten';
+  freshnessConfidence: number;
+  freshnessReason: string;
   matchedMenuItem?: string | null;
   inMenu?: boolean;
   menuMatchScore?: number | null;
@@ -88,6 +97,7 @@ export default function HardwareCapturePage() {
   const [tareWeightGrams, setTareWeightGrams] = useState<number>(0);
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
   const [editWeight, setEditWeight] = useState('');
+  const [recoveringToInventory, setRecoveringToInventory] = useState(false);
   
   // Form data for manual confirmation
   const [wasteType, setWasteType] = useState<'food' | 'oil' | 'packaging' | 'organic'>('food');
@@ -434,6 +444,9 @@ export default function HardwareCapturePage() {
     const roundedWeight = Number(finalWeight.toFixed(2));
     const safeCost = Number.isFinite(roundedWeight) ? Number((roundedWeight * costPerKg).toFixed(2)) : 0;
     const safeCo2 = Number.isFinite(roundedWeight) ? Number((roundedWeight * co2PerKg).toFixed(2)) : 0;
+    const freshness: 'fresh' | 'rotten' = analysis?.freshness === 'fresh' ? 'fresh' : 'rotten';
+    const freshnessConfidence = typeof analysis?.freshnessConfidence === 'number' ? analysis.freshnessConfidence : 60;
+    const freshnessReason = analysis?.freshnessReason || '';
 
     return {
       items: [
@@ -441,13 +454,19 @@ export default function HardwareCapturePage() {
           name: dishName,
           category,
           weight: roundedWeight,
-          confidence
+          confidence,
+          freshness,
+          freshnessConfidence,
+          freshnessReason,
         }
       ],
       totalWeightKg: roundedWeight,
       co2Kg: safeCo2,
       costEUR: safeCost,
       confidence,
+      freshness,
+      freshnessConfidence,
+      freshnessReason,
       matchedMenuItem: analysis?.matchedMenuItem ?? null,
       inMenu: analysis?.inMenu ?? false,
       menuMatchScore: typeof analysis?.menuMatchScore === 'number' ? analysis.menuMatchScore : null,
@@ -622,6 +641,48 @@ export default function HardwareCapturePage() {
     });
   };
 
+  const recoverToInventory = async () => {
+    if (!scanResult || scanResult.freshness !== 'fresh') return;
+    setRecoveringToInventory(true);
+    try {
+      const item = scanResult.items[0];
+      const res = await fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'recover',
+          items: [{
+            name: item?.name || 'Recovered Item',
+            category: item?.category || 'food',
+            quantity: 1,
+            weight: scanResult.totalWeightKg,
+            unit: 'kg',
+            source: 'waste-recovery',
+            notes: `Recovered from waste scan — AI classified as fresh (${scanResult.freshnessConfidence}% confidence). ${scanResult.freshnessReason}`,
+          }]
+        })
+      });
+      if (!res.ok) throw new Error('Inventory API error');
+      toast({
+        title: '♻️ Recovered to Inventory',
+        description: `${item?.name} (${(scanResult.totalWeightKg * 1000).toFixed(0)}g) added back to inventory as fresh stock.`,
+      });
+      setScanResult(null);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setNotes('');
+    } catch (err) {
+      console.error('Recovery error:', err);
+      toast({
+        title: 'Recovery Failed',
+        description: 'Could not add item to inventory. Please try manually.',
+        variant: 'destructive',
+      });
+    } finally {
+      setRecoveringToInventory(false);
+    }
+  };
+
   // Shared scan results card — used by both Camera and Upload tabs
   const renderScanResults = (emptyIcon: React.ReactNode, emptyText: string, emptySubText: string) => (
     <Card className="overflow-hidden">
@@ -635,9 +696,21 @@ export default function HardwareCapturePage() {
             <CardDescription>AI-detected waste items</CardDescription>
           </div>
           {scanResult && (
-            <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50">
-              {scanResult.items.length} item{scanResult.items.length !== 1 ? 's' : ''} detected
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className={scanResult.freshness === 'fresh'
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                  : 'border-red-300 bg-red-50 text-red-700'
+                }
+              >
+                {scanResult.freshness === 'fresh' ? (
+                  <><ShieldCheck className="w-3 h-3 mr-1" /> Fresh</>
+                ) : (
+                  <><AlertTriangle className="w-3 h-3 mr-1" /> Spoiled</>
+                )}
+              </Badge>
+            </div>
           )}
         </div>
       </CardHeader>
@@ -668,6 +741,49 @@ export default function HardwareCapturePage() {
                 <p className="text-xs font-medium text-emerald-600/70">kg CO₂</p>
               </div>
             </div>
+
+            {/* Freshness Classification Banner */}
+            {scanResult.freshness === 'fresh' ? (
+              <div className="rounded-xl border-2 border-emerald-200 bg-gradient-to-r from-emerald-50 to-green-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                      <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Fresh — Recoverable</p>
+                      <p className="text-sm text-emerald-600 mt-0.5">{scanResult.freshnessReason}</p>
+                      <p className="text-xs text-emerald-500 mt-1">{scanResult.freshnessConfidence}% confidence</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+                    onClick={recoverToInventory}
+                    disabled={recoveringToInventory}
+                  >
+                    {recoveringToInventory ? (
+                      <><RefreshCw className="h-4 w-4 mr-1.5 animate-spin" /> Recovering…</>
+                    ) : (
+                      <><Package className="h-4 w-4 mr-1.5" /> Recover to Inventory</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border-2 border-red-200 bg-gradient-to-r from-red-50 to-orange-50 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-red-800">Spoiled — Must Dispose</p>
+                    <p className="text-sm text-red-600 mt-0.5">{scanResult.freshnessReason}</p>
+                    <p className="text-xs text-red-500 mt-1">{scanResult.freshnessConfidence}% confidence</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Menu Match */}
             <div className="flex items-center justify-between rounded-lg border px-4 py-3">
@@ -702,9 +818,20 @@ export default function HardwareCapturePage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-slate-900 truncate">{item.name}</p>
-                          <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium mt-1 ${getCategoryColor(item.category)}`}>
-                            {item.category}
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${getCategoryColor(item.category)}`}>
+                              {item.category}
+                            </span>
+                            {item.freshness && (
+                              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
+                                item.freshness === 'fresh'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-red-50 text-red-700 border border-red-200'
+                              }`}>
+                                {item.freshness === 'fresh' ? '🟢 Fresh' : '🔴 Spoiled'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

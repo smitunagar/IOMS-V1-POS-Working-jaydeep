@@ -12,6 +12,9 @@ const buildFallbackResponse = () => ({
   category: 'Food Waste',
   estimatedWeight: '0.5 kg',
   confidence: 60,
+  freshness: 'rotten' as const,
+  freshnessConfidence: 50,
+  freshnessReason: 'Unable to determine – defaulting to waste',
   fallback: true,
 });
 
@@ -231,17 +234,26 @@ export async function POST(request: NextRequest) {
     
     // Create prompt for waste identification
     const prompt = `
-You are a food waste identification expert. Analyze the provided image and identify the food waste.
+You are a food waste identification expert working in a commercial kitchen. Analyze the provided image and identify the food waste.
 
 Return a JSON object with the following structure:
 {
   "dishName": "Name of the dish or food item",
   "category": "Food Waste category (e.g., Prepared Food, Raw Ingredients, Vegetables, Meat, Dairy, Bakery, etc.)",
   "estimatedWeight": "Estimated weight in kg (e.g., 0.5 kg, 1.2 kg)",
-  "confidence": 85
+  "confidence": 85,
+  "freshness": "fresh" or "rotten",
+  "freshnessConfidence": 80,
+  "freshnessReason": "Brief reason for the freshness classification"
 }
 
-RULES:
+FRESHNESS RULES:
+- "fresh": Food that is still safe to consume, looks clean, has good color, no mold, no discoloration, no foul appearance. Could be leftover, untouched, over-prepared, or excess stock.
+- "rotten": Food that is spoiled, moldy, discolored, slimy, decomposing, has visible contamination, or is clearly unsafe to consume.
+- If the food is cooked but still looks safe and edible, classify as "fresh".
+- If in doubt between fresh and rotten, lean toward "fresh" with lower freshnessConfidence.
+
+GENERAL RULES:
 1. Be specific about the dish name (e.g., "Pasta Carbonara", "Grilled Chicken", "Caesar Salad")
 2. If you can't identify the exact dish, describe what you see (e.g., "Mixed Cooked Vegetables")
 3. Estimate weight based on visual size (typical portion sizes)
@@ -284,12 +296,19 @@ Analyze the image now:
       ? await calculateCo2FromIngredients(recipeIngredients, resolvedWeightKg)
       : null;
 
+    const freshness = ['fresh', 'rotten'].includes(analysisData.freshness)
+      ? analysisData.freshness
+      : 'rotten';
+
     const responsePayload = {
       success: true,
       dishName: analysisData.dishName || 'Unknown Dish',
       category: analysisData.category || 'Food Waste',
       estimatedWeight: analysisData.estimatedWeight || '0.5 kg',
       confidence: analysisData.confidence || 80,
+      freshness,
+      freshnessConfidence: typeof analysisData.freshnessConfidence === 'number' ? analysisData.freshnessConfidence : 60,
+      freshnessReason: analysisData.freshnessReason || '',
       weightKg: resolvedWeightKg ?? undefined,
       recipeIngredients: recipeIngredients || undefined,
       matchedMenuItem: recipeResult?.matchedName || undefined,
