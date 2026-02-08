@@ -161,11 +161,16 @@ export async function GET(request: NextRequest) {
     const orders = result.rows.map((row: any) => {
       // Extract item names from JSONB array
       const itemsArray = Array.isArray(row.items) ? row.items : [];
-      const itemsCount = itemsArray.length;
-      // Extract name from each item - check multiple possible property names
+      // Sum quantities (fall back to 1 per entry if quantity not specified)
+      const itemsCount = itemsArray.reduce((sum: number, item: any) => {
+        const qty = Number(item.quantity) || 1;
+        return sum + qty;
+      }, 0);
+      // Extract name from each item, include quantity if > 1
       const itemNames = itemsArray.map((item: any) => {
-        // Try different possible property names for the item name
-        return item.name || item.item_name || item.itemName || item.title || item.product_name || 'Unknown Item';
+        const name = item.name || item.item_name || item.itemName || item.title || item.product_name || 'Unknown Item';
+        const qty = Number(item.quantity) || 1;
+        return qty > 1 ? `${qty}× ${name}` : name;
       }).join(', ');
 
       // Format date
