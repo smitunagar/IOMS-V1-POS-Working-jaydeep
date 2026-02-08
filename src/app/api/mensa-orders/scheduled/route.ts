@@ -42,7 +42,7 @@ const getClientIp = (request: NextRequest) => {
   return realIp || 'unknown';
 };
 
-const getCorsHeaders = (origin: string | null) => {
+const getCorsHeaders = (origin: string | null): Record<string, string> | null => {
   if (!origin) {
     return {
       'Access-Control-Allow-Origin': '*',

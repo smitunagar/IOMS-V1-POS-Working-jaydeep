@@ -7,7 +7,7 @@ const ALLOWED_ORIGINS = (process.env.MENSA_ORDERS_ALLOWED_ORIGINS || '').split('
 const API_KEY_HEADER = (process.env.MENSA_ORDERS_API_KEY_HEADER || 'x-api-key').toLowerCase();
 const API_KEY = process.env.MENSA_ORDERS_API_KEY || '';
 
-const getCorsHeaders = (origin: string | null) => {
+const getCorsHeaders = (origin: string | null): Record<string, string> | null => {
   if (!origin) {
     return {
       'Access-Control-Allow-Origin': '*',
