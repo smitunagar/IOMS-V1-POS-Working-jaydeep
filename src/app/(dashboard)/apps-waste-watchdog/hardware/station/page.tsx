@@ -83,7 +83,7 @@ export default function HardwareCapturePage() {
   const [scaleWeight, setScaleWeight] = useState<number | null>(null);
   const [scaleUnit, setScaleUnit] = useState<string>('kg');
   const [scaleStatus, setScaleStatus] = useState<'connected' | 'disconnected' | 'error'>('disconnected');
-  const [tareWeightGrams, setTareWeightGrams] = useState<number>(355.3);
+  const [tareWeightGrams, setTareWeightGrams] = useState<number>(0);
   
   // Form data for manual confirmation
   const [wasteType, setWasteType] = useState<'food' | 'oil' | 'packaging' | 'organic'>('food');
@@ -654,47 +654,15 @@ export default function HardwareCapturePage() {
                     <span className="text-xs text-slate-500">{scaleStatus}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-500">Net weight</p>
+                    <p className="text-xs text-slate-500">Live weight</p>
                     <p className="text-lg font-semibold text-slate-900">
-                      {netWeightKg !== null
+                      {scaleWeight !== null
                         ? (normalizeScaleUnit(scaleUnit) === 'g'
-                          ? `${(netWeightKg * 1000).toFixed(2)} g`
-                          : `${netWeightKg.toFixed(3)} kg`)
+                          ? `${(scaleWeight * 1000).toFixed(2)} g`
+                          : `${scaleWeight.toFixed(3)} kg`)
                         : '—'}
                     </p>
-                    <p className="text-[11px] text-slate-400">
-                      Gross: {scaleWeight !== null ? `${(scaleWeight * 1000).toFixed(2)} g` : '—'} • Tare: {tareWeightGrams.toFixed(2)} g
-                    </p>
                   </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-slate-50 px-4 py-3">
-                  <div className="flex-1 min-w-[180px]">
-                    <Label htmlFor="tare-weight" className="text-xs text-slate-600">Plate tare (g)</Label>
-                    <Input
-                      id="tare-weight"
-                      type="number"
-                      step="0.01"
-                      value={tareWeightGrams}
-                      onChange={(event) => {
-                        const value = Number(event.target.value);
-                        setTareWeightGrams(Number.isFinite(value) ? Math.max(0, value) : 0);
-                      }}
-                      className="mt-1"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-5"
-                    onClick={() => {
-                      if (scaleWeight !== null) {
-                        setTareWeightGrams(Number((scaleWeight * 1000).toFixed(2)));
-                      }
-                    }}
-                    disabled={scaleWeight === null}
-                  >
-                    Use current as tare
-                  </Button>
                 </div>
                 <div className="relative bg-slate-100 rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
                   <video
