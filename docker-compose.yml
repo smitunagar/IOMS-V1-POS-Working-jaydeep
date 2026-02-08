@@ -37,8 +37,8 @@ services:
       SCALE_SERIAL_PORT: "/dev/cu.usbserial-BG02Q7V9"
       SCALE_BAUD: "9600"
       SCALE_HTTP_PORT: "8787"
-    ports:
-      - "8787:8787"
+    # ports:
+    #   - "8787:8787"  # Disabled - using SSH tunnel from Mac instead
     volumes:
       - ./logs:/app/logs
     # Uncomment on Linux if you pass the USB device into the container
@@ -50,6 +50,8 @@ services:
     image: nginx:1.27-alpine
     depends_on:
       - app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "80:80"
       - "443:443"
