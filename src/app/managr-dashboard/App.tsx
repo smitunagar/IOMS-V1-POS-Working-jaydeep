@@ -97,7 +97,9 @@ const App: React.FC = () => {
     if (normalized.includes('wilhelm')) return 'wilhelm';
     if (normalized.includes('morgen')) return 'morgen';
     if (normalized.includes('prinz') || normalized.includes('karl')) return 'prinz';
-    return null;
+    // Fallback: map any other known Refectory / Mensa to 'wilhelm' so they still appear
+    if (normalized.includes('refectory') || normalized.includes('mensa') || normalized.includes('cafe')) return 'wilhelm';
+    return 'wilhelm'; // default bucket so no order is silently dropped
   };
 
   const resolveOrderTimestamp = (order: { createdAt?: string; date?: string; time?: string }) => {
@@ -146,7 +148,7 @@ const App: React.FC = () => {
         const site = resolvePreorderSite(order.institution);
         if (!site) return null;
         const source = order.source?.toLowerCase();
-        if (source && !/student|app|pre-?order/.test(source)) return null;
+        if (source && !/student|app|pre-?order|campuseats|campus/.test(source)) return null;
         return { timestamp, site };
       })
       .filter(Boolean) as Array<{ timestamp: Date; site: PreorderSite }>;
