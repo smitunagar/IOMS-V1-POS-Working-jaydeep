@@ -23,7 +23,9 @@ import {
   Activity,
   Clock,
   User,
-  MapPin
+  MapPin,
+  Pencil,
+  Leaf
 } from 'lucide-react';
 import { toast } from '@/shared/hooks/use-toast';
 
@@ -84,6 +86,8 @@ export default function HardwareCapturePage() {
   const [scaleUnit, setScaleUnit] = useState<string>('kg');
   const [scaleStatus, setScaleStatus] = useState<'connected' | 'disconnected' | 'error'>('disconnected');
   const [tareWeightGrams, setTareWeightGrams] = useState<number>(0);
+  const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+  const [editWeight, setEditWeight] = useState('');
   
   // Form data for manual confirmation
   const [wasteType, setWasteType] = useState<'food' | 'oil' | 'packaging' | 'organic'>('food');
@@ -555,6 +559,225 @@ export default function HardwareCapturePage() {
     };
   }, []);
 
+  // Category helpers for interactive scan results
+  const getCategoryIcon = (category: string) => {
+    const icons: Record<string, string> = {
+      vegetable: '🥬', bakery: '🍞', grain: '🌾', protein: '🍗',
+      fruit: '🍎', dessert: '🍰', food: '🍽️', oil: '🫒',
+      packaging: '📦', organic: '🌱'
+    };
+    return icons[category] || '🍽️';
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      vegetable: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      bakery: 'bg-amber-50 text-amber-700 border-amber-200',
+      grain: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      protein: 'bg-rose-50 text-rose-700 border-rose-200',
+      fruit: 'bg-orange-50 text-orange-700 border-orange-200',
+      dessert: 'bg-pink-50 text-pink-700 border-pink-200',
+      food: 'bg-blue-50 text-blue-700 border-blue-200',
+    };
+    return colors[category] || 'bg-slate-50 text-slate-700 border-slate-200';
+  };
+
+  const updateItemWeight = (index: number, newWeightGrams: number) => {
+    if (!scanResult) return;
+    const newWeightKg = newWeightGrams / 1000;
+    const updatedItems = scanResult.items.map((item, i) =>
+      i === index ? { ...item, weight: Number(newWeightKg.toFixed(3)) } : item
+    );
+    const totalWeightKg = updatedItems.reduce((sum, item) => sum + item.weight, 0);
+    const matched = FOOD_LIBRARY.find(f => f.name.toLowerCase() === updatedItems[0]?.name.toLowerCase());
+    const costPerKg = matched?.costPerKg ?? 4.5;
+    const co2PerKg = matched?.co2PerKg ?? 2.1;
+    setScanResult({
+      ...scanResult,
+      items: updatedItems,
+      totalWeightKg: Number(totalWeightKg.toFixed(3)),
+      costEUR: Number((totalWeightKg * costPerKg).toFixed(2)),
+      co2Kg: Number((totalWeightKg * co2PerKg).toFixed(2)),
+    });
+    setEditingItemIndex(null);
+  };
+
+  const removeItem = (index: number) => {
+    if (!scanResult) return;
+    const updatedItems = scanResult.items.filter((_, i) => i !== index);
+    if (updatedItems.length === 0) {
+      setScanResult(null);
+      return;
+    }
+    const totalWeightKg = updatedItems.reduce((sum, item) => sum + item.weight, 0);
+    const matched = FOOD_LIBRARY.find(f => f.name.toLowerCase() === updatedItems[0]?.name.toLowerCase());
+    const costPerKg = matched?.costPerKg ?? 4.5;
+    const co2PerKg = matched?.co2PerKg ?? 2.1;
+    setScanResult({
+      ...scanResult,
+      items: updatedItems,
+      totalWeightKg: Number(totalWeightKg.toFixed(3)),
+      costEUR: Number((totalWeightKg * costPerKg).toFixed(2)),
+      co2Kg: Number((totalWeightKg * co2PerKg).toFixed(2)),
+    });
+  };
+
+  // Shared scan results card — used by both Camera and Upload tabs
+  const renderScanResults = (emptyIcon: React.ReactNode, emptyText: string, emptySubText: string) => (
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-600" />
+              <span>Scan Results</span>
+            </CardTitle>
+            <CardDescription>AI-detected waste items</CardDescription>
+          </div>
+          {scanResult && (
+            <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50">
+              {scanResult.items.length} item{scanResult.items.length !== 1 ? 's' : ''} detected
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {posMatchMessage && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>{posMatchMessage}</span>
+          </div>
+        )}
+        {scanResult ? (
+          <div className="space-y-5">
+            {/* Summary Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 text-center border border-blue-100">
+                <Scale className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                <p className="text-2xl font-bold text-blue-700">{(scanResult.totalWeightKg * 1000).toFixed(0)}</p>
+                <p className="text-xs font-medium text-blue-600/70">grams</p>
+              </div>
+              <div className="rounded-xl bg-gradient-to-br from-red-50 to-red-100/50 p-4 text-center border border-red-100">
+                <Activity className="w-5 h-5 text-red-600 mx-auto mb-1" />
+                <p className="text-2xl font-bold text-red-700">€{scanResult.costEUR.toFixed(2)}</p>
+                <p className="text-xs font-medium text-red-600/70">cost</p>
+              </div>
+              <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 text-center border border-emerald-100">
+                <Leaf className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
+                <p className="text-2xl font-bold text-emerald-700">{scanResult.co2Kg.toFixed(1)}</p>
+                <p className="text-xs font-medium text-emerald-600/70">kg CO₂</p>
+              </div>
+            </div>
+
+            {/* Menu Match */}
+            <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-slate-400" />
+                <span className="text-sm font-medium text-slate-600">Menu Match</span>
+              </div>
+              {scanResult.inMenu && scanResult.matchedMenuItem ? (
+                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200">
+                  ✓ {scanResult.matchedMenuItem}
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-slate-100 text-slate-500">
+                  Not in menu
+                </Badge>
+              )}
+            </div>
+
+            {/* Detected Items */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Detected Items</h4>
+              <div className="space-y-2">
+                {scanResult.items.map((item, index) => (
+                  <div
+                    key={index}
+                    className="group relative rounded-xl border border-slate-200 bg-white p-4 transition-all duration-200 hover:shadow-md hover:border-slate-300"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-lg border border-slate-100">
+                          {getCategoryIcon(item.category)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-900 truncate">{item.name}</p>
+                          <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium mt-1 ${getCategoryColor(item.category)}`}>
+                            {item.category}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {editingItemIndex === index ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              value={editWeight}
+                              onChange={(e) => setEditWeight(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = parseFloat(editWeight);
+                                  if (!isNaN(val) && val > 0) updateItemWeight(index, val);
+                                }
+                                if (e.key === 'Escape') setEditingItemIndex(null);
+                              }}
+                              className="w-20 h-8 text-right text-sm"
+                              autoFocus
+                            />
+                            <span className="text-xs text-slate-500">g</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              onClick={() => {
+                                const val = parseFloat(editWeight);
+                                if (!isNaN(val) && val > 0) updateItemWeight(index, val);
+                              }}
+                            >
+                              <CheckCircle className="h-4 w-4 text-emerald-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setEditingItemIndex(index);
+                              setEditWeight((item.weight * 1000).toFixed(0));
+                            }}
+                            className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 transition-colors hover:bg-slate-100"
+                          >
+                            <span className="text-lg font-bold text-slate-900">{(item.weight * 1000).toFixed(0)}</span>
+                            <span className="text-sm text-slate-500">g</span>
+                            <Pencil className="h-3 w-3 text-slate-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => removeItem(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="rounded-full bg-slate-50 p-4 mb-4">
+              {emptyIcon}
+            </div>
+            <p className="text-slate-600 font-medium">{emptyText}</p>
+            <p className="text-sm text-slate-400 mt-1">{emptySubText}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   // Confirm and log the waste event
   const confirmAndLog = async () => {
     if (!scanResult) return;
@@ -751,83 +974,11 @@ export default function HardwareCapturePage() {
             </Card>
 
             <div className="space-y-6">
-              {/* Scan Results */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Scale className="w-5 h-5" />
-                    <span>Scan Results</span>
-                  </CardTitle>
-                  <CardDescription>AI-detected waste items</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {posMatchMessage && (
-                    <div className="mb-4 flex items-center space-x-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-                      <CheckCircle className="h-4 w-4" />
-                      <span>{posMatchMessage}</span>
-                    </div>
-                  )}
-                  {scanResult ? (
-                    <div className="space-y-4">
-                      {/* Summary */}
-                      <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg">
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-blue-600">{(scanResult.totalWeightKg * 1000).toFixed(2)}</p>
-                          <p className="text-sm text-slate-600">g Total</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-red-600">€{scanResult.costEUR.toFixed(2)}</p>
-                          <p className="text-sm text-slate-600">Cost</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-green-600">{scanResult.co2Kg.toFixed(1)}</p>
-                          <p className="text-sm text-slate-600">kg CO₂</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
-                        <span className="text-slate-600">Menu match</span>
-                        {scanResult.inMenu && scanResult.matchedMenuItem ? (
-                          <span className="font-medium text-emerald-600">
-                            {scanResult.matchedMenuItem}
-                          </span>
-                        ) : (
-                          <span className="font-medium text-rose-600">Not in menu</span>
-                        )}
-                      </div>
-
-                      {/* Detected Items */}
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Detected Items:</h4>
-                        {scanResult.items.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-white border rounded-lg">
-                            <div>
-                              <p className="font-medium">{item.name}</p>
-                              <p className="text-sm text-slate-600">{item.category}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium">{(item.weight * 1000).toFixed(2)} g</p>
-                              <div className="flex items-center space-x-1">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <p className="text-sm text-slate-600">{(item.confidence * 100).toFixed(0)}%</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Overall Confidence */}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <Scan className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-slate-600">No scan results yet</p>
-                      <p className="text-sm text-slate-500">Use camera to scan waste items</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
+              {renderScanResults(
+                <Scan className="w-12 h-12 text-slate-300" />,
+                'No scan results yet',
+                'Use camera to scan waste items'
+              )}
             </div>
           </div>
         </TabsContent>
@@ -884,80 +1035,11 @@ export default function HardwareCapturePage() {
               </CardContent>
             </Card>
 
-            {/* Same Results Card as Camera Tab */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Scale className="w-5 h-5" />
-                  <span>Scan Results</span>
-                </CardTitle>
-                <CardDescription>AI-detected waste items</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {posMatchMessage && (
-                  <div className="mb-4 flex items-center space-x-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>{posMatchMessage}</span>
-                  </div>
-                )}
-                {scanResult ? (
-                  <div className="space-y-4">
-                    {/* Same content as camera tab */}
-                    <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-blue-600">{(scanResult.totalWeightKg * 1000).toFixed(2)}</p>
-                        <p className="text-sm text-slate-600">g Total</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-red-600">€{scanResult.costEUR.toFixed(2)}</p>
-                        <p className="text-sm text-slate-600">Cost</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-green-600">{scanResult.co2Kg.toFixed(1)}</p>
-                        <p className="text-sm text-slate-600">kg CO₂</p>
-                      </div>
-                    </div>
-
-                      <div className="flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
-                        <span className="text-slate-600">Menu match</span>
-                        {scanResult.inMenu && scanResult.matchedMenuItem ? (
-                          <span className="font-medium text-emerald-600">
-                            {scanResult.matchedMenuItem}
-                          </span>
-                        ) : (
-                          <span className="font-medium text-rose-600">Not in menu</span>
-                        )}
-                      </div>
-
-                    <div className="space-y-2">
-                      <h4 className="font-medium">Detected Items:</h4>
-                      {scanResult.items.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-white border rounded-lg">
-                          <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-slate-600">{item.category}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium">{(item.weight * 1000).toFixed(2)} g</p>
-                            <div className="flex items-center space-x-1">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <p className="text-sm text-slate-600">{(item.confidence * 100).toFixed(0)}%</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600">No scan results yet</p>
-                    <p className="text-sm text-slate-500">Upload an image to scan</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {renderScanResults(
+              <Upload className="w-12 h-12 text-slate-300" />,
+              'No scan results yet',
+              'Upload an image to scan'
+            )}
           </div>
         </TabsContent>
 
