@@ -114,6 +114,14 @@ html {
 
 /* 3D Effects and Enhanced Shadows */
 @layer utilities {
+  .managr-dashboard .bg-white.rounded-xl.shadow-sm.border {
+    @apply transition-all duration-200 hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5;
+  }
+
+  .managr-dashboard .bg-white.rounded-xl.shadow-sm.border:hover {
+    background-color: #fcfdfc;
+  }
+
   .shadow-3xl {
     box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
   }

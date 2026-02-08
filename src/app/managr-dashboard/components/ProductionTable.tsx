@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card } from './ui/Card';
-import { PRODUCTION_DATA } from '../constants';
 
 const ConfidenceDots: React.FC<{ score: number }> = ({ score }) => {
   return (
@@ -38,36 +37,99 @@ const ConfidenceDots: React.FC<{ score: number }> = ({ score }) => {
   );
 };
 
-export const ProductionTable: React.FC = () => {
+type ProductionItem = {
+  id: string;
+  dish: string;
+  planned: number;
+  recommendedMin: number;
+  recommendedMax: number;
+  confidence: number;
+  reason?: string;
+  details?: string;
+};
+
+type ProductionTableProps = {
+  items?: ProductionItem[];
+  embedded?: boolean;
+};
+
+const defaultItems: ProductionItem[] = [
+  {
+    id: '1',
+    dish: 'Pasta Veg',
+    planned: 200,
+    recommendedMin: 180,
+    recommendedMax: 210,
+    confidence: 4.5,
+    reason: 'High repeat demand at midday',
+    details: 'Stable sell-through last 5 services.',
+  },
+  {
+    id: '2',
+    dish: 'Chicken Bowl',
+    planned: 250,
+    recommendedMin: 230,
+    recommendedMax: 260,
+    confidence: 4.5,
+    reason: 'Top seller last week',
+    details: 'Strong preorder conversion at 12:00–13:00.',
+  },
+  {
+    id: '3',
+    dish: 'Soup',
+    planned: 120,
+    recommendedMin: 90,
+    recommendedMax: 110,
+    confidence: 3,
+    reason: 'Repeated unsold surplus last 3 days',
+    details: 'Reduce batch size to align with demand.',
+  },
+];
+
+export const ProductionTable: React.FC<ProductionTableProps> = ({ items = defaultItems, embedded = false }) => {
+  const tableContent = (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="border-b border-gray-100 text-sm text-gray-500">
+            <th className="py-3 px-2 font-medium">Dish</th>
+            <th className="py-3 px-2 font-medium text-center">Planned</th>
+            <th className="py-3 px-2 font-medium text-center">Recommended</th>
+            <th className="py-3 px-2 font-medium text-center">Confidence</th>
+            <th className="py-3 px-2 font-medium">Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, index) => (
+            <tr key={item.id} className={index !== items.length - 1 ? 'border-b border-gray-50' : ''}>
+              <td className="py-4 px-2 font-medium text-gray-800">{item.dish}</td>
+              <td className="py-4 px-2 text-center text-gray-700">{item.planned}</td>
+              <td className="py-4 px-2 text-center text-gray-500">
+                {item.recommendedMin}&ndash;{item.recommendedMax}
+              </td>
+              <td className="py-4 px-2 flex justify-center items-center">
+                <ConfidenceDots score={item.confidence} />
+              </td>
+              <td className="py-4 px-2 text-xs text-gray-600">
+                <p className="font-semibold text-gray-700">{item.reason || 'Demand-led adjustment'}</p>
+                {item.details && <p className="text-[10px] text-gray-400 mt-1">{item.details}</p>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  if (embedded) {
+    return <div className="h-full">{tableContent}</div>;
+  }
+
   return (
     <Card className="h-full">
-      <h2 className="text-lg font-semibold text-gray-800 mb-6">Tomorrow's Suggested Production</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-gray-100 text-sm text-gray-500">
-              <th className="py-3 px-2 font-medium">Dish</th>
-              <th className="py-3 px-2 font-medium text-center">Planned</th>
-              <th className="py-3 px-2 font-medium text-center">Recommended</th>
-              <th className="py-3 px-2 font-medium text-center">Confidence</th>
-            </tr>
-          </thead>
-          <tbody>
-            {PRODUCTION_DATA.map((item, index) => (
-              <tr key={item.id} className={index !== PRODUCTION_DATA.length - 1 ? 'border-b border-gray-50' : ''}>
-                <td className="py-4 px-2 font-medium text-gray-800">{item.dish}</td>
-                <td className="py-4 px-2 text-center text-gray-700">{item.planned}</td>
-                <td className="py-4 px-2 text-center text-gray-500">
-                  {item.recommendedMin}&ndash;{item.recommendedMax}
-                </td>
-                <td className="py-4 px-2 flex justify-center items-center">
-                  <ConfidenceDots score={item.confidence} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <h2 className="text-lg font-semibold text-gray-800 mb-1">Top-Seller Focus</h2>
+      <p className="text-xs text-gray-500 mb-5">Key dishes only, sorted by impact</p>
+      {tableContent}
     </Card>
   );
 };
