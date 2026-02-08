@@ -818,20 +818,9 @@ export default function HardwareCapturePage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-slate-900 truncate">{item.name}</p>
-                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                            <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${getCategoryColor(item.category)}`}>
-                              {item.category}
-                            </span>
-                            {item.freshness && (
-                              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
-                                item.freshness === 'fresh'
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : 'bg-red-50 text-red-700 border border-red-200'
-                              }`}>
-                                {item.freshness === 'fresh' ? '🟢 Fresh' : '🔴 Spoiled'}
-                              </span>
-                            )}
-                          </div>
+                          <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium mt-1 ${getCategoryColor(item.category)}`}>
+                            {item.category}
+                          </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
