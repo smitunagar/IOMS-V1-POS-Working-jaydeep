@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { DashboardHeader } from './components/DashboardHeader';
 import { DemandForecast } from './components/DemandForecast';
 import { WasteSnapshotSmall } from './components/WasteSnapshotSmall';
@@ -9,6 +9,9 @@ import { TrendingUp, CalendarClock, BarChart3, PackageSearch, AlertTriangle } fr
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, BarChart, Bar, Cell, LabelList } from 'recharts';
 
 type FoodType = 'all' | 'vegan' | 'vegetarian' | 'non-vegetarian';
+type PreorderSite = 'wilhelm' | 'morgen' | 'prinz';
+type PreorderWindow = '15m' | '60m' | 'today';
+type PreorderRow = { label: string; value: number; trend: string; site: PreorderSite };
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'demand' | 'waste' | 'inventory' | 'output'>('demand');
@@ -26,8 +29,9 @@ const App: React.FC = () => {
   const [wasteTrendFoodType, setWasteTrendFoodType] = useState<FoodType>('all');
   const [recommendedPrepFoodType, setRecommendedPrepFoodType] = useState<FoodType>('all');
   const [prepGuidanceFoodType, setPrepGuidanceFoodType] = useState<FoodType>('all');
-  const [preorderWindow, setPreorderWindow] = useState<'15m' | '60m' | 'today'>('15m');
-  const [preorderSite, setPreorderSite] = useState<'all' | 'wilhelm' | 'morgen' | 'prinz'>('all');
+  const [preorderWindow, setPreorderWindow] = useState<PreorderWindow>('15m');
+  const [preorderSite, setPreorderSite] = useState<'all' | PreorderSite>('all');
+  const [preorderError, setPreorderError] = useState<string | null>(null);
   const [wasteCaptureRange, setWasteCaptureRange] = useState<'yesterday' | '7d' | '30d'>('yesterday');
   const [wasteDetailRange, setWasteDetailRange] = useState<'today' | '7d' | '30d'>('7d');
   const [inventoryExpiryRange, setInventoryExpiryRange] = useState<'7d' | '14d' | '30d'>('7d');
@@ -67,7 +71,7 @@ const App: React.FC = () => {
     { label: 'Fri', value: 60, color: '#f9d75c' },
   ];
 
-  const preorderData: Record<'15m' | '60m' | 'today', { label: string; value: number; trend: string; site: 'wilhelm' | 'morgen' | 'prinz' }[]> = {
+  const preorderData: Record<PreorderWindow, PreorderRow[]> = {
     '15m': [
       { label: 'Mensa Wilhelmstraße', value: 46, trend: '+6%', site: 'wilhelm' },
       { label: 'Mensa Morgenstelle', value: 28, trend: '+3%', site: 'morgen' },
@@ -84,6 +88,157 @@ const App: React.FC = () => {
       { label: 'Mensa Prinz Karl', value: 280, trend: '+6%', site: 'prinz' },
     ],
   };
+
+  const [livePreorderData, setLivePreorderData] = useState<Record<PreorderWindow, PreorderRow[]>>(preorderData);
+
+  const resolvePreorderSite = (institution?: string | null): PreorderSite | null => {
+    if (!institution) return null;
+    const normalized = institution.toLowerCase();
+    if (normalized.includes('wilhelm')) return 'wilhelm';
+    if (normalized.includes('morgen')) return 'morgen';
+    if (normalized.includes('prinz') || normalized.includes('karl')) return 'prinz';
+    return null;
+  };
+
+  const resolveOrderTimestamp = (order: { createdAt?: string; date?: string; time?: string }) => {
+    if (order.createdAt) {
+      const parsed = new Date(order.createdAt);
+      if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+    if (order.date) {
+      const time = order.time && order.time.length > 0 ? order.time : '00:00:00';
+      const parsed = new Date(`${order.date}T${time}`);
+      if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+    return null;
+  };
+
+  const formatTrend = (current: number, previous: number) => {
+    if (previous === 0) {
+      return current === 0 ? '0%' : '+100%';
+    }
+    const change = Math.round(((current - previous) / previous) * 100);
+    return `${change >= 0 ? '+' : ''}${change}%`;
+  };
+
+  const buildPreorderSummary = (orders: Array<{
+    institution?: string;
+    createdAt?: string;
+    date?: string;
+    time?: string;
+    source?: string;
+  }>) => {
+    const now = new Date();
+    const windows: Record<Exclude<PreorderWindow, 'today'>, number> = {
+      '15m': 15,
+      '60m': 60,
+    };
+
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const yesterdayStart = new Date(todayStart);
+    yesterdayStart.setDate(todayStart.getDate() - 1);
+
+    const relevantOrders = orders
+      .map((order) => {
+        const timestamp = resolveOrderTimestamp(order);
+        if (!timestamp) return null;
+        const site = resolvePreorderSite(order.institution);
+        if (!site) return null;
+        const source = order.source?.toLowerCase();
+        if (source && !/student|app|pre-?order/.test(source)) return null;
+        return { timestamp, site };
+      })
+      .filter(Boolean) as Array<{ timestamp: Date; site: PreorderSite }>;
+
+    const countsForWindow = (start: Date, end: Date, site: PreorderSite) =>
+      relevantOrders.filter((order) => order.site === site && order.timestamp >= start && order.timestamp <= end).length;
+
+    const buildRows = (window: PreorderWindow): PreorderRow[] => {
+      return (['wilhelm', 'morgen', 'prinz'] as PreorderSite[]).map((site) => {
+        let current = 0;
+        let previous = 0;
+        if (window === 'today') {
+          current = countsForWindow(todayStart, now, site);
+          previous = countsForWindow(yesterdayStart, todayStart, site);
+        } else {
+          const minutes = windows[window];
+          const windowStart = new Date(now.getTime() - minutes * 60 * 1000);
+          const previousStart = new Date(now.getTime() - minutes * 2 * 60 * 1000);
+          current = countsForWindow(windowStart, now, site);
+          previous = countsForWindow(previousStart, windowStart, site);
+        }
+
+        const label = site === 'wilhelm'
+          ? 'Mensa Wilhelmstraße'
+          : site === 'morgen'
+          ? 'Mensa Morgenstelle'
+          : 'Mensa Prinz Karl';
+
+        return {
+          label,
+          value: current,
+          trend: formatTrend(current, previous),
+          site,
+        };
+      });
+    };
+
+    return {
+      '15m': buildRows('15m'),
+      '60m': buildRows('60m'),
+      today: buildRows('today'),
+    } as Record<PreorderWindow, PreorderRow[]>;
+  };
+
+  const fetchLivePreorders = useCallback(async () => {
+    try {
+      const response = await fetch('/api/mensa-orders/scheduled');
+      const payload = await response.json();
+      if (!response.ok || !payload?.success) {
+        throw new Error(payload?.message || 'Failed to fetch live preorders');
+      }
+
+      const summary = buildPreorderSummary(payload.data || []);
+      setLivePreorderData(summary);
+      setPreorderError(null);
+    } catch (error: any) {
+      setPreorderError(error.message || 'Failed to fetch live preorders');
+    }
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchWithGuard = async () => {
+      if (!isMounted) return;
+      await fetchLivePreorders();
+    };
+
+    fetchWithGuard();
+    const interval = setInterval(fetchWithGuard, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [fetchLivePreorders]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!('EventSource' in window)) return;
+
+    const source = new EventSource('/api/mensa-orders/stream');
+    source.addEventListener('scheduled-order', () => {
+      fetchLivePreorders();
+    });
+    source.addEventListener('error', () => {
+      source.close();
+    });
+
+    return () => {
+      source.close();
+    };
+  }, [fetchLivePreorders]);
 
   const wasteCaptureData: Record<'yesterday' | '7d' | '30d', {
     label: string;
@@ -536,7 +691,7 @@ const App: React.FC = () => {
 
   const posSalesHistory = posSalesHistoryData[posRange];
   const dayOfWeekPatterns = dayOfWeekData;
-  const livePreorders = preorderData[preorderWindow].filter((row) =>
+  const livePreorders = livePreorderData[preorderWindow].filter((row) =>
     preorderSite === 'all' ? true : row.site === preorderSite
   );
   const foodTypeFactorMap = {
@@ -766,6 +921,9 @@ const App: React.FC = () => {
                   </select>
                 </div>
               </div>
+              {preorderError && (
+                <p className="text-xs text-red-600 mb-3">{preorderError}</p>
+              )}
               <div className="space-y-3">
                 {livePreorders.map((row) => (
                   <div key={row.label} className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
