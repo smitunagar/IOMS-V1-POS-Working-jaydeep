@@ -16,6 +16,12 @@ const SCALE_POLL_INTERVAL_MS = Number(process.env.SCALE_POLL_INTERVAL_MS || 1000
 let latestWeight = null;
 let latestRaw = null;
 let latestTimestamp = null;
+let stableWeight = null;
+
+// --- Stabilization config ---
+const STABLE_WINDOW = 5;          // number of readings in sliding window
+const STABLE_THRESHOLD = 1.0;     // grams – ignore changes smaller than this
+const weightBuffer = [];           // ring buffer of recent readings
 
 const extractWeight = (line) => {
   if (!line) return null;
@@ -27,6 +33,28 @@ const extractWeight = (line) => {
   return value;
 };
 
+const median = (arr) => {
+  const sorted = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+
+const stabilize = (rawValue) => {
+  weightBuffer.push(rawValue);
+  if (weightBuffer.length > STABLE_WINDOW) {
+    weightBuffer.shift();
+  }
+  if (weightBuffer.length < 2) return rawValue;
+  const med = median(weightBuffer);
+  // Only update stable weight when change exceeds threshold
+  if (stableWeight === null || Math.abs(med - stableWeight) >= STABLE_THRESHOLD) {
+    stableWeight = Math.round(med * 100) / 100; // round to 0.01g
+  }
+  return stableWeight;
+};
+
 const updateWeight = (line) => {
   const trimmed = line.trim();
   if (!trimmed) return;
@@ -35,9 +63,13 @@ const updateWeight = (line) => {
   }
   const value = extractWeight(trimmed);
   if (value === null) return;
-  latestWeight = value;
   latestRaw = trimmed;
   latestTimestamp = new Date().toISOString();
+
+  const stable = stabilize(value);
+  // Only broadcast when the stable weight actually changes
+  if (latestWeight !== null && stable === latestWeight) return;
+  latestWeight = stable;
   broadcast({
     type: 'weight',
     weight: latestWeight,
@@ -70,6 +102,8 @@ const server = http.createServer((req, res) => {
       weight: latestWeight,
       unit: SCALE_UNIT,
       raw: latestRaw,
+      stable: true,
+      bufferSize: weightBuffer.length,
       timestamp: latestTimestamp,
     }));
     return;
@@ -144,16 +178,6 @@ port.on('close', () => {
 
 parser.on('data', (line) => {
   updateWeight(line);
-});
-
-port.on('data', (chunk) => {
-  if (!chunk || chunk.length === 0) return;
-  const ascii = chunk.toString('utf8');
-  if (SCALE_LOG_RAW) {
-    console.log('📥 Scale raw bytes:', chunk.toString('hex'));
-    console.log('📥 Scale raw ascii:', ascii.replace(/\r/g, '\\r').replace(/\n/g, '\\n'));
-  }
-  updateWeight(ascii);
 });
 
 server.listen(HTTP_PORT, () => {

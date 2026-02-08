@@ -244,8 +244,11 @@ export default function HardwareCapturePage() {
 
     connect();
 
+    // HTTP polling only as a fallback when WebSocket is not connected
     if (!scalePollRef.current) {
       scalePollRef.current = setInterval(async () => {
+        // Skip polling when WebSocket is alive — avoid double-updates / flicker
+        if (scaleSocketRef.current?.readyState === WebSocket.OPEN) return;
         try {
           const healthUrl = getScaleHealthUrl();
           const weightUrl = healthUrl.replace('/health', '/weight');
@@ -260,7 +263,7 @@ export default function HardwareCapturePage() {
         } catch {
           // ignore polling errors
         }
-      }, 1000);
+      }, 2000);
     }
 
     return () => {
