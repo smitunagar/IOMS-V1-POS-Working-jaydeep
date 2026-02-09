@@ -244,7 +244,10 @@ Return a JSON object with the following structure:
   "confidence": 85,
   "freshness": "fresh" or "rotten",
   "freshnessConfidence": 80,
-  "freshnessReason": "Brief reason for the freshness classification"
+  "freshnessReason": "Brief reason for the freshness classification",
+  "predictedIngredients": ["ingredient1", "ingredient2", "ingredient3"],
+  "estimatedCostEUR": 2.50,
+  "costBreakdown": "Brief explanation of cost estimate"
 }
 
 FRESHNESS RULES:
@@ -252,6 +255,11 @@ FRESHNESS RULES:
 - "rotten": Food that is spoiled, moldy, discolored, slimy, decomposing, has visible contamination, or is clearly unsafe to consume.
 - If the food is cooked but still looks safe and edible, classify as "fresh".
 - If in doubt between fresh and rotten, lean toward "fresh" with lower freshnessConfidence.
+
+INGREDIENT & COST RULES:
+- "predictedIngredients": List the main ingredients you can identify or infer from the dish. Use simple names like "chicken", "rice", "tomato", "pasta", "beef", "bread", "cheese", "butter", "potato", "onion", "broccoli", "egg". These will be matched against an IFEU CO2 database.
+- "estimatedCostEUR": Estimate the food cost in EUR based on typical German commercial kitchen prices.
+- "costBreakdown": Brief explanation like "Chicken breast ~€8/kg, rice ~€2/kg, vegetables ~€3/kg"
 
 GENERAL RULES:
 1. Be specific about the dish name (e.g., "Pasta Carbonara", "Grilled Chicken", "Caesar Salad")
@@ -292,9 +300,22 @@ Analyze the image now:
     const resolvedWeightKg = weightKgFromBody ?? parseWeightKg(analysisData?.estimatedWeight);
     const recipeResult = await getMenuIngredientsForDish(analysisData?.dishName);
     const recipeIngredients = recipeResult?.ingredients || null;
-    const co2Result = recipeIngredients && resolvedWeightKg
+
+    // CO2 calculation: prefer menu ingredients, fallback to AI-predicted ingredients
+    let co2Result = recipeIngredients && resolvedWeightKg
       ? await calculateCo2FromIngredients(recipeIngredients, resolvedWeightKg)
       : null;
+    let co2Source: 'menu' | 'ai-predicted' | 'default' = recipeIngredients ? 'menu' : 'default';
+    let predictedIngredients = Array.isArray(analysisData?.predictedIngredients) ? analysisData.predictedIngredients : [];
+
+    if (!co2Result && predictedIngredients.length && resolvedWeightKg) {
+      co2Result = await calculateCo2FromIngredients(predictedIngredients, resolvedWeightKg);
+      if (co2Result) co2Source = 'ai-predicted';
+    }
+
+    // Cost: prefer AI estimate, fallback to rough calculation
+    const aiCostEUR = typeof analysisData?.estimatedCostEUR === 'number' ? analysisData.estimatedCostEUR : null;
+    const costBreakdown = analysisData?.costBreakdown || null;
 
     const freshness = ['fresh', 'rotten'].includes(analysisData.freshness)
       ? analysisData.freshness
@@ -311,12 +332,16 @@ Analyze the image now:
       freshnessReason: analysisData.freshnessReason || '',
       weightKg: resolvedWeightKg ?? undefined,
       recipeIngredients: recipeIngredients || undefined,
+      predictedIngredients: predictedIngredients.length ? predictedIngredients : undefined,
       matchedMenuItem: recipeResult?.matchedName || undefined,
       menuMatchScore: recipeResult?.matchScore ?? undefined,
       inMenu: Boolean(recipeResult?.matchedName),
       co2Kg: co2Result?.co2Kg ?? undefined,
       co2ePerKg: co2Result?.co2ePerKg ?? undefined,
       co2Matches: co2Result?.matches ?? undefined,
+      co2Source,
+      estimatedCostEUR: aiCostEUR ?? undefined,
+      costBreakdown: costBreakdown ?? undefined,
     };
 
     const uploadResult = await uploadIfConfigured(parsedImage.buffer, parsedImage.contentType);
