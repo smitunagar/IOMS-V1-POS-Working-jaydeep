@@ -342,20 +342,20 @@ export default function WasteWatchdogLinePage() {
               </div>
               <div className="rounded-xl bg-gradient-to-br from-red-50 to-red-100/50 p-3 text-center border border-red-100">
                 <DollarSign className="w-4 h-4 text-red-600 mx-auto mb-0.5" />
-                <p className="text-xl font-bold text-red-700">\u20AC{analysis.costEUR.toFixed(2)}</p>
+                <p className="text-xl font-bold text-red-700">€{analysis.costEUR.toFixed(2)}</p>
                 <p className="text-[11px] font-medium text-red-600/70">cost</p>
               </div>
               <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-3 text-center border border-emerald-100">
                 <Leaf className="w-4 h-4 text-emerald-600 mx-auto mb-0.5" />
                 <p className="text-xl font-bold text-emerald-700">{analysis.co2Kg.toFixed(2)}</p>
-                <p className="text-[11px] font-medium text-emerald-600/70">kg CO\u2082e</p>
+                <p className="text-[11px] font-medium text-emerald-600/70">kg CO₂e</p>
               </div>
             </div>
 
             {analysis.matchedMenuItem && (
               <div className="flex items-center justify-between rounded-lg border px-3 py-2 mb-3">
                 <span className="text-sm text-slate-600">Menu match</span>
-                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">\u2713 {analysis.matchedMenuItem}</Badge>
+                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">✓ {analysis.matchedMenuItem}</Badge>
               </div>
             )}
 
@@ -364,7 +364,7 @@ export default function WasteWatchdogLinePage() {
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-emerald-800">Fresh \u2014 Recoverable</p>
+                    <p className="text-sm font-semibold text-emerald-800">Fresh — Recoverable</p>
                     <p className="text-xs text-emerald-600">{analysis.freshnessReason} ({analysis.freshnessConfidence}%)</p>
                   </div>
                 </div>
@@ -374,7 +374,7 @@ export default function WasteWatchdogLinePage() {
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-red-800">Spoiled \u2014 Must Dispose</p>
+                    <p className="text-sm font-semibold text-red-800">Spoiled — Must Dispose</p>
                     <p className="text-xs text-red-600">{analysis.freshnessReason} ({analysis.freshnessConfidence}%)</p>
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export default function WasteWatchdogLinePage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <Flame className="w-4 h-4 text-orange-500" />
-                CO\u2082 Emissions Breakdown
+                CO₂ Emissions Breakdown
               </CardTitle>
               {co2SourceBadge(analysis.co2Source)}
             </div>
@@ -409,21 +409,21 @@ export default function WasteWatchdogLinePage() {
                 ? 'Calculated from actual menu recipe ingredients matched against IFEU database'
                 : analysis.co2Source === 'ai-predicted'
                   ? 'Calculated from AI-predicted ingredients matched against IFEU database'
-                  : 'Using default estimate \u2014 upload more recipes for better accuracy'}
+                  : 'Using default estimate — upload more recipes for better accuracy'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between rounded-lg bg-slate-50 border p-3 mb-4">
               <div>
-                <p className="text-sm font-medium text-slate-700">Total CO\u2082 equivalent</p>
-                <p className="text-xs text-slate-500">{analysis.co2ePerKg.toFixed(2)} kg CO\u2082e/kg \u00D7 {analysis.weightKg.toFixed(3)} kg</p>
+                <p className="text-sm font-medium text-slate-700">Total CO₂ equivalent</p>
+                <p className="text-xs text-slate-500">{analysis.co2ePerKg.toFixed(2)} kg CO₂e/kg × {analysis.weightKg.toFixed(3)} kg</p>
               </div>
               <p className="text-2xl font-bold text-emerald-700">{analysis.co2Kg.toFixed(3)} <span className="text-sm font-medium">kg</span></p>
             </div>
 
             {analysis.co2Matches.length > 0 ? (
               <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ingredient CO\u2082 Factors (IFEU)</h4>
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ingredient CO₂ Factors (IFEU)</h4>
                 <div className="divide-y rounded-lg border overflow-hidden">
                   {analysis.co2Matches.map((match, i) => (
                     <div key={i} className="flex items-center justify-between px-3 py-2 text-sm bg-white hover:bg-slate-50 transition-colors">
@@ -433,7 +433,7 @@ export default function WasteWatchdogLinePage() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {match.matchedLabel && match.matchedLabel !== match.ingredient && (
-                          <span className="text-xs text-slate-400 max-w-[140px] truncate">\u2192 {match.matchedLabel}</span>
+                          <span className="text-xs text-slate-400 max-w-[140px] truncate">→ {match.matchedLabel}</span>
                         )}
                         {match.co2ePerKg !== null ? (
                           <span className="font-mono font-semibold text-slate-900">{match.co2ePerKg.toFixed(1)}</span>
@@ -446,7 +446,7 @@ export default function WasteWatchdogLinePage() {
                 </div>
                 <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-1">
                   <Info className="w-3 h-3" />
-                  Values in kg CO\u2082e per kg food. Source: IFEU 2020 environmental footprints study (Germany).
+                  Values in kg CO₂e per kg food. Source: IFEU 2020 environmental footprints study (Germany).
                 </p>
               </div>
             ) : analysis.ingredients.length > 0 ? (
@@ -457,10 +457,10 @@ export default function WasteWatchdogLinePage() {
                     <Badge key={i} variant="secondary" className="text-xs">{ing}</Badge>
                   ))}
                 </div>
-                <p className="text-[11px] text-slate-400">No IFEU CO\u2082 matches found \u2014 using default estimate.</p>
+                <p className="text-[11px] text-slate-400">No IFEU CO₂ matches found — using default estimate.</p>
               </div>
             ) : (
-              <p className="text-sm text-slate-400 text-center py-4">No ingredient data available \u2014 using default CO\u2082 factor.</p>
+              <p className="text-sm text-slate-400 text-center py-4">No ingredient data available — using default CO₂ factor.</p>
             )}
           </CardContent>
         </Card>
@@ -488,7 +488,7 @@ export default function WasteWatchdogLinePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Waste Watchdog Line</h1>
-          <p className="text-slate-600 mt-1">Capture, upload or manually log waste \u2014 AI analyses weight, cost, CO\u2082 & freshness</p>
+          <p className="text-slate-600 mt-1">Capture, upload or manually log waste — AI analyses weight, cost, CO₂ & freshness</p>
         </div>
         <Badge variant="outline" className="flex items-center space-x-2">
           <div className="w-2 h-2 bg-emerald-500 rounded-full" />
@@ -524,7 +524,7 @@ export default function WasteWatchdogLinePage() {
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <div className="text-center text-white">
                         <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
-                        <p>Analyzing\u2026</p>
+                        <p>Analyzing…</p>
                       </div>
                     </div>
                   )}
@@ -638,8 +638,8 @@ export default function WasteWatchdogLinePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Leaf className="w-5 h-5" /> CO\u2082 Reference (IFEU)</CardTitle>
-                <CardDescription>Common food CO\u2082 factors from IFEU 2020 study</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Leaf className="w-5 h-5" /> CO₂ Reference (IFEU)</CardTitle>
+                <CardDescription>Common food CO₂ factors from IFEU 2020 study</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="divide-y rounded-lg border overflow-hidden text-sm">
@@ -661,11 +661,11 @@ export default function WasteWatchdogLinePage() {
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between px-3 py-2 bg-white hover:bg-slate-50">
                       <span className="text-slate-700">{item.name}</span>
-                      <span className="font-mono font-semibold text-slate-900">{item.co2.toFixed(1)} <span className="text-xs font-normal text-slate-500">kg CO\u2082e/kg</span></span>
+                      <span className="font-mono font-semibold text-slate-900">{item.co2.toFixed(1)} <span className="text-xs font-normal text-slate-500">kg CO₂e/kg</span></span>
                     </div>
                   ))}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-2">Source: IFEU \u2013 Environmental footprints of food products (Germany, 2020)</p>
+                <p className="text-[11px] text-slate-400 mt-2">Source: IFEU – Environmental footprints of food products (Germany, 2020)</p>
               </CardContent>
             </Card>
           </div>

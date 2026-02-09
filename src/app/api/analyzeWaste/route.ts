@@ -12,9 +12,9 @@ const buildFallbackResponse = () => ({
   category: 'Food Waste',
   estimatedWeight: '0.5 kg',
   confidence: 60,
-  freshness: 'rotten' as const,
-  freshnessConfidence: 50,
-  freshnessReason: 'Unable to determine – defaulting to waste',
+  freshness: 'fresh' as const,
+  freshnessConfidence: 30,
+  freshnessReason: 'Unable to determine — defaulting to fresh (safe assumption)',
   fallback: true,
 });
 
@@ -351,15 +351,23 @@ Analyze the image now:
     const recipeIngredients = recipeResult?.ingredients || null;
 
     // CO2 calculation: prefer menu ingredients, fallback to AI-predicted ingredients
-    let co2Result = recipeIngredients && resolvedWeightKg
-      ? await calculateCo2FromIngredients(recipeIngredients, resolvedWeightKg)
-      : null;
+    let co2Result: { co2Kg: number; co2ePerKg: number; matches: { ingredient: string; co2ePerKg: number | null; matchedLabel: string | null }[] } | null = null;
     let co2Source: 'menu' | 'ai-predicted' | 'default' = recipeIngredients ? 'menu' : 'default';
     let predictedIngredients = Array.isArray(analysisData?.predictedIngredients) ? analysisData.predictedIngredients : [];
 
-    if (!co2Result && predictedIngredients.length && resolvedWeightKg) {
-      co2Result = await calculateCo2FromIngredients(predictedIngredients, resolvedWeightKg);
-      if (co2Result) co2Source = 'ai-predicted';
+    try {
+      co2Result = recipeIngredients && resolvedWeightKg
+        ? await calculateCo2FromIngredients(recipeIngredients, resolvedWeightKg)
+        : null;
+
+      if (!co2Result && predictedIngredients.length && resolvedWeightKg) {
+        co2Result = await calculateCo2FromIngredients(predictedIngredients, resolvedWeightKg);
+        if (co2Result) co2Source = 'ai-predicted';
+      }
+    } catch (co2Err) {
+      console.error('⚠️ CO2 calculation failed (non-fatal):', co2Err);
+      co2Result = null;
+      co2Source = 'default';
     }
 
     // Cost: prefer AI estimate, fallback to rough calculation
