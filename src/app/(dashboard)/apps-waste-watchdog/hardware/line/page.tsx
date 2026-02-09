@@ -15,17 +15,12 @@ import {
   Scan,
   CheckCircle,
   Scale,
-  Activity,
   Leaf,
   MapPin,
   Trash2,
   Eye,
-  Clock,
-  ShieldCheck,
-  AlertTriangle,
   Pencil,
   DollarSign,
-  Flame,
   FileText,
   BarChart3,
   Info,
@@ -33,27 +28,14 @@ import {
 import { toast } from '@/shared/hooks/use-toast';
 
 /* types */
-interface Co2Match {
-  ingredient: string;
-  co2ePerKg: number | null;
-  matchedLabel: string | null;
-}
-
 interface LineAnalysis {
   dishName: string;
   category: string;
   weightKg: number;
   costEUR: number;
-  costBreakdown: string | null;
   co2Kg: number;
-  co2ePerKg: number;
   co2Source: 'menu' | 'ai-predicted' | 'default';
-  co2Matches: Co2Match[];
   confidence: number;
-  freshness: 'fresh' | 'rotten';
-  freshnessConfidence: number;
-  freshnessReason: string;
-  ingredients: string[];
   matchedMenuItem: string | null;
   inMenu: boolean;
 }
@@ -127,28 +109,14 @@ export default function WasteWatchdogLinePage() {
 
   const mapToAnalysis = (data: any): LineAnalysis => {
     const weightKg = data.weightKg ?? parseWeightKg(data.estimatedWeight);
-    const ingredients = data.recipeIngredients || data.predictedIngredients || [];
-    const co2Matches: Co2Match[] = (data.co2Matches || []).map((m: any) => ({
-      ingredient: m.ingredient,
-      co2ePerKg: m.co2ePerKg ?? null,
-      matchedLabel: m.matchedLabel ?? null,
-    }));
-
     return {
       dishName: data.dishName || 'Unknown Dish',
       category: data.category || 'Food Waste',
       weightKg: Number.isFinite(weightKg) ? Number(weightKg.toFixed(3)) : 0.3,
       costEUR: data.estimatedCostEUR ?? Number((weightKg * DEFAULT_COST_PER_KG).toFixed(2)),
-      costBreakdown: data.costBreakdown || null,
       co2Kg: data.co2Kg ?? Number((weightKg * DEFAULT_CO2_PER_KG).toFixed(3)),
-      co2ePerKg: data.co2ePerKg ?? DEFAULT_CO2_PER_KG,
       co2Source: data.co2Source || 'default',
-      co2Matches,
       confidence: Math.min(1, (Number(data.confidence) || 80) / 100),
-      freshness: data.freshness === 'fresh' ? 'fresh' : 'rotten',
-      freshnessConfidence: data.freshnessConfidence ?? 60,
-      freshnessReason: data.freshnessReason || '',
-      ingredients,
       matchedMenuItem: data.matchedMenuItem ?? null,
       inMenu: data.inMenu ?? false,
     };
@@ -279,14 +247,11 @@ export default function WasteWatchdogLinePage() {
     }
   };
 
-  const co2SourceBadge = (source: string) => {
+  const co2SourceLabel = (source: string) => {
     switch (source) {
-      case 'menu':
-        return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">From Menu Recipe</Badge>;
-      case 'ai-predicted':
-        return <Badge className="bg-amber-100 text-amber-700 border-amber-200">AI Predicted</Badge>;
-      default:
-        return <Badge className="bg-slate-100 text-slate-600 border-slate-200">Default Estimate</Badge>;
+      case 'menu': return 'From Menu';
+      case 'ai-predicted': return 'AI Estimated';
+      default: return 'Default';
     }
   };
 
@@ -299,7 +264,7 @@ export default function WasteWatchdogLinePage() {
               <BarChart3 className="w-12 h-12 text-slate-300" />
             </div>
             <p className="text-slate-600 font-medium">No analysis yet</p>
-            <p className="text-sm text-slate-400 mt-1">Capture or upload an image to get a detailed breakdown</p>
+            <p className="text-sm text-slate-400 mt-1">Capture or upload an image to analyze</p>
           </CardContent>
         </Card>
       );
@@ -315,166 +280,76 @@ export default function WasteWatchdogLinePage() {
                 <CardDescription>{analysis.category}</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline"
-                  className={analysis.freshness === 'fresh'
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                    : 'border-red-300 bg-red-50 text-red-700'}>
-                  {analysis.freshness === 'fresh' ? (
-                    <><ShieldCheck className="w-3 h-3 mr-1" /> Fresh</>
-                  ) : (
-                    <><AlertTriangle className="w-3 h-3 mr-1" /> Spoiled</>
-                  )}
-                </Badge>
-                {analysis.inMenu && (
-                  <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+                {analysis.inMenu ? (
+                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
                     <MapPin className="w-3 h-3 mr-1" /> In Menu
+                  </Badge>
+                ) : (
+                  <Badge className="bg-amber-100 text-amber-700 border-amber-200">
+                    AI Detected
                   </Badge>
                 )}
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 p-3 text-center border border-blue-100">
-                <Scale className="w-4 h-4 text-blue-600 mx-auto mb-0.5" />
-                <p className="text-xl font-bold text-blue-700">{(analysis.weightKg * 1000).toFixed(0)}</p>
-                <p className="text-[11px] font-medium text-blue-600/70">grams</p>
-              </div>
-              <div className="rounded-xl bg-gradient-to-br from-red-50 to-red-100/50 p-3 text-center border border-red-100">
-                <DollarSign className="w-4 h-4 text-red-600 mx-auto mb-0.5" />
-                <p className="text-xl font-bold text-red-700">€{analysis.costEUR.toFixed(2)}</p>
-                <p className="text-[11px] font-medium text-red-600/70">cost</p>
-              </div>
-              <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-3 text-center border border-emerald-100">
-                <Leaf className="w-4 h-4 text-emerald-600 mx-auto mb-0.5" />
-                <p className="text-xl font-bold text-emerald-700">{analysis.co2Kg.toFixed(2)}</p>
-                <p className="text-[11px] font-medium text-emerald-600/70">kg CO₂e</p>
-              </div>
-            </div>
-
             {analysis.matchedMenuItem && (
-              <div className="flex items-center justify-between rounded-lg border px-3 py-2 mb-3">
-                <span className="text-sm text-slate-600">Menu match</span>
-                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">✓ {analysis.matchedMenuItem}</Badge>
+              <div className="flex items-center justify-between rounded-lg border px-3 py-2 mb-4 bg-emerald-50 border-emerald-200">
+                <span className="text-sm text-emerald-700 font-medium">Menu match</span>
+                <span className="text-sm font-semibold text-emerald-800">{analysis.matchedMenuItem}</span>
               </div>
             )}
 
-            {analysis.freshness === 'fresh' ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 mb-3">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-emerald-800">Fresh — Recoverable</p>
-                    <p className="text-xs text-emerald-600">{analysis.freshnessReason} ({analysis.freshnessConfidence}%)</p>
-                  </div>
-                </div>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 text-center border border-blue-100">
+                <Scale className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                <p className="text-2xl font-bold text-blue-700">{(analysis.weightKg * 1000).toFixed(0)}</p>
+                <p className="text-xs font-medium text-blue-600/70">grams</p>
               </div>
-            ) : (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 mb-3">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-red-800">Spoiled — Must Dispose</p>
-                    <p className="text-xs text-red-600">{analysis.freshnessReason} ({analysis.freshnessConfidence}%)</p>
-                  </div>
-                </div>
+              <div className="rounded-xl bg-gradient-to-br from-red-50 to-red-100/50 p-4 text-center border border-red-100">
+                <DollarSign className="w-5 h-5 text-red-600 mx-auto mb-1" />
+                <p className="text-2xl font-bold text-red-700">{'\u20AC'}{analysis.costEUR.toFixed(2)}</p>
+                <p className="text-xs font-medium text-red-600/70">cost</p>
               </div>
-            )}
-
-            {analysis.costBreakdown && (
-              <div className="rounded-lg border bg-amber-50 border-amber-200 p-3 mb-3">
-                <div className="flex items-start gap-2">
-                  <DollarSign className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-amber-800">Cost Breakdown</p>
-                    <p className="text-xs text-amber-700 mt-0.5">{analysis.costBreakdown}</p>
-                  </div>
-                </div>
+              <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 text-center border border-emerald-100">
+                <Leaf className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
+                <p className="text-2xl font-bold text-emerald-700">{analysis.co2Kg.toFixed(2)}</p>
+                <p className="text-xs font-medium text-emerald-600/70">kg CO{'\u2082'}e</p>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Flame className="w-4 h-4 text-orange-500" />
-                CO₂ Emissions Breakdown
-              </CardTitle>
-              {co2SourceBadge(analysis.co2Source)}
-            </div>
-            <CardDescription className="text-xs">
-              {analysis.co2Source === 'menu'
-                ? 'Calculated from actual menu recipe ingredients matched against IFEU database'
-                : analysis.co2Source === 'ai-predicted'
-                  ? 'Calculated from AI-predicted ingredients matched against IFEU database'
-                  : 'Using default estimate — upload more recipes for better accuracy'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between rounded-lg bg-slate-50 border p-3 mb-4">
-              <div>
-                <p className="text-sm font-medium text-slate-700">Total CO₂ equivalent</p>
-                <p className="text-xs text-slate-500">{analysis.co2ePerKg.toFixed(2)} kg CO₂e/kg × {analysis.weightKg.toFixed(3)} kg</p>
-              </div>
-              <p className="text-2xl font-bold text-emerald-700">{analysis.co2Kg.toFixed(3)} <span className="text-sm font-medium">kg</span></p>
             </div>
 
-            {analysis.co2Matches.length > 0 ? (
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ingredient CO₂ Factors (IFEU)</h4>
-                <div className="divide-y rounded-lg border overflow-hidden">
-                  {analysis.co2Matches.map((match, i) => (
-                    <div key={i} className="flex items-center justify-between px-3 py-2 text-sm bg-white hover:bg-slate-50 transition-colors">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${match.co2ePerKg !== null ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                        <span className="text-slate-800 truncate">{match.ingredient}</span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {match.matchedLabel && match.matchedLabel !== match.ingredient && (
-                          <span className="text-xs text-slate-400 max-w-[140px] truncate">→ {match.matchedLabel}</span>
-                        )}
-                        {match.co2ePerKg !== null ? (
-                          <span className="font-mono font-semibold text-slate-900">{match.co2ePerKg.toFixed(1)}</span>
-                        ) : (
-                          <span className="text-xs text-slate-400 italic">no match</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-1">
-                  <Info className="w-3 h-3" />
-                  Values in kg CO₂e per kg food. Source: IFEU 2020 environmental footprints study (Germany).
-                </p>
-              </div>
-            ) : analysis.ingredients.length > 0 ? (
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Detected Ingredients</h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {analysis.ingredients.map((ing, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs">{ing}</Badge>
-                  ))}
-                </div>
-                <p className="text-[11px] text-slate-400">No IFEU CO₂ matches found — using default estimate.</p>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-400 text-center py-4">No ingredient data available — using default CO₂ factor.</p>
-            )}
-          </CardContent>
-        </Card>
+            <div className="flex items-center justify-between rounded-lg bg-slate-50 border px-3 py-2 mb-4">
+              <span className="text-sm text-slate-600">CO{'\u2082'} source</span>
+              <Badge variant="outline" className={
+                analysis.co2Source === 'menu'
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                  : analysis.co2Source === 'ai-predicted'
+                    ? 'border-amber-300 bg-amber-50 text-amber-700'
+                    : 'border-slate-300 bg-slate-50 text-slate-600'
+              }>
+                {co2SourceLabel(analysis.co2Source)}
+              </Badge>
+            </div>
 
-        <Card>
-          <CardContent className="pt-5">
+            <div className="flex items-center gap-2 text-xs text-slate-400 mb-4">
+              <Info className="w-3 h-3 shrink-0" />
+              <span>
+                {analysis.co2Source === 'menu'
+                  ? 'CO\u2082 calculated from menu recipe ingredients via IFEU database'
+                  : analysis.co2Source === 'ai-predicted'
+                    ? 'CO\u2082 estimated by AI from detected ingredients'
+                    : 'Using default CO\u2082 factor (2.1 kg/kg)'}
+              </span>
+            </div>
+
             <div className="flex gap-3">
               <Button onClick={confirmAndLog} className="flex-1">
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Confirm & Log Waste Event
+                Confirm & Log
               </Button>
               <Button variant="outline" onClick={() => { setAnalysis(null); setSelectedFile(null); setPreviewUrl(null); }}>
                 <Trash2 className="w-4 h-4 mr-2" />
-                Cancel
+                Discard
               </Button>
             </div>
           </CardContent>
@@ -488,7 +363,7 @@ export default function WasteWatchdogLinePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Waste Watchdog Line</h1>
-          <p className="text-slate-600 mt-1">Capture, upload or manually log waste — AI analyses weight, cost, CO₂ & freshness</p>
+          <p className="text-slate-600 mt-1">Capture, upload or manually log waste {'—'} AI analyses weight, cost & CO{'₂'}</p>
         </div>
         <Badge variant="outline" className="flex items-center space-x-2">
           <div className="w-2 h-2 bg-emerald-500 rounded-full" />
@@ -638,34 +513,21 @@ export default function WasteWatchdogLinePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Leaf className="w-5 h-5" /> CO₂ Reference (IFEU)</CardTitle>
-                <CardDescription>Common food CO₂ factors from IFEU 2020 study</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Info className="w-5 h-5" /> How It Works</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="divide-y rounded-lg border overflow-hidden text-sm">
-                  {[
-                    { name: 'Beef, average', co2: 13.6 },
-                    { name: 'Butter', co2: 9.0 },
-                    { name: 'Cheese, average', co2: 5.7 },
-                    { name: 'Chicken, average', co2: 5.5 },
-                    { name: 'Fish, aquaculture', co2: 5.1 },
-                    { name: 'Cream', co2: 4.2 },
-                    { name: 'Chocolate, milk', co2: 4.1 },
-                    { name: 'Egg', co2: 3.0 },
-                    { name: 'Rice', co2: 1.6 },
-                    { name: 'Pasta', co2: 0.7 },
-                    { name: 'Bread', co2: 0.6 },
-                    { name: 'Potato', co2: 0.2 },
-                    { name: 'Apple', co2: 0.3 },
-                    { name: 'Broccoli, fresh', co2: 0.3 },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between px-3 py-2 bg-white hover:bg-slate-50">
-                      <span className="text-slate-700">{item.name}</span>
-                      <span className="font-mono font-semibold text-slate-900">{item.co2.toFixed(1)} <span className="text-xs font-normal text-slate-500">kg CO₂e/kg</span></span>
-                    </div>
-                  ))}
+              <CardContent className="space-y-3">
+                <div className="rounded-lg border p-3 bg-emerald-50 border-emerald-200">
+                  <p className="text-sm font-medium text-emerald-800 mb-1">Menu Items</p>
+                  <p className="text-xs text-emerald-700">If the dish is in our menu database, CO{`\u2082`} is calculated from actual recipe ingredients using IFEU data.</p>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-2">Source: IFEU – Environmental footprints of food products (Germany, 2020)</p>
+                <div className="rounded-lg border p-3 bg-amber-50 border-amber-200">
+                  <p className="text-sm font-medium text-amber-800 mb-1">Unknown Items</p>
+                  <p className="text-xs text-amber-700">If not in the menu, AI estimates the CO{`\u2082`} from detected ingredients.</p>
+                </div>
+                <div className="rounded-lg border p-3 bg-slate-50">
+                  <p className="text-sm font-medium text-slate-700 mb-1">Manual Entries</p>
+                  <p className="text-xs text-slate-600">Manual entries use a default CO{`\u2082`} factor of 2.1 kg/kg and are flagged for manager review.</p>
+                </div>
               </CardContent>
             </Card>
           </div>
