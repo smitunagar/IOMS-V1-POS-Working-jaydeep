@@ -26,6 +26,7 @@ import {
   Pencil,
   Leaf,
   Package,
+  MapPin,
   ShieldCheck,
   AlertTriangle
 } from 'lucide-react';
@@ -73,7 +74,6 @@ export default function HardwareCapturePage() {
   const [lastSnapshotUrl, setLastSnapshotUrl] = useState<string | null>(null);
   const [lastSnapshotAt, setLastSnapshotAt] = useState<string | null>(null);
   const [lastScanAt, setLastScanAt] = useState<string | null>(null);
-  const [posMatchMessage, setPosMatchMessage] = useState<string | null>(null);
   const [scaleWeight, setScaleWeight] = useState<number | null>(null);
   const [scaleUnit, setScaleUnit] = useState<string>('kg');
   const [scaleStatus, setScaleStatus] = useState<'connected' | 'disconnected' | 'error'>('disconnected');
@@ -413,7 +413,8 @@ export default function HardwareCapturePage() {
   const mapAnalysisToScan = useCallback((analysis: any, weightOverride?: number | null): ScanResult => {
     const dishName = analysis?.dishName || 'Unknown Dish';
     const category = analysis?.category || 'food';
-    const fallbackWeight = parseWeightKg(analysis?.estimatedWeight);
+    const apiWeight = typeof analysis?.weightKg === 'number' && Number.isFinite(analysis.weightKg) ? analysis.weightKg : null;
+    const fallbackWeight = apiWeight ?? parseWeightKg(analysis?.estimatedWeight);
     const safeOverride = typeof weightOverride === 'number' && !Number.isNaN(weightOverride)
       ? weightOverride
       : null;
@@ -590,7 +591,7 @@ export default function HardwareCapturePage() {
       i === index ? { ...item, weight: Number(newWeightKg.toFixed(3)) } : item
     );
     const totalWeightKg = updatedItems.reduce((sum, item) => sum + item.weight, 0);
-    // Proportionally recalculate cost and CO2 based on weight change
+    // Scale cost & CO2 proportionally from original scan values
     const ratio = scanResult.totalWeightKg > 0 ? totalWeightKg / scanResult.totalWeightKg : 1;
     setScanResult({
       ...scanResult,
@@ -610,6 +611,7 @@ export default function HardwareCapturePage() {
       return;
     }
     const totalWeightKg = updatedItems.reduce((sum, item) => sum + item.weight, 0);
+    // Scale cost & CO2 proportionally from original scan values
     const ratio = scanResult.totalWeightKg > 0 ? totalWeightKg / scanResult.totalWeightKg : 1;
     setScanResult({
       ...scanResult,
@@ -694,12 +696,6 @@ export default function HardwareCapturePage() {
         </div>
       </CardHeader>
       <CardContent>
-        {posMatchMessage && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-            <CheckCircle className="h-4 w-4 shrink-0" />
-            <span>{posMatchMessage}</span>
-          </div>
-        )}
         {scanResult ? (
           <div className="space-y-5">
             {/* Summary Stats */}
@@ -1336,7 +1332,7 @@ export default function HardwareCapturePage() {
                     Staff Entry History
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
-                    <Activity className="w-4 h-4 mr-2" />
+                    <MapPin className="w-4 h-4 mr-2" />
                     Station Breakdown
                   </Button>
                 </CardContent>
