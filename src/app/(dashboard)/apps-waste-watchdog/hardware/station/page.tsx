@@ -468,16 +468,17 @@ export default function HardwareCapturePage() {
       });
 
       let lastError: Error | null = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
         const response = await fetch('/api/analyzeWaste', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: payload,
         });
 
-        if (response.status === 429 && attempt < 3) {
-          const wait = Number(response.headers.get('Retry-After') || 10) * 1000;
-          console.log(`⏳ AI busy — retry ${attempt}/3 in ${wait / 1000}s`);
+        if (response.status === 429 && attempt < 2) {
+          const wait = Number(response.headers.get('Retry-After') || 30) * 1000;
+          console.log(`⏳ AI busy — retry in ${Math.round(wait / 1000)}s`);
+          toast({ title: `AI models busy — retrying in ${Math.round(wait / 1000)}s…` });
           await new Promise(r => setTimeout(r, wait));
           continue;
         }

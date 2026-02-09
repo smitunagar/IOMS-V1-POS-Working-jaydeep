@@ -161,22 +161,23 @@ export default function WasteWatchdogLinePage() {
       const imageDataUrl = await toDataUrl(imageBlob);
 
       let lastError: Error | null = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
         const response = await fetch('/api/analyzeWaste', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: imageDataUrl, source: 'line' }),
         });
 
-        if (response.status === 429 && attempt < 3) {
-          const wait = Number(response.headers.get('Retry-After') || 10) * 1000;
-          toast({ title: `AI busy — retrying in ${wait / 1000}s (${attempt}/3)…` });
+        if (response.status === 429 && attempt < 2) {
+          const wait = Number(response.headers.get('Retry-After') || 30) * 1000;
+          toast({ title: `AI models busy — retrying in ${Math.round(wait / 1000)}s…` });
           await new Promise(r => setTimeout(r, wait));
           continue;
         }
 
         if (!response.ok) {
-          lastError = new Error(`Analysis failed (${response.status})`);
+          const body = await response.json().catch(() => null);
+          lastError = new Error(body?.error || `Analysis failed (${response.status})`);
           break;
         }
 

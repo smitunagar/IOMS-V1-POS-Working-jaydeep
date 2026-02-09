@@ -50,30 +50,58 @@ const normalizeName = (value: string) => value
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Models to try in order — if primary hits quota, fall back to alternatives
+const GEMINI_MODELS = [
+  'googleai/gemini-2.5-flash',
+  'googleai/gemini-2.0-flash',
+  'googleai/gemini-1.5-flash',
+];
+
 async function callGeminiWithRetry(
   prompt: string,
   imageUrl: string,
-  maxRetries = 3
 ): Promise<string> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const result = await ai.generate([
-        { text: prompt },
-        { media: { url: imageUrl } }
-      ]);
-      return result?.text || '';
-    } catch (err: any) {
-      const is429 = err.message?.includes('429') || err.message?.toLowerCase().includes('quota') || err.message?.toLowerCase().includes('rate');
-      if (is429 && attempt < maxRetries) {
-        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000; // 2s, 4s + jitter
-        console.log(`⏳ Gemini 429 — retry ${attempt}/${maxRetries} in ${Math.round(delay)}ms`);
-        await sleep(delay);
-        continue;
+  const maxRetries = 3;
+  const retryDelays = [15_000, 30_000, 60_000]; // 15s, 30s, 60s
+
+  for (let modelIdx = 0; modelIdx < GEMINI_MODELS.length; modelIdx++) {
+    const model = GEMINI_MODELS[modelIdx];
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🤖 Trying ${model} (attempt ${attempt}/${maxRetries})`);
+        const result = await ai.generate({
+          model,
+          prompt: [
+            { text: prompt },
+            { media: { url: imageUrl } },
+          ],
+        });
+        return result?.text || '';
+      } catch (err: any) {
+        const msg = err.message?.toLowerCase() || '';
+        const is429 = msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('resource_exhausted');
+
+        if (is429) {
+          // Try next model first before waiting
+          if (modelIdx < GEMINI_MODELS.length - 1) {
+            console.log(`⏳ ${model} rate-limited — trying fallback model ${GEMINI_MODELS[modelIdx + 1]}`);
+            break; // break inner retry loop → next model
+          }
+          // Last model — retry with delay
+          if (attempt < maxRetries) {
+            const delay = retryDelays[attempt - 1] + Math.random() * 5000;
+            console.log(`⏳ All models rate-limited — retry ${attempt}/${maxRetries} in ${Math.round(delay / 1000)}s`);
+            await sleep(delay);
+            continue;
+          }
+        }
+        // Non-429 error or retries exhausted
+        if (attempt >= maxRetries && modelIdx >= GEMINI_MODELS.length - 1) throw err;
+        if (!is429) throw err; // don't retry non-rate errors
       }
-      throw err;
     }
   }
-  throw new Error('Gemini: max retries exceeded');
+  throw new Error('Gemini: all models rate-limited, max retries exceeded');
 }
 
 const scoreNameMatch = (dishName: string, menuName: string) => {
@@ -381,12 +409,12 @@ Analyze the image now:
   } catch (error: any) {
     console.error('❌ Waste analysis error:', error);
     
-    if (error.message?.includes('429') || error.message?.toLowerCase().includes('quota') || error.message?.toLowerCase().includes('rate')) {
+    if (error.message?.includes('429') || error.message?.toLowerCase().includes('quota') || error.message?.toLowerCase().includes('rate') || error.message?.toLowerCase().includes('resource_exhausted')) {
       return NextResponse.json({
         success: false,
-        error: 'Gemini API is busy. Please wait a few seconds and try again.',
-        retryAfter: 10,
-      }, { status: 429, headers: { 'Retry-After': '10' } });
+        error: 'AI models are busy. Please wait 30 seconds and try again.',
+        retryAfter: 30,
+      }, { status: 429, headers: { 'Retry-After': '30' } });
     }
 
     const fallback = buildFallbackResponse();
