@@ -50,11 +50,10 @@ const normalizeName = (value: string) => value
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Models to try in order — if primary hits quota, fall back to alternatives
+// Models to try in order — 2.0-flash is fastest (no thinking overhead)
 const GEMINI_MODELS = [
-  'googleai/gemini-2.5-flash',
   'googleai/gemini-2.0-flash',
-  'googleai/gemini-1.5-flash',
+  'googleai/gemini-2.5-flash',
 ];
 
 async function callGeminiWithRetry(
