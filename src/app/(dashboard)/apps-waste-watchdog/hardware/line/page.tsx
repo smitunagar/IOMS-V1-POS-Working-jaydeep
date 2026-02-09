@@ -159,17 +159,35 @@ export default function WasteWatchdogLinePage() {
       scanInProgressRef.current = true;
       setIsScanning(true);
       const imageDataUrl = await toDataUrl(imageBlob);
-      const response = await fetch('/api/analyzeWaste', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageDataUrl, source: 'line' }),
-      });
-      if (!response.ok) throw new Error('Analysis failed');
-      const data = await response.json();
-      setAnalysis(mapToAnalysis(data));
-      setLastScanAt(new Date().toLocaleTimeString());
+
+      let lastError: Error | null = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const response = await fetch('/api/analyzeWaste', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: imageDataUrl, source: 'line' }),
+        });
+
+        if (response.status === 429 && attempt < 3) {
+          const wait = Number(response.headers.get('Retry-After') || 10) * 1000;
+          toast({ title: `AI busy — retrying in ${wait / 1000}s (${attempt}/3)…` });
+          await new Promise(r => setTimeout(r, wait));
+          continue;
+        }
+
+        if (!response.ok) {
+          lastError = new Error(`Analysis failed (${response.status})`);
+          break;
+        }
+
+        const data = await response.json();
+        setAnalysis(mapToAnalysis(data));
+        setLastScanAt(new Date().toLocaleTimeString());
+        return; // success
+      }
+      throw lastError ?? new Error('Analysis failed');
     } catch {
-      toast({ title: 'Scan Failed', description: 'Unable to analyze this image.', variant: 'destructive' });
+      toast({ title: 'Scan Failed', description: 'Unable to analyze this image. Please try again in a moment.', variant: 'destructive' });
     } finally {
       scanInProgressRef.current = false;
       setIsScanning(false);

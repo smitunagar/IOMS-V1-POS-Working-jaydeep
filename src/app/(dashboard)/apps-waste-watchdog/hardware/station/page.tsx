@@ -460,28 +460,43 @@ export default function HardwareCapturePage() {
     try {
       scanInProgressRef.current = true;
       const imageDataUrl = await toDataUrl(imageBlob);
-      const response = await fetch('/api/analyzeWaste', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: imageDataUrl,
-          source: 'station',
-          station,
-          weightKg: typeof scaleWeightRef.current === 'number' ? scaleWeightRef.current : null
-        })
+      const payload = JSON.stringify({
+        image: imageDataUrl,
+        source: 'station',
+        station,
+        weightKg: typeof scaleWeightRef.current === 'number' ? scaleWeightRef.current : null
       });
 
-      if (!response.ok) {
-        throw new Error('Analysis failed');
-      }
+      let lastError: Error | null = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const response = await fetch('/api/analyzeWaste', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+        });
 
-      const data = await response.json();
-      const weightOverride = typeof scaleWeightRef.current === 'number'
-        ? scaleWeightRef.current
-        : null;
-      const mapped = mapAnalysisToScan(data, weightOverride);
-      setScanResult(mapped);
-      setLastScanAt(new Date().toLocaleTimeString());
+        if (response.status === 429 && attempt < 3) {
+          const wait = Number(response.headers.get('Retry-After') || 10) * 1000;
+          console.log(`⏳ AI busy — retry ${attempt}/3 in ${wait / 1000}s`);
+          await new Promise(r => setTimeout(r, wait));
+          continue;
+        }
+
+        if (!response.ok) {
+          lastError = new Error(`Analysis failed (${response.status})`);
+          break;
+        }
+
+        const data = await response.json();
+        const weightOverride = typeof scaleWeightRef.current === 'number'
+          ? scaleWeightRef.current
+          : null;
+        const mapped = mapAnalysisToScan(data, weightOverride);
+        setScanResult(mapped);
+        setLastScanAt(new Date().toLocaleTimeString());
+        return; // success
+      }
+      throw lastError ?? new Error('Analysis failed');
     } catch (error) {
       console.error('Analysis error:', error);
       toast({

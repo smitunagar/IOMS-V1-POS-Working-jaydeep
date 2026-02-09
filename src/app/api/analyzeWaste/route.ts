@@ -48,6 +48,34 @@ const normalizeName = (value: string) => value
   .replace(/\s+/g, ' ')
   .trim();
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function callGeminiWithRetry(
+  prompt: string,
+  imageUrl: string,
+  maxRetries = 3
+): Promise<string> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await ai.generate([
+        { text: prompt },
+        { media: { url: imageUrl } }
+      ]);
+      return result?.text || '';
+    } catch (err: any) {
+      const is429 = err.message?.includes('429') || err.message?.toLowerCase().includes('quota') || err.message?.toLowerCase().includes('rate');
+      if (is429 && attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000; // 2s, 4s + jitter
+        console.log(`⏳ Gemini 429 — retry ${attempt}/${maxRetries} in ${Math.round(delay)}ms`);
+        await sleep(delay);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error('Gemini: max retries exceeded');
+}
+
 const scoreNameMatch = (dishName: string, menuName: string) => {
   const dishTokens = normalizeName(dishName).split(' ').filter(Boolean);
   const menuTokens = normalizeName(menuName).split(' ').filter(Boolean);
@@ -271,15 +299,9 @@ GENERAL RULES:
 Analyze the image now:
 `;
     
-    console.log('🚀 Sending request to Gemini...');
+    console.log('🚀 Sending request to Gemini (with retry)...');
 
-    // Generate content using Genkit with image
-    const result = await ai.generate([
-      { text: prompt },
-      { media: { url: image } }
-    ]);
-
-    const text = result?.text || '';
+    const text = await callGeminiWithRetry(prompt, image);
     
     console.log('📄 Gemini response received');
     console.log('📊 Response:', text);
@@ -359,11 +381,12 @@ Analyze the image now:
   } catch (error: any) {
     console.error('❌ Waste analysis error:', error);
     
-    if (error.message?.includes('429') || error.message?.toLowerCase().includes('quota')) {
+    if (error.message?.includes('429') || error.message?.toLowerCase().includes('quota') || error.message?.toLowerCase().includes('rate')) {
       return NextResponse.json({
         success: false,
-        error: 'Gemini API quota exceeded. Please try again later.',
-      }, { status: 429 });
+        error: 'Gemini API is busy. Please wait a few seconds and try again.',
+        retryAfter: 10,
+      }, { status: 429, headers: { 'Retry-After': '10' } });
     }
 
     const fallback = buildFallbackResponse();
