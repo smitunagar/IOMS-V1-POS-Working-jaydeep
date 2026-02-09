@@ -23,7 +23,6 @@ import {
   Activity,
   Clock,
   User,
-  MapPin,
   Pencil,
   Leaf,
   Package,
@@ -49,9 +48,6 @@ interface ScanResult {
   freshness: 'fresh' | 'rotten';
   freshnessConfidence: number;
   freshnessReason: string;
-  matchedMenuItem?: string | null;
-  inMenu?: boolean;
-  menuMatchScore?: number | null;
 }
 
 interface WasteEventData {
@@ -65,19 +61,6 @@ interface WasteEventData {
 }
 
 const SNAPSHOT_INTERVAL_MS = 5000;
-
-const FOOD_LIBRARY = [
-  { name: 'Mixed vegetables', category: 'vegetable', costPerKg: 6.5, co2PerKg: 2.4 },
-  { name: 'Bread waste', category: 'bakery', costPerKg: 3.1, co2PerKg: 1.8 },
-  { name: 'Pasta', category: 'grain', costPerKg: 4.2, co2PerKg: 1.6 },
-  { name: 'Rice', category: 'grain', costPerKg: 2.8, co2PerKg: 1.2 },
-  { name: 'Grilled chicken', category: 'protein', costPerKg: 11.5, co2PerKg: 6.1 },
-  { name: 'Fish fillet', category: 'protein', costPerKg: 12.9, co2PerKg: 5.4 },
-  { name: 'Salad mix', category: 'vegetable', costPerKg: 5.4, co2PerKg: 2.1 },
-  { name: 'Potato wedges', category: 'vegetable', costPerKg: 3.6, co2PerKg: 1.4 },
-  { name: 'Fruit medley', category: 'fruit', costPerKg: 7.2, co2PerKg: 1.9 },
-  { name: 'Dessert tray', category: 'dessert', costPerKg: 9.8, co2PerKg: 3.2 },
-];
 
 export default function HardwareCapturePage() {
   const [activeTab, setActiveTab] = useState('camera');
@@ -438,12 +421,14 @@ export default function HardwareCapturePage() {
     const resolvedWeight = Number.isFinite(weightKg) ? weightKg : fallbackWeight;
     const finalWeight = Number.isFinite(resolvedWeight) ? resolvedWeight : 0.5;
     const confidence = Math.min(1, (Number(analysis?.confidence) || 80) / 100);
-    const matched = FOOD_LIBRARY.find(item => item.name.toLowerCase() === dishName.toLowerCase());
-    const costPerKg = matched?.costPerKg ?? 4.5;
-    const co2PerKg = matched?.co2PerKg ?? 2.1;
     const roundedWeight = Number(finalWeight.toFixed(2));
-    const safeCost = Number.isFinite(roundedWeight) ? Number((roundedWeight * costPerKg).toFixed(2)) : 0;
-    const safeCo2 = Number.isFinite(roundedWeight) ? Number((roundedWeight * co2PerKg).toFixed(2)) : 0;
+
+    // Use API's actual CO2 and cost values instead of hardcoded library
+    const apiCo2 = typeof analysis?.co2Kg === 'number' && Number.isFinite(analysis.co2Kg) ? analysis.co2Kg : null;
+    const apiCost = typeof analysis?.estimatedCostEUR === 'number' && Number.isFinite(analysis.estimatedCostEUR) ? analysis.estimatedCostEUR : null;
+    const safeCo2 = apiCo2 ?? Number((roundedWeight * 2.1).toFixed(2));
+    const safeCost = apiCost ?? Number((roundedWeight * 4.5).toFixed(2));
+
     const freshness: 'fresh' | 'rotten' = analysis?.freshness === 'fresh' ? 'fresh' : 'rotten';
     const freshnessConfidence = typeof analysis?.freshnessConfidence === 'number' ? analysis.freshnessConfidence : 60;
     const freshnessReason = analysis?.freshnessReason || '';
@@ -467,9 +452,6 @@ export default function HardwareCapturePage() {
       freshness,
       freshnessConfidence,
       freshnessReason,
-      matchedMenuItem: analysis?.matchedMenuItem ?? null,
-      inMenu: analysis?.inMenu ?? false,
-      menuMatchScore: typeof analysis?.menuMatchScore === 'number' ? analysis.menuMatchScore : null,
     };
   }, [parseWeightKg]);
 
@@ -608,15 +590,14 @@ export default function HardwareCapturePage() {
       i === index ? { ...item, weight: Number(newWeightKg.toFixed(3)) } : item
     );
     const totalWeightKg = updatedItems.reduce((sum, item) => sum + item.weight, 0);
-    const matched = FOOD_LIBRARY.find(f => f.name.toLowerCase() === updatedItems[0]?.name.toLowerCase());
-    const costPerKg = matched?.costPerKg ?? 4.5;
-    const co2PerKg = matched?.co2PerKg ?? 2.1;
+    // Proportionally recalculate cost and CO2 based on weight change
+    const ratio = scanResult.totalWeightKg > 0 ? totalWeightKg / scanResult.totalWeightKg : 1;
     setScanResult({
       ...scanResult,
       items: updatedItems,
       totalWeightKg: Number(totalWeightKg.toFixed(3)),
-      costEUR: Number((totalWeightKg * costPerKg).toFixed(2)),
-      co2Kg: Number((totalWeightKg * co2PerKg).toFixed(2)),
+      costEUR: Number((scanResult.costEUR * ratio).toFixed(2)),
+      co2Kg: Number((scanResult.co2Kg * ratio).toFixed(2)),
     });
     setEditingItemIndex(null);
   };
@@ -629,15 +610,13 @@ export default function HardwareCapturePage() {
       return;
     }
     const totalWeightKg = updatedItems.reduce((sum, item) => sum + item.weight, 0);
-    const matched = FOOD_LIBRARY.find(f => f.name.toLowerCase() === updatedItems[0]?.name.toLowerCase());
-    const costPerKg = matched?.costPerKg ?? 4.5;
-    const co2PerKg = matched?.co2PerKg ?? 2.1;
+    const ratio = scanResult.totalWeightKg > 0 ? totalWeightKg / scanResult.totalWeightKg : 1;
     setScanResult({
       ...scanResult,
       items: updatedItems,
       totalWeightKg: Number(totalWeightKg.toFixed(3)),
-      costEUR: Number((totalWeightKg * costPerKg).toFixed(2)),
-      co2Kg: Number((totalWeightKg * co2PerKg).toFixed(2)),
+      costEUR: Number((scanResult.costEUR * ratio).toFixed(2)),
+      co2Kg: Number((scanResult.co2Kg * ratio).toFixed(2)),
     });
   };
 
@@ -784,23 +763,6 @@ export default function HardwareCapturePage() {
                 </div>
               </div>
             )}
-
-            {/* Menu Match */}
-            <div className="flex items-center justify-between rounded-lg border px-4 py-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-slate-400" />
-                <span className="text-sm font-medium text-slate-600">Menu Match</span>
-              </div>
-              {scanResult.inMenu && scanResult.matchedMenuItem ? (
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200">
-                  ✓ {scanResult.matchedMenuItem}
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="bg-slate-100 text-slate-500">
-                  Not in menu
-                </Badge>
-              )}
-            </div>
 
             {/* Detected Items */}
             <div className="space-y-3">
@@ -1374,7 +1336,7 @@ export default function HardwareCapturePage() {
                     Staff Entry History
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
-                    <MapPin className="w-4 h-4 mr-2" />
+                    <Activity className="w-4 h-4 mr-2" />
                     Station Breakdown
                   </Button>
                 </CardContent>
